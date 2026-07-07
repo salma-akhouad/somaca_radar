@@ -1,2 +1,2 @@
-# somaca_it_mapping
-A real time map of Somaca's factory network showing equipment health and predicting failures before they happen.
+# somaca_predictive_maintenance_
+A predictive maintenance system that uses deep learning to catch equipment failures before they happen across Somaca's factory floor.
