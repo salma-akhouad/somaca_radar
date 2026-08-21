@@ -1,0 +1,2 @@
+import { Icon } from '../common/Icon'
+export function SomacaHelperLauncher() { return <aside className="helper-card" aria-label="SOMACA Helper"><div className="helper-avatar" aria-label="Emplacement de l'avatar illustré SOMACA Helper"><span>SH</span><i>◒</i></div><div className="helper-card__content"><strong>SOMACA HELPER</strong><p>Comment puis-je vous aider aujourd'hui ?</p><button type="button" aria-label="Ouvrir SOMACA Helper"><Icon name="message" size={19} /></button></div></aside> }
