@@ -1,21 +1,31 @@
 import hashlib
+from typing import cast
+from sqlalchemy import func
 from datetime import datetime, timedelta, timezone
+from uuid import UUID # Universally Unique Identifier, a 128-bit number used to uniquely identify information in computer systems. 
 from passlib.context import CryptContext
 from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.exc import IntegrityError
 from .database import SessionLocal, get_db
-from .models import (Machine, Role, Utilisateur, Session as SessionModel,
-                    Departement, Unite, Poteau, Etat, StatutHistorique, SomacaHelper)
-from .schemas import (CurrentStatusOut,MachineDetailOut, MachineCreate, MachineDetailOut,RoleCreate,UtilisateurCreate, SessionCreate, 
-                      DepartementCreate, UniteCreate, PoteauCreate, EtatCreate, 
-                      StatutHistoriqueCreate, SomacaHelperCreate,MachineUpdate, 
-                      RoleUpdate, UtilisateurUpdate, SessionUpdate, DepartementUpdate, 
-                      UniteUpdate, PoteauUpdate, EtatUpdate, StatutHistoriqueUpdate, 
-                      SomacaHelperUpdate,MachineOut, RoleOut, UtilisateurOut, SessionOut, 
-                      DepartementOut, UniteOut,PoteauOut, EtatOut, StatutHistoriqueOut, SomacaHelperOut)
+from .models import (Machine, Role, Utilisateur, Session as SessionModel, Departement, Unite, Poteau, 
+                     Etat, StatutHistorique, SomacaHelperMessage, Incident, IncidentStatusHistory, 
+                    IncidentContact, IncidentStatus, ContactType
+                    )
+from .schemas import (CurrentStatusOut,MachineDetailOut, MachineCreate, MachineDetailOut,RoleCreate,
+                      UtilisateurCreate, SessionCreate, DepartementCreate, UniteCreate, PoteauCreate, 
+                      EtatCreate, StatutHistoriqueCreate, SomacaHelperMessageOut,MachineUpdate, 
+                      RoleUpdate, UtilisateurUpdate, DepartementUpdate, UniteUpdate, PoteauUpdate, 
+                      EtatUpdate, StatutHistoriqueUpdate,MachineOut, RoleOut, UtilisateurOut, SessionOut, 
+                      DepartementOut, UniteOut,PoteauOut, EtatOut, StatutHistoriqueOut, LoginRequest,
+                      LoginResponse, HelperConversationSummaryOut, HelperAskRequest, HelperAskResponse, 
+                      HelperResponseStatus, RoutingResult, IncidentCreate, IncidentUpdate, IncidentStatusUpdate,
+                      IncidentOut, IncidentStatusHistoryOut, IncidentContactCreate, IncidentContactOut,TechnicianOut,
+                      )
 from .auth import _resolve_user_from_token, create_access_token, get_current_user, require_role, ACCESS_TOKEN_EXPIRE_MINUTES, RoleName
-from .schemas import LoginRequest, LoginResponse
+from .somaca_helper_service import SomacaHelperServiceError, SomacaHelperClarificationError, detect_intent, analyze_routing, generate_final_answer,  generate_clarification_answer
+from .gemini_client import GEMINI_MODEL, HELPER_CONTEXT_MESSAGE_LIMIT
+
 
 app = FastAPI()
 
@@ -239,6 +249,29 @@ def delete_utilisateur(id_util: int, db: Session = Depends(get_db),
     db.delete(existing)
     commit_or_409(db, "Cannot delete: other records still reference this resource.")
 
+@app.get("/technicians",
+    response_model=list[TechnicianOut],
+)
+def get_technicians(
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    return (
+        db.query(Utilisateur)
+        .join(
+            Role,
+            Utilisateur.id_role == Role.id_role,
+        )
+        .filter(
+            func.lower(Role.nom_role)
+            == RoleName.TECHNICIEN
+        )
+        .order_by(
+            Utilisateur.nom.asc(),
+            Utilisateur.prenom.asc(),
+        )
+        .all()
+    )
 
 # Sessions
 @app.get("/sessions", response_model=list[SessionOut],)
@@ -408,6 +441,7 @@ def delete_etat(id_etat: int, db: Session = Depends(get_db),
 @app.get("/statuts", response_model=list[StatutHistoriqueOut])
 def get_statuts(db: Session = Depends(get_db), _: Utilisateur = Depends(get_current_user)):
     return db.query(StatutHistorique).filter(StatutHistorique.date_suppression.is_(None)).all() 
+# Here we didn't use StatutHistoriqueOut, we used StatutHistorique because we want to return the raw SQLAlchemy model instances, which will be automatically converted to the StatutHistoriqueOut Pydantic model by FastAPI when sending the response. 
 
 @app.post("/statuts", response_model=StatutHistoriqueOut)
 async def create_statut(statut: StatutHistoriqueCreate, db: Session = Depends(get_db),
@@ -449,54 +483,567 @@ def delete_statut(id_statut: int, db: Session = Depends(get_db),
     ).first()
     if existing is None:
         raise HTTPException(status_code=404, detail="Historical status not found")
-    existing.date_suppression = datetime.now(timezone.utc)
+    setattr(existing,"date_suppression",datetime.now(timezone.utc))
     commit_or_409(db, "Cannot delete: other records still reference this resource.")
 
 
-# Somaca Helper
-@app.get("/helper", response_model=list[SomacaHelperOut])
-def get_helper(db: Session = Depends(get_db),
-                _: Utilisateur = Depends(get_current_user)):
-    return db.query(SomacaHelper).all()
+# SomacaHelper Conversations
+@app.get("/helper/conversations",response_model=list[HelperConversationSummaryOut])
+def get_helper_conversations(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user),
+):
+    FirstMessage = aliased(SomacaHelperMessage)
+    first_user_message = (
+        db.query(FirstMessage.content)
+        .filter(
+            FirstMessage.conversation_id == SomacaHelperMessage.conversation_id,
+            FirstMessage.id_util == current_user.id_util,
+            FirstMessage.role == "USER",
+        )
+        .order_by(
+            FirstMessage.date_creation.asc(),
+            FirstMessage.id_message.asc(),
+        )
+        .limit(1)
+        .correlate(SomacaHelperMessage) 
+        .scalar_subquery()
+    )
 
-@app.post("/helper", response_model=SomacaHelperOut)
-def create_helper(helper: SomacaHelperCreate, db: Session = Depends(get_db),
-                  _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    new_helper = SomacaHelper(**helper.model_dump())
-    db.add(new_helper)
+    rows = (
+        db.query(
+            SomacaHelperMessage.conversation_id.label(
+                "conversation_id"
+            ),
+            first_user_message.label("preview"),
+            func.count(
+                SomacaHelperMessage.id_message
+            ).label("message_count"),
+            func.max(
+                SomacaHelperMessage.date_creation
+            ).label("last_activity"),
+        )
+        .filter(
+            SomacaHelperMessage.id_util == current_user.id_util
+        )
+        .group_by(
+            SomacaHelperMessage.conversation_id
+        )
+        .order_by(
+            func.max(
+                SomacaHelperMessage.date_creation
+            ).desc()
+        )
+        .all()
+    )
+    # We are mapping each field in the rows to the corresponding field in the Pydantic model.Bc there is no direct SQLAlchemy table for this query.
+    return [
+        HelperConversationSummaryOut(
+            conversation_id=row.conversation_id,
+            preview=row.preview or "New conversation",
+            message_count=row.message_count,
+            last_activity=row.last_activity,
+        )
+        for row in rows
+    ]
+
+@app.get("/helper/conversations/{conversation_id}", response_model=list[SomacaHelperMessageOut])
+def get_helper_conversation(
+    conversation_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user),
+):
+    messages = (
+        db.query(SomacaHelperMessage)
+        .filter(
+            SomacaHelperMessage.conversation_id == conversation_id,
+            SomacaHelperMessage.id_util == current_user.id_util,
+        )
+        .order_by(
+            SomacaHelperMessage.date_creation.asc(),
+            SomacaHelperMessage.id_message.asc(),
+        )
+        .all()
+    )
+
+    if not messages:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found",
+        )
+
+    return messages
+
+
+@app.post("/helper/ask", response_model=HelperAskResponse)
+def ask_helper(
+    request: HelperAskRequest,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user),
+):
+    recent_messages = (
+        db.query(SomacaHelperMessage)
+        .filter(
+            SomacaHelperMessage.conversation_id == request.conversation_id,
+            SomacaHelperMessage.id_util == current_user.id_util,
+        )
+        .order_by(
+            SomacaHelperMessage.date_creation.desc(),
+            SomacaHelperMessage.id_message.desc(),
+        )
+        .limit(HELPER_CONTEXT_MESSAGE_LIMIT)
+        .all()
+    )
+
+    # The database returned newest first; Gemini needs chronological context.
+    recent_messages.reverse()
+
+    try:
+        routing_result = detect_intent(
+            request,
+            recent_messages,
+        )
+
+        if routing_result.unsupported:
+            answer = routing_result.unsupported_reason or "This request is not supported by SomacaHelper."
+            response_status = HelperResponseStatus.UNSUPPORTED_REQUEST
+            facts = {}
+
+        elif routing_result.needs_clarification:
+            answer = routing_result.clarification_question  or "Please clarify your request."
+            response_status = HelperResponseStatus.CLARIFICATION_REQUIRED
+            facts = {}
+
+        else:
+            try:
+                facts = analyze_routing(
+                    db,
+                    routing_result,
+                )
+
+            except SomacaHelperClarificationError as exc:
+                answer = generate_clarification_answer(
+                    request=request,
+                    clarification=exc,
+                )
+                response_status = HelperResponseStatus.CLARIFICATION_REQUIRED
+                facts = {}
+
+            else:
+                answer = generate_final_answer(
+                    request=request,
+                    routing=routing_result,
+                    facts=facts,
+                    recent_messages=recent_messages,
+                )
+
+                response_status = HelperResponseStatus.ANSWERED
+
+    except SomacaHelperServiceError:
+        db.rollback()
+
+        return HelperAskResponse(
+            status=HelperResponseStatus.ERROR,
+            answer=(
+                "SomacaHelper is temporarily unavailable. Please try again later."
+            ),
+        )
+
+    user_message = SomacaHelperMessage(
+        conversation_id=request.conversation_id,
+        id_util=current_user.id_util,
+        role="USER",
+        content=request.question,
+        id_machine=request.context.current_machine_id,
+        intent=(
+            routing_result.intent.value
+            if routing_result.intent is not None
+            else None
+        ),
+        facts=None,
+        model_name=None,
+    )
+
+    assistant_message = SomacaHelperMessage(
+        conversation_id=request.conversation_id,
+        id_util=current_user.id_util,
+        role="ASSISTANT",
+        content=answer,
+        id_machine=request.context.current_machine_id,
+        intent=(
+            routing_result.intent.value
+            if routing_result.intent is not None
+            else None
+        ),
+        facts=facts,
+        model_name=GEMINI_MODEL,
+    )
+
+    db.add(user_message) 
+    db.add(assistant_message)
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return HelperAskResponse(
+            status=HelperResponseStatus.ERROR,
+            answer= "The conversation could not be saved. Please try again."
+        )
+
+    return HelperAskResponse(
+        status=response_status,
+        answer=answer,
+        intent=routing_result.intent,
+        facts=facts,
+    )
+
+@app.delete("/helper/conversations/{conversation_id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_helper_conversation(
+    conversation_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user),
+):
+    deleted_count = (
+        db.query(SomacaHelperMessage)
+        .filter(
+            SomacaHelperMessage.conversation_id == conversation_id,
+            SomacaHelperMessage.id_util == current_user.id_util,
+        )
+        .delete(synchronize_session=False)
+    )
+
+    if deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found",
+        )
+
     commit_or_409(db)
-    db.refresh(new_helper)
-    return new_helper
 
-@app.patch("/helper/{id_recommandation}", response_model=SomacaHelperOut)
-def update_helper(id_recommandation: int, helper: SomacaHelperUpdate, db: Session = Depends(get_db),
-                  _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    existing = db.query(SomacaHelper).filter(SomacaHelper.id_recommandation == id_recommandation).first()
+
+# Incident Management
+@app.post("/incidents",response_model=IncidentOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_incident(
+    incident: IncidentCreate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        require_role(
+            RoleName.ADMINISTRATEUR,
+            RoleName.TECHNICIEN,
+        )
+    ),
+):
+    machine = (
+        db.query(Machine)
+        .filter(
+            Machine.id_machine == incident.id_machine
+        )
+        .first()
+    )
+
+    if machine is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Machine not found",
+        )
+
+    new_incident = Incident(
+        id_machine=incident.id_machine,
+        problem=incident.problem,
+        severity=incident.severity,
+        status=IncidentStatus.OUVERT,
+        created_by_user_id=current_user.id_util,
+    )
+
+    db.add(new_incident)
+    try:
+        db.flush() # it sends the pending changes to the database without committing the transaction. This allows us to get 
+        # The auto-generated primary key (id_incident) for the new incident before we commit the transaction. If there is an 
+        # IntegrityError (PostgreSQL correctly detected that something we asked it to store violates a database rule.), we 
+        # can catch it and handle it appropriately without having committed any changes to the database yet.
+
+        initial_history = IncidentStatusHistory(
+            id_incident=new_incident.id_incident,
+            status=IncidentStatus.OUVERT,
+            changed_by_user_id=current_user.id_util,
+        )
+
+        db.add(initial_history)
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            # 409 is within the range of 400 to 499, which indicates that the client made an error in the request. 
+            # In this case, it suggests that there was a conflict with the current state of the resource, such as a duplicate value or an invalid foreign key reference.
+            detail="Could not create incident",
+        )
+    
+    # refresh() is used to reload the instance from the database, ensuring that we have the most up-to-date data, including any auto-generated fields like the primary key (id_incident) and timestamps.
+    # because the model we are returning is IncidentOut, which includes the id_incident field, we need to ensure that this field is populated with the correct value from the database before returning the response.
+    db.refresh(new_incident)
+    return new_incident
+
+@app.get("/incidents",response_model=list[IncidentOut])
+def get_incidents(
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    return (
+        db.query(Incident)
+        .order_by(Incident.created_at.desc())
+        .all()
+    )
+
+@app.get("/incidents/{id_incident}",response_model=IncidentOut)
+def get_incident(
+    id_incident: int,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    incident = (
+        db.query(Incident)
+        .filter(
+            Incident.id_incident == id_incident
+        )
+        .first()
+    )
+
+    if incident is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+
+    return incident
+
+@app.patch("/incidents/{id_incident}", response_model=IncidentOut)
+def update_incident(
+    id_incident: int,
+    incident: IncidentUpdate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR,RoleName.TECHNICIEN)
+    )):
+
+    existing = (
+        db.query(Incident)
+        .filter(
+            Incident.id_incident == id_incident
+        )
+        .first()
+    )
+
     if existing is None:
-        raise HTTPException(status_code=404, detail="SomacaHelper recommendation not found")
-    for field, value in helper.model_dump(exclude_unset=True).items():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+    
+    data = incident.model_dump(exclude_unset=True) 
+    # It creates a dictionary of the fields that were provided in the request, excluding
+    #  any fields that were not set. This allows us to only update the fields that the client 
+    # wants to change, without overwriting other fields with default values. It gives us: 
+    # field_name : new_value
+
+    if (
+        current_user.role.nom_role.lower()
+        == RoleName.TECHNICIEN
+    ):
+        forbidden_fields = {
+            "problem",
+            "severity",
+        }
+
+        if forbidden_fields.intersection(data):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Technicians cannot modify the problem or severity.",
+                ),
+            )
+        
+    for field, value in data.items():
         setattr(existing, field, value)
+
     commit_or_409(db)
-    db.refresh(existing)
     return existing
 
-@app.delete("/helper/{id_recommandation}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_helper(id_recommandation: int, db: Session = Depends(get_db),
-                  _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    existing = db.query(SomacaHelper).filter(SomacaHelper.id_recommandation == id_recommandation).first()
-    if existing is None:
-        raise HTTPException(status_code=404, detail="SomacaHelper recommendation not found")
-    db.delete(existing)
-    commit_or_409(db, "Cannot delete: other records still reference this resource.")
+@app.patch("/incidents/{id_incident}/status", response_model=IncidentOut)
+def update_incident_status(
+    id_incident: int,
+    status_update: IncidentStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR,RoleName.TECHNICIEN)
+    ),
+):
+    existing = (
+        db.query(Incident)
+        .filter(
+            Incident.id_incident == id_incident
+        )
+        .first()
+    )
 
+    if existing is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+
+    existing_status = cast(
+        IncidentStatus,
+        existing.status,
+    )
+    if existing_status == status_update.status:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Incident already has this status",
+        )
+
+    setattr(existing,"status",status_update.status)
+    history_entry = IncidentStatusHistory(
+        id_incident=existing.id_incident,
+        status=status_update.status,
+        changed_by_user_id=current_user.id_util,
+    )
+
+    db.add(history_entry)
+    commit_or_409(db,"Could not update incident status")
+    return existing
+
+@app.get("/incidents/{id_incident}/history",
+    response_model=list[IncidentStatusHistoryOut],
+)
+def get_incident_history(
+    id_incident: int,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    incident = (
+        db.query(Incident)
+        .filter(Incident.id_incident == id_incident)
+        .first()
+    )
+
+    if incident is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+
+    return (
+        db.query(IncidentStatusHistory)
+        .filter(
+            IncidentStatusHistory.id_incident == id_incident
+        )
+        .order_by(
+            IncidentStatusHistory.changed_at.asc(),
+            IncidentStatusHistory.id_status_change.asc(),
+        )
+        .all()
+    )
+
+@app.post("/incidents/{id_incident}/contacts",
+    response_model=IncidentContactOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_incident_contact(
+    id_incident: int,
+    contact: IncidentContactCreate,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR,RoleName.TECHNICIEN)
+    ),
+):
+    incident = (
+        db.query(Incident)
+        .filter(Incident.id_incident == id_incident)
+        .first()
+    )
+
+    if incident is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+
+    if contact.contact_type == ContactType.TECHNICIEN:
+        technician = (
+            db.query(Utilisateur)
+            .filter(Utilisateur.id_util == contact.id_util)
+            .first()
+        )
+
+        if technician is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Technician user not found",
+            )
+
+        if technician.role.nom_role.lower() != RoleName.TECHNICIEN:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="The selected user is not a technician",
+            )
+
+    new_contact = IncidentContact(
+        id_incident=id_incident,
+        contact_type=contact.contact_type,
+        id_util=contact.id_util,
+        external_contact_name=contact.external_contact_name,
+    )
+
+    db.add(new_contact)
+    commit_or_409(db)
+    db.refresh(new_contact)
+    return new_contact
+
+@app.get("/incidents/{id_incident}/contacts",
+    response_model=list[IncidentContactOut],
+)
+def get_incident_contacts(
+    id_incident: int,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    incident = (
+        db.query(Incident)
+        .filter(Incident.id_incident == id_incident)
+        .first()
+    )
+
+    if incident is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Incident not found",
+        )
+
+    return (
+        db.query(IncidentContact)
+        .filter(
+            IncidentContact.id_incident == id_incident
+        )
+        .order_by(
+            IncidentContact.contacted_at.asc(),
+            IncidentContact.id_contact.asc(),
+        )
+        .all()
+    )
 
 # Authentication
 @app.post("/login", response_model=LoginResponse)
 def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(Utilisateur).filter(Utilisateur.email == credentials.email).first()
+    # Verify user exists and password matches
     if user is None or not pwd_context.verify(credentials.mot_de_passe, user.mot_de_passe):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    token = create_access_token(user.id_util)
+    token = create_access_token(cast(int, user.id_util))
     # Hashing the token before storing it in the database to enhance security.
     token_hash = hashlib.sha256(token.encode()).hexdigest() 
     expire_time = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES) # timedelta is a class used to represent a duration, the difference between two dates or times. 
@@ -542,4 +1089,3 @@ async def websocket_statuts(websocket: WebSocket, token: str): # FastAPI reads t
             await websocket.receive_text()  # it waits for a message from the client. This is necessary to keep the connection alive and to detect when the client disconnects. The server doesn't actually use the received message, but it needs to call receive_text() to avoid the connection being closed due to inactivity. And it waits wihtout consuming CPU ressources.
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-

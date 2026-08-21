@@ -1,10 +1,162 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text, Float
+from sqlalchemy import UUID, Column, Integer, String, Date, DateTime, ForeignKey, Text, Index, Enum as SQLEnum, func
 from .database import Base
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
+from enum import Enum
+
+# SQLAlchemy model : describes how data is stored in the database,
+# It does not directly interface with frontend JSON. 
+
+class IncidentStatus(str, Enum):
+    OUVERT = "ouvert"
+    EN_COURS = "en_cours"
+    EN_ATTENTE = "en_attente"
+    RESOLU = "resolu"
+    FERME = "ferme"
+    ANNULE = "annule"
+
+class IncidentSeverity(str, Enum):
+    MINEUR = "mineur"
+    MAJEUR = "majeur"
+    CRITIQUE = "critique"
+
+class ContactType(str, Enum):
+    TECHNICIEN = "technicien"
+    RENAULT = "renault"
+    AUTRE = "autre"
 
 
-# SQLAlchemy model : describes how data is stored in the database
+class Incident(Base):
+    __tablename__ = "incident"
+    id_incident = Column(Integer, primary_key=True)
+    id_machine = Column(
+        Integer,
+        ForeignKey("machine.id_machine"),
+        nullable=False,
+        index=True,
+    )
+    problem = Column(
+        Text,
+        nullable=False,
+    )
+    severity = Column(
+        SQLEnum(
+            IncidentSeverity,
+            name="incident_severity",
+            # This Python enum maps to the PostgreSQL enum type 
+            # that already exists under the name incident_status.
+            values_callable=lambda enum_class: [
+            member.value for member in enum_class
+        ], # this line converts the enum members to their string values for storage in the database
+        ),
+        nullable=False,
+    )
+    status = Column(
+        SQLEnum(
+            IncidentStatus,
+            name="incident_status",
+            values_callable=lambda enum_class: [
+            member.value for member in enum_class
+        ],
+        ),
+        nullable=False,
+    )
+    confirmed_cause = Column(
+        Text,
+        nullable=True,
+    )
+    applied_solution = Column(
+        Text,
+        nullable=True,
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    created_by_user_id = Column(
+        Integer,
+        ForeignKey("utilisateur.id_util"),
+        nullable=False,
+        index=True,
+    )
 
+
+class IncidentStatusHistory(Base):
+    __tablename__ = "incident_status_history"
+    id_status_change = Column(
+        Integer,
+        primary_key=True,
+    )
+    id_incident = Column(
+        Integer,
+        ForeignKey("incident.id_incident"),
+        nullable=False,
+        index=True,
+    )
+    status = Column(
+        SQLEnum(
+            IncidentStatus,
+            name="incident_status",
+            create_type=False, # do not create a new enum type in the database, use the existing one
+            values_callable=lambda enum_class: [
+            member.value for member in enum_class
+        ],
+        ),
+        nullable=False,
+    )
+    changed_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    changed_by_user_id = Column(
+        Integer,
+        ForeignKey("utilisateur.id_util"),
+        nullable=False,
+        index=True,
+    )
+
+
+class IncidentContact(Base):
+    __tablename__ = "incident_contact"
+    id_contact = Column(
+        Integer,
+        primary_key=True,
+    )
+    id_incident = Column(
+        Integer,
+        ForeignKey("incident.id_incident"),
+        nullable=False,
+        index=True,
+    )
+    contact_type = Column(
+        SQLEnum(
+            ContactType,
+            name="incident_contact_type",
+            values_callable=lambda enum_class: [
+            member.value for member in enum_class
+        ],
+        ),
+        nullable=False,
+    )
+    id_util = Column(
+        Integer,
+        ForeignKey("utilisateur.id_util"),
+        nullable=True,
+        index=True,
+    )
+    external_contact_name = Column(
+        String(150),
+        nullable=True,
+    )
+    contacted_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(), 
+    )
+
+    
 class Role(Base):
     __tablename__ = "role"
     id_role = Column(Integer, primary_key=True)
@@ -56,6 +208,7 @@ class Etat(Base):
     libelle_etat = Column(String)
     couleur = Column(String)
 
+# It records machine health-state changes (not full incident management).
 class StatutHistorique(Base):
     __tablename__ = "statut_historique"
     id_statut = Column(Integer, primary_key=True)
@@ -66,16 +219,33 @@ class StatutHistorique(Base):
     id_util = Column(Integer, ForeignKey("utilisateur.id_util"), nullable=True, index=True)
     date_suppression = Column(DateTime, nullable=True)  # soft delete marker
 
-class SomacaHelper(Base):
-    __tablename__ = "somaca_helper"
-    id_recommandation = Column(Integer, primary_key=True)
-    description = Column(Text)
-    cout_estime_min = Column(Float)
-    cout_estime_max = Column(Float)
-    niveau_complexite = Column(String)
-    date_creation = Column(DateTime)
-    id_machine = Column(Integer, ForeignKey("machine.id_machine"))
+class SomacaHelperMessage(Base):
+    __tablename__ = "somaca_helper_message"
+    id_message = Column(Integer, primary_key=True) # identifies one message
+    conversation_id = Column(UUID(as_uuid=True), nullable=False)# groups several messages into one conversation 
+    id_util = Column(Integer, ForeignKey("utilisateur.id_util"), nullable=False)
+    role = Column( String(10), nullable=False) # USER or ASSISTANT.
+    content = Column(Text, nullable=False) # Text means a large amount of text
+    id_machine = Column(Integer, ForeignKey("machine.id_machine"), index=True)
+    intent = Column(String(60)) # Intent means the purpose or goal of the message
+    facts = Column(JSONB) # JSONB means a JSON object that can be queried and indexed in PostgreSQL
+    model_name = Column(String(100))
+    date_creation = Column(DateTime(timezone=True), nullable=False,  server_default=func.now())
 
+    __table_args__ = (
+        Index(
+            "idx_helper_conversation_user_date",
+            "conversation_id",
+            "id_util",
+            "date_creation",
+        ),
+        Index(
+        "idx_helper_user_conversation_date",
+        "id_util",
+        "conversation_id",
+        "date_creation",
+    ),
+    )
 class Machine(Base):
     __tablename__ = "machine"
     id_machine = Column(Integer, primary_key=True)

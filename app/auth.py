@@ -8,12 +8,15 @@ from sqlalchemy.orm import Session
 from .database import get_db
 from .models import Utilisateur, Session as SessionModel
 
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
 ALGORITHM = "HS256" # The algorithm used to sign the JWT. HS256 is a symmetric algorithm that uses a secret key for both signing and verification.
 ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
-if not SECRET_KEY:
+_secret_key = os.getenv("JWT_SECRET_KEY")
+if not _secret_key:
     raise RuntimeError("JWT_SECRET_KEY environment variable is missing")
+
+SECRET_KEY: str = _secret_key
 
 def create_access_token(user_id: int) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
