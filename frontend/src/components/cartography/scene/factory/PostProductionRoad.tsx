@@ -1,163 +1,171 @@
+interface RoadSectionProps {
+  position: [
+    number,
+    number,
+    number,
+  ]
+
+  length: number
+  width?: number
+  rotation?: number
+}
+
+
+function RoadSection({
+  position,
+  length,
+  width = 4.4,
+  rotation = 0,
+}: RoadSectionProps) {
+  return (
+    <group
+      position={position}
+      rotation-y={rotation}
+    >
+      {/* =====================================================
+          ROAD SURFACE
+
+          Very thin because this is a surface treatment on the
+          factory floor, NOT another structural platform.
+          ===================================================== */}
+
+      <mesh
+        position={[
+          0,
+          0.018,
+          0,
+        ]}
+        receiveShadow
+      >
+        <boxGeometry
+          args={[
+            length,
+            0.025,
+            width,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#555a57"
+          roughness={0.96}
+          metalness={0}
+        />
+      </mesh>
+
+
+      {/* =====================================================
+          SAFETY / ROUTE EDGES
+
+          Two continuous yellow lines define the vehicle route.
+
+          They deliberately sit near the edges rather than
+          crossing through the centre of the road.
+          ===================================================== */}
+
+      {[
+        -(width / 2 - 0.22),
+        width / 2 - 0.22,
+      ].map((z) => (
+        <mesh
+          key={z}
+          position={[
+            0,
+            0.037,
+            z,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              length - 0.15,
+              0.012,
+              0.085,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#c89d18"
+            roughness={0.72}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+
 export function PostProductionRoad() {
   return (
     <group>
       {/* =====================================================
-          SECTION 1
-          Production exit → final control
+          CONTINUOUS POST-PRODUCTION VEHICLE ROUTE
+
+          Montage
+             ↓
+          Final control
+             ↓
+          Validation
+             ↓
+          Release
+             ↓
+          Finished vehicle parking
+
+          Each section overlaps the next slightly so the eye
+          reads ONE continuous industrial circulation route.
           ===================================================== */}
 
-      <mesh
+
+      {/* Production exit → final control */}
+      <RoadSection
         position={[
-          21,
-          0.045,
+          21.5,
+          0,
           -19,
         ]}
-        receiveShadow
-      >
-        <boxGeometry
-          args={[
-            10,
-            0.09,
-            4.2,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#606561"
-          roughness={0.94}
-        />
-      </mesh>
+        length={11}
+      />
 
 
-      {/* =====================================================
-          SECTION 2
-          Validation route
-          ===================================================== */}
-
-      <mesh
+      {/* Final control → validation */}
+      <RoadSection
         position={[
           31.5,
-          0.045,
+          0,
           -19,
         ]}
-        receiveShadow
-      >
-        <boxGeometry
-          args={[
-            11,
-            0.09,
-            4.2,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#606561"
-          roughness={0.94}
-        />
-      </mesh>
+        length={10}
+      />
 
 
       {/* =====================================================
-          SMALL DIAGONAL TRANSITION
+          GENTLE ROUTE TRANSITION
 
-          Gives the road a natural industrial routing
-          instead of looking like one giant ruler.
+          The route begins turning toward the finished vehicle
+          release / parking side.
+
+          A small rotation keeps it industrial and believable
+          without making the trajectory unnecessarily complex.
           ===================================================== */}
 
-      <mesh
+      <RoadSection
         position={[
           39,
-          0.045,
-          -18,
+          0,
+          -18.25,
         ]}
-        rotation-y={-0.18}
-        receiveShadow
-      >
-        <boxGeometry
-          args={[
-            6,
-            0.09,
-            4.2,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#606561"
-          roughness={0.94}
-        />
-      </mesh>
+        length={6.5}
+        rotation={-0.18}
+      />
 
 
-      {/* =====================================================
-          PARKING APPROACH
-          ===================================================== */}
-
-      <mesh
+      {/* Parking approach */}
+      <RoadSection
         position={[
-          44,
-          0.045,
-          -17,
+          44.2,
+          0,
+          -17.25,
         ]}
-        receiveShadow
-      >
-        <boxGeometry
-          args={[
-            6,
-            0.09,
-            4.2,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#606561"
-          roughness={0.94}
-        />
-      </mesh>
-
-
-      {/* Yellow guidance — first section */}
-      <mesh
-        position={[
-          30,
-          0.1,
-          -19,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            27,
-            0.025,
-            0.1,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#d9ad19"
-        />
-      </mesh>
-
-
-      {/* Yellow guidance — parking approach */}
-      <mesh
-        position={[
-          41.5,
-          0.1,
-          -17.55,
-        ]}
-        rotation-y={-0.18}
-      >
-        <boxGeometry
-          args={[
-            7,
-            0.025,
-            0.1,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#d9ad19"
-        />
-      </mesh>
+        length={5.4}
+      />
     </group>
   )
 }

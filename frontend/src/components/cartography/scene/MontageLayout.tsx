@@ -3,6 +3,14 @@ import {
 } from './markings/IndustrialLane'
 
 import {
+  ProductionHandoff,
+} from './factory/ProductionHandoff'
+
+import {
+  LoweringStation,
+} from './factory/LoweringStation'
+
+import {
   RestrictedTechnicalArea,
 } from './factory/RestrictedTechnicalArea'
 
@@ -273,6 +281,9 @@ export function MontageLayout() {
 
       <OverheadAssemblyLine />
 
+      <LoweringStation />
+
+      <ProductionHandoff />
 
       {/* Raised intervention zone */}
       <RaisedAccessStation />

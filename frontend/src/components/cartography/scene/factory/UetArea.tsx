@@ -1,12 +1,7 @@
 import { Text } from '@react-three/drei'
 
 interface UetAreaProps {
-  position: [
-    number,
-    number,
-    number,
-  ]
-
+  position: [number, number, number]
   width?: number
   depth?: number
   label: string
@@ -18,106 +13,75 @@ export function UetArea({
   depth = 6,
   label,
 }: UetAreaProps) {
-  const borderColor =
-    '#d3a715'
+  const borderColor = '#b8942b'
 
   return (
     <group position={position}>
-      {/* Subtle zone floor */}
-      <mesh
-        position={[
-          0,
-          0.018,
-          0,
-        ]}
-        rotation-x={
-          -Math.PI / 2
-        }
-        receiveShadow
-      >
-        <planeGeometry
-          args={[
-            width,
-            depth,
-          ]}
-        />
+      {/* UET boundaries are painted markings,
+          not a second floor surface. */}
 
-        <meshStandardMaterial
-          color="#c7c8c2"
-          transparent
-          opacity={0.34}
-          roughness={0.96}
-        />
-      </mesh>
-
-      {/* Horizontal borders */}
-      {[
-        -depth / 2,
-        depth / 2,
-      ].map((z) => (
+      {[-depth / 2, depth / 2].map((z) => (
         <mesh
-          key={z}
-          position={[
-            0,
-            0.035,
-            z,
-          ]}
+          key={`horizontal-${z}`}
+          position={[0, 0.038, z]}
         >
           <boxGeometry
-            args={[
-              width,
-              0.018,
-              0.11,
-            ]}
+            args={[width, 0.012, 0.075]}
           />
 
           <meshStandardMaterial
             color={borderColor}
+            roughness={0.78}
           />
         </mesh>
       ))}
 
-      {/* Vertical borders */}
-      {[
-        -width / 2,
-        width / 2,
-      ].map((x) => (
+      {[-width / 2, width / 2].map((x) => (
         <mesh
-          key={x}
-          position={[
-            x,
-            0.035,
-            0,
-          ]}
+          key={`vertical-${x}`}
+          position={[x, 0.038, 0]}
         >
           <boxGeometry
-            args={[
-              0.11,
-              0.018,
-              depth,
-            ]}
+            args={[0.075, 0.012, depth]}
           />
 
           <meshStandardMaterial
             color={borderColor}
+            roughness={0.78}
           />
         </mesh>
       ))}
 
-      {/* Only stable map identity */}
+      {/* Corner emphasis:
+          small marks make the work-zone boundary readable
+          without filling the entire floor with color. */}
+
+      {[
+        [-width / 2, -depth / 2],
+        [width / 2, -depth / 2],
+        [-width / 2, depth / 2],
+        [width / 2, depth / 2],
+      ].map(([x, z], index) => (
+        <mesh
+          key={index}
+          position={[x, 0.041, z]}
+        >
+          <boxGeometry
+            args={[0.24, 0.014, 0.24]}
+          />
+
+          <meshStandardMaterial
+            color="#a98326"
+            roughness={0.76}
+          />
+        </mesh>
+      ))}
+
       <Text
-        position={[
-          0,
-          0.065,
-          0,
-        ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.9}
-        color="#454946"
+        position={[0, 0.052, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.72}
+        color="#4b504c"
         anchorX="center"
         anchorY="middle"
       >

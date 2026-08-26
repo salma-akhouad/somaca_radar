@@ -1,93 +1,180 @@
 import { useMemo } from 'react'
 import {
   CanvasTexture,
-  NearestFilter,
+  LinearFilter,
   RepeatWrapping,
 } from 'three'
+
 
 export function FactoryFloor() {
   const floorTexture = useMemo(() => {
     const canvas = document.createElement('canvas')
 
-    canvas.width = 4
-    canvas.height = 4
+    /*
+     * We generate a small concrete texture ourselves.
+     *
+     * This avoids downloading an external image while still
+     * preventing the factory floor from looking perfectly flat.
+     */
+    canvas.width = 128
+    canvas.height = 128
 
     const context = canvas.getContext('2d')
 
     if (!context) {
-      throw new Error('Could not create factory floor texture')
+      throw new Error(
+        'Could not create factory floor texture',
+      )
     }
+
+
+    /* Base industrial concrete */
+    context.fillStyle = '#b9bab5'
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    )
+
 
     /*
-      Two industrial gray tones.
+     * Very small variations in the concrete.
+     *
+     * IMPORTANT:
+     * These are NOT tiles.
+     *
+     * They only create subtle irregularities like a real
+     * industrial concrete surface.
+     */
+    for (let i = 0; i < 650; i += 1) {
+      const x = Math.random() * canvas.width
+      const y = Math.random() * canvas.height
 
-      The difference is intentionally visible,
-      but not so strong that the floor competes
-      with the yellow production flow.
-    */
-    const lightGray = '#cfd0ca'
-    const darkGray = '#aeb0aa'
+      const brightness =
+        158 + Math.floor(Math.random() * 28)
 
-    for (let x = 0; x < 4; x += 1) {
-      for (let y = 0; y < 4; y += 1) {
-        const isDark = (x + y) % 2 === 0
+      const alpha =
+        0.025 + Math.random() * 0.045
 
-        context.fillStyle = isDark
-          ? darkGray
-          : lightGray
+      context.fillStyle =
+        `rgba(${brightness}, ${brightness}, ${brightness - 3}, ${alpha})`
 
-        context.fillRect(
-          x,
-          y,
-          1,
-          1,
-        )
-      }
+      context.fillRect(
+        x,
+        y,
+        1 + Math.random() * 3,
+        1 + Math.random() * 3,
+      )
     }
 
-    const texture = new CanvasTexture(canvas)
+
+    /*
+     * Very subtle expansion / construction joints.
+     *
+     * Real large concrete factory floors are divided into
+     * sections. These lines should remain quiet and should
+     * NOT compete with safety markings.
+     */
+    context.strokeStyle =
+      'rgba(90, 94, 90, 0.12)'
+
+    context.lineWidth = 1
+
+    context.beginPath()
+
+    context.moveTo(64, 0)
+    context.lineTo(64, 128)
+
+    context.moveTo(0, 64)
+    context.lineTo(128, 64)
+
+    context.stroke()
+
+
+    const texture =
+      new CanvasTexture(canvas)
 
     texture.wrapS = RepeatWrapping
     texture.wrapT = RepeatWrapping
 
     /*
-      Higher values = smaller/more numerous floor squares.
-    */
-    texture.repeat.set(15, 15)
+     * Repeating the texture gives us many concrete sections
+     * across the much larger factory.
+     */
+    texture.repeat.set(10, 7)
 
     /*
-      Prevents the edges of the tiny procedural texture
-      from becoming blurry.
-    */
-    texture.magFilter = NearestFilter
+     * Linear filtering softens the procedural texture.
+     *
+     * The previous NearestFilter emphasized individual pixels
+     * and helped create the game-like appearance.
+     */
+    texture.magFilter = LinearFilter
+    texture.minFilter = LinearFilter
 
     return texture
   }, [])
 
+
   return (
     <group>
+      {/* =====================================================
+          MAIN CONTINUOUS FACTORY FLOOR
+
+          Everything in the cartography scene belongs to this
+          same industrial environment.
+
+          We deliberately extend it far beyond the currently
+          modelled equipment so the user never encounters a
+          sudden "end of factory" during normal navigation.
+          ===================================================== */}
+
       <mesh
+        position={[15, -0.025, 0]}
         rotation-x={-Math.PI / 2}
         receiveShadow
       >
-        <planeGeometry args={[60, 60]} />
+        <planeGeometry
+          args={[
+            130,
+            100,
+          ]}
+        />
 
         <meshStandardMaterial
           map={floorTexture}
-          roughness={0.9}
-          metalness={0.02}
+          color="#c3c4bf"
+          roughness={0.94}
+          metalness={0}
         />
       </mesh>
 
-      {/* Very subtle industrial grid */}
+
+      {/* =====================================================
+          SUBTLE STRUCTURAL FLOOR GRID
+
+          This gives scale to the factory without creating the
+          old checkerboard appearance.
+          ===================================================== */}
+
       <gridHelper
         args={[
-          60,
-          30,
-          '#a8aaa4',
-          '#c2c3bd',
+          100,
+          20,
+          '#9fa19c',
+          '#b0b2ad',
         ]}
-        position={[0, 0.012, 0]}
+        position={[
+          15,
+          0.006,
+          0,
+        ]}
+        scale={[
+          1.3,
+          1,
+          1,
+        ]}
       />
     </group>
   )

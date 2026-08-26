@@ -1,6 +1,16 @@
+import { RoundedBox } from '@react-three/drei'
 import {
-  RoundedBox,
-} from '@react-three/drei'
+  DoubleSide,
+  Shape,
+} from 'three'
+
+import type {
+  VehicleLightingState,
+} from './VehicleLighting'
+
+import {
+  VEHICLE_LIGHTS_OFF,
+} from './VehicleLighting'
 
 
 export type VehicleStage =
@@ -12,27 +22,100 @@ export type VehicleStage =
 
 
 interface VehicleBodyProps {
-  position?: [
-    number,
-    number,
-    number,
-  ]
-
+  position?: [number, number, number]
   rotation?: number
-
   stage?: VehicleStage
-
   color?: string
+  lights?: VehicleLightingState
 }
 
 
 interface WheelProps {
-  position: [
-    number,
-    number,
-    number,
-  ]
+  position: [number, number, number]
 }
+
+
+const BODY_WIDTH = 1.72
+const SIDE_SURFACE = BODY_WIDTH / 2 + 0.012
+
+
+const bodyProfile = new Shape()
+
+bodyProfile.moveTo(-2.02, 0.47)
+bodyProfile.lineTo(-2.05, 0.76)
+bodyProfile.bezierCurveTo(
+  -2.04,
+  1.03,
+  -1.9,
+  1.23,
+  -1.64,
+  1.42,
+)
+bodyProfile.bezierCurveTo(
+  -1.42,
+  1.6,
+  -1.17,
+  1.7,
+  -0.86,
+  1.74,
+)
+bodyProfile.lineTo(0.34, 1.74)
+bodyProfile.bezierCurveTo(
+  0.58,
+  1.7,
+  0.72,
+  1.58,
+  0.89,
+  1.39,
+)
+bodyProfile.lineTo(1.19, 1.08)
+bodyProfile.bezierCurveTo(
+  1.42,
+  1.02,
+  1.7,
+  1.02,
+  1.88,
+  0.94,
+)
+bodyProfile.bezierCurveTo(
+  2.03,
+  0.87,
+  2.08,
+  0.73,
+  2.06,
+  0.49,
+)
+bodyProfile.lineTo(1.72, 0.45)
+bodyProfile.lineTo(-1.72, 0.45)
+bodyProfile.closePath()
+
+
+const frontWindowShape = new Shape()
+
+frontWindowShape.moveTo(0.17, 1.62)
+frontWindowShape.lineTo(0.58, 1.58)
+frontWindowShape.lineTo(0.91, 1.29)
+frontWindowShape.lineTo(0.78, 1.15)
+frontWindowShape.lineTo(0.08, 1.15)
+frontWindowShape.closePath()
+
+
+const rearWindowShape = new Shape()
+
+rearWindowShape.moveTo(-0.76, 1.62)
+rearWindowShape.lineTo(0.08, 1.62)
+rearWindowShape.lineTo(-0.03, 1.15)
+rearWindowShape.lineTo(-0.83, 1.15)
+rearWindowShape.closePath()
+
+
+const quarterWindowShape = new Shape()
+
+quarterWindowShape.moveTo(-1.28, 1.53)
+quarterWindowShape.lineTo(-0.85, 1.62)
+quarterWindowShape.lineTo(-0.91, 1.16)
+quarterWindowShape.lineTo(-1.38, 1.19)
+quarterWindowShape.closePath()
 
 
 function Wheel({
@@ -40,62 +123,83 @@ function Wheel({
 }: WheelProps) {
   return (
     <group position={position}>
-      {/* Tire */}
       <mesh
         rotation-x={Math.PI / 2}
         castShadow
       >
         <cylinderGeometry
           args={[
-            0.37,
-            0.37,
-            0.24,
-            28,
+            0.35,
+            0.35,
+            0.22,
+            32,
           ]}
         />
 
         <meshStandardMaterial
-          color="#181c19"
-          roughness={0.78}
+          color="#171a18"
+          roughness={0.76}
         />
       </mesh>
 
-      {/* Alloy wheel */}
       <mesh
         rotation-x={Math.PI / 2}
       >
         <cylinderGeometry
           args={[
-            0.22,
-            0.22,
-            0.255,
-            20,
+            0.235,
+            0.235,
+            0.235,
+            24,
           ]}
         />
 
         <meshStandardMaterial
-          color="#747a75"
+          color="#858a86"
           metalness={0.72}
-          roughness={0.28}
+          roughness={0.25}
         />
       </mesh>
 
-      {/* Hub */}
+      {[0, 1, 2, 3, 4].map((index) => (
+        <mesh
+          key={index}
+          position={[0, 0, 0.13]}
+          rotation-z={
+            index * (Math.PI / 5)
+          }
+        >
+          <boxGeometry
+            args={[
+              0.055,
+              0.34,
+              0.025,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#404642"
+            metalness={0.7}
+            roughness={0.26}
+          />
+        </mesh>
+      ))}
+
       <mesh
         rotation-x={Math.PI / 2}
       >
         <cylinderGeometry
           args={[
-            0.07,
-            0.07,
-            0.27,
-            16,
+            0.065,
+            0.065,
+            0.255,
+            18,
           ]}
         />
 
         <meshStandardMaterial
-          color="#2a2f2b"
-          metalness={0.65}
+          color="#252a27"
+          metalness={0.6}
           roughness={0.3}
         />
       </mesh>
@@ -104,18 +208,330 @@ function Wheel({
 }
 
 
+function WheelHub({
+  position,
+}: WheelProps) {
+  return (
+    <group position={position}>
+      <mesh
+        rotation-x={Math.PI / 2}
+      >
+        <cylinderGeometry
+          args={[0.18, 0.18, 0.08, 20]}
+        />
+
+        <meshStandardMaterial
+          color="#717672"
+          metalness={0.65}
+          roughness={0.34}
+        />
+      </mesh>
+
+      <mesh
+        rotation-x={Math.PI / 2}
+      >
+        <cylinderGeometry
+          args={[0.065, 0.065, 0.11, 16]}
+        />
+
+        <meshStandardMaterial
+          color="#343936"
+          metalness={0.62}
+          roughness={0.38}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+
+function SideWindows({
+  side,
+  glazed,
+}: {
+  side: number
+  glazed: boolean
+}) {
+  const materialProps = glazed
+    ? {
+      color: '#26363b',
+      metalness: 0.08,
+      roughness: 0.13,
+    }
+    : {
+      color: '#171b19',
+      metalness: 0,
+      roughness: 0.72,
+    }
+
+  return (
+    <>
+      {[
+        frontWindowShape,
+        rearWindowShape,
+        quarterWindowShape,
+      ].map((shape, index) => (
+        <mesh
+          key={index}
+          position={[0, 0, side]}
+        >
+          <shapeGeometry args={[shape]} />
+
+          <meshStandardMaterial
+            {...materialProps}
+            side={DoubleSide}
+          />
+        </mesh>
+      ))}
+    </>
+  )
+}
+
+
+function FrontLighting({
+  lights,
+}: {
+  lights: VehicleLightingState
+}) {
+  const headlightIntensity =
+    lights.headlights
+      ? 2.8
+      : 0.12
+
+  return (
+    <>
+      {[-0.53, 0.53].map(
+        (z) => (
+          <group
+            key={z}
+            position={[
+              2.055,
+              0.94,
+              z,
+            ]}
+          >
+            <RoundedBox
+              args={[
+                0.075,
+                0.19,
+                0.48,
+              ]}
+              radius={0.045}
+              smoothness={3}
+            >
+              <meshStandardMaterial
+                color="#d7dddd"
+                metalness={0.16}
+                roughness={0.16}
+              />
+            </RoundedBox>
+
+            <mesh
+              position={[
+                0.043,
+                0.035,
+                0,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.018,
+                  0.045,
+                  0.35,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={
+                  lights.headlights
+                    ? '#fff4cf'
+                    : '#d7dbd7'
+                }
+                emissive="#fff0bd"
+                emissiveIntensity={
+                  headlightIntensity
+                }
+              />
+            </mesh>
+          </group>
+        ),
+      )}
+
+      {[-0.7, 0.7].map(
+        (z) => {
+          const active =
+            z < 0
+              ? lights.leftIndicator
+              : lights.rightIndicator
+
+          return (
+            <mesh
+              key={z}
+              position={[
+                2.07,
+                0.84,
+                z,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.025,
+                  0.1,
+                  0.17,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={
+                  active
+                    ? '#e7a11e'
+                    : '#8c6730'
+                }
+                emissive="#e99a16"
+                emissiveIntensity={
+                  active
+                    ? 2.2
+                    : 0.08
+                }
+                roughness={0.3}
+              />
+            </mesh>
+          )
+        },
+      )}
+    </>
+  )
+}
+
+
+function RearLighting({
+  lights,
+}: {
+  lights: VehicleLightingState
+}) {
+  return (
+    <>
+      {[-0.57, 0.57].map(
+        (z) => (
+          <group
+            key={z}
+            position={[
+              -2.045,
+              1.01,
+              z,
+            ]}
+          >
+            <RoundedBox
+              args={[
+                0.07,
+                0.33,
+                0.31,
+              ]}
+              radius={0.04}
+              smoothness={3}
+            >
+              <meshStandardMaterial
+                color="#7d2927"
+                emissive="#c82e27"
+                emissiveIntensity={
+                  lights.brakeLights
+                    ? 2.3
+                    : 0.16
+                }
+                roughness={0.25}
+              />
+            </RoundedBox>
+
+            <mesh
+              position={[
+                -0.04,
+                -0.08,
+                0,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.015,
+                  0.075,
+                  0.16,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={
+                  lights.reverseLights
+                    ? '#f2eee0'
+                    : '#aaa9a1'
+                }
+                emissive="#eee8d4"
+                emissiveIntensity={
+                  lights.reverseLights
+                    ? 1.7
+                    : 0.04
+                }
+              />
+            </mesh>
+          </group>
+        ),
+      )}
+
+      {[-0.7, 0.7].map(
+        (z) => {
+          const active =
+            z < 0
+              ? lights.leftIndicator
+              : lights.rightIndicator
+
+          return (
+            <mesh
+              key={z}
+              position={[
+                -2.055,
+                0.9,
+                z,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.02,
+                  0.095,
+                  0.14,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={
+                  active
+                    ? '#e19a1d'
+                    : '#855f2c'
+                }
+                emissive="#df9416"
+                emissiveIntensity={
+                  active
+                    ? 2
+                    : 0.05
+                }
+              />
+            </mesh>
+          )
+        },
+      )}
+    </>
+  )
+}
+
+
 export function VehicleBody({
   position = [0, 0, 0],
   rotation = 0,
   stage = 'finished',
-
-  // Warm pearl/off-white automotive paint.
   color = '#eceee9',
+  lights = VEHICLE_LIGHTS_OFF,
 }: VehicleBodyProps) {
   const hasGlass =
     stage !== 'shell'
 
-  const hasExteriorTrim =
+  const hasTrim =
     stage === 'assembly' ||
     stage === 'documented' ||
     stage === 'finished'
@@ -125,8 +541,7 @@ export function VehicleBody({
     stage === 'finished'
 
   const hasDocument =
-    stage === 'documented' ||
-    stage === 'finished'
+    stage === 'documented'
 
 
   return (
@@ -134,353 +549,509 @@ export function VehicleBody({
       position={position}
       rotation-y={rotation}
     >
-      {/* =====================================================
-          MAIN LOWER BODY
-          ===================================================== */}
-
-      <RoundedBox
-        args={[3.75, 0.62, 1.6]}
-        radius={0.16}
-        smoothness={5}
-        position={[0, 0.72, 0]}
+      <mesh
+        position={[
+          0,
+          0,
+          -BODY_WIDTH / 2,
+        ]}
         castShadow
       >
-        <meshStandardMaterial
-          color={color}
-          metalness={0.22}
-          roughness={0.28}
+        <extrudeGeometry
+          args={[
+            bodyProfile,
+            {
+              depth: BODY_WIDTH,
+              bevelEnabled: true,
+              bevelThickness: 0.045,
+              bevelSize: 0.045,
+              bevelSegments: 2,
+              curveSegments: 10,
+            },
+          ]}
         />
-      </RoundedBox>
 
-
-      {/* Hood / capot */}
-      <RoundedBox
-        args={[1.05, 0.28, 1.48]}
-        radius={0.12}
-        smoothness={4}
-        position={[1.38, 1.02, 0]}
-        rotation={[0, 0, -0.05]}
-        castShadow
-      >
         <meshStandardMaterial
           color={color}
-          metalness={0.22}
+          metalness={0.24}
           roughness={0.27}
         />
-      </RoundedBox>
+      </mesh>
 
 
-      {/* Rear hatch volume */}
-      <RoundedBox
-        args={[0.72, 0.58, 1.5]}
-        radius={0.14}
-        smoothness={4}
-        position={[-1.46, 1.03, 0]}
-        rotation={[0, 0, 0.06]}
-        castShadow
-      >
-        <meshStandardMaterial
-          color={color}
-          metalness={0.22}
-          roughness={0.28}
+      <>
+        <SideWindows
+          side={SIDE_SURFACE}
+          glazed={hasGlass}
         />
-      </RoundedBox>
 
-
-      {/* =====================================================
-          CABIN / ROOF
-          ===================================================== */}
-
-      <RoundedBox
-        args={[2.18, 0.78, 1.34]}
-        radius={0.22}
-        smoothness={5}
-        position={[-0.15, 1.38, 0]}
-        castShadow
-      >
-        <meshStandardMaterial
-          color={color}
-          metalness={0.2}
-          roughness={0.27}
+        <SideWindows
+          side={-SIDE_SURFACE}
+          glazed={hasGlass}
         />
-      </RoundedBox>
 
+        <mesh
+          position={[1.03, 1.41, 0]}
+          rotation-z={-0.56}
+        >
+          <boxGeometry args={[0.055, 0.6, 1.38]} />
 
-      {/* Slight roof cap */}
-      <RoundedBox
-        args={[1.75, 0.12, 1.28]}
-        radius={0.08}
-        smoothness={4}
-        position={[-0.2, 1.82, 0]}
-        castShadow
-      >
-        <meshStandardMaterial
-          color={color}
-          metalness={0.18}
-          roughness={0.25}
-        />
-      </RoundedBox>
+          <meshStandardMaterial
+            color={
+              hasGlass
+                ? '#26363b'
+                : '#171b19'
+            }
+            metalness={
+              hasGlass
+                ? 0.08
+                : 0
+            }
+            roughness={
+              hasGlass
+                ? 0.12
+                : 0.72
+            }
+          />
+        </mesh>
 
+        <mesh
+          position={[-1.52, 1.37, 0]}
+          rotation-z={0.25}
+        >
+          <boxGeometry args={[0.055, 0.52, 1.34]} />
 
-      {/* =====================================================
-          WINDOWS / GLASS
-          ===================================================== */}
+          <meshStandardMaterial
+            color={
+              hasGlass
+                ? '#26363b'
+                : '#171b19'
+            }
+            metalness={
+              hasGlass
+                ? 0.08
+                : 0
+            }
+            roughness={
+              hasGlass
+                ? 0.12
+                : 0.72
+            }
+          />
+        </mesh>
+      </>
 
-      {hasGlass && (
+      {hasTrim && (
         <>
-          {/* Windshield */}
-          <mesh
-            position={[0.84, 1.43, 0]}
-            rotation-z={-0.34}
-          >
-            <boxGeometry args={[0.07, 0.62, 1.12]} />
-
-            <meshStandardMaterial
-              color="#24343a"
-              metalness={0.08}
-              roughness={0.13}
-            />
-          </mesh>
-
-
-          {/* Rear glass */}
-          <mesh
-            position={[-1.18, 1.43, 0]}
-            rotation-z={0.28}
-          >
-            <boxGeometry args={[0.07, 0.57, 1.08]} />
-
-            <meshStandardMaterial
-              color="#24343a"
-              metalness={0.08}
-              roughness={0.13}
-            />
-          </mesh>
-
-
-          {/* Side windows */}
-          {[-0.69, 0.69].map(
+          {[-SIDE_SURFACE, SIDE_SURFACE].map(
             (z) => (
               <group key={z}>
-                <RoundedBox
-                  args={[0.82, 0.46, 0.035]}
-                  radius={0.05}
-                  smoothness={3}
-                  position={[0.28, 1.46, z]}
+                <mesh
+                  position={[
+                    0,
+                    0.5,
+                    z,
+                  ]}
                 >
-                  <meshStandardMaterial
-                    color="#26383e"
-                    roughness={0.12}
-                    metalness={0.06}
+                  <boxGeometry
+                    args={[
+                      3.38,
+                      0.11,
+                      0.045,
+                    ]}
                   />
-                </RoundedBox>
 
-                <RoundedBox
-                  args={[0.72, 0.46, 0.035]}
-                  radius={0.05}
-                  smoothness={3}
-                  position={[-0.62, 1.46, z]}
-                >
                   <meshStandardMaterial
-                    color="#26383e"
-                    roughness={0.12}
-                    metalness={0.06}
+                    color="#292e2b"
+                    roughness={0.62}
                   />
-                </RoundedBox>
+                </mesh>
+
+                {[-0.36, 0.48].map(
+                  (x) => (
+                    <mesh
+                      key={x}
+                      position={[
+                        x,
+                        1.02,
+                        z,
+                      ]}
+                    >
+                      <boxGeometry
+                        args={[
+                          0.028,
+                          0.76,
+                          0.025,
+                        ]}
+                      />
+
+                      <meshStandardMaterial
+                        color="#8b8e89"
+                        roughness={0.55}
+                      />
+                    </mesh>
+                  ),
+                )}
+
+                {[-0.7, 0.25].map(
+                  (x) => (
+                    <RoundedBox
+                      key={x}
+                      args={[
+                        0.2,
+                        0.045,
+                        0.04,
+                      ]}
+                      radius={0.015}
+                      smoothness={2}
+                      position={[
+                        x,
+                        1.05,
+                        z * 1.01,
+                      ]}
+                    >
+                      <meshStandardMaterial
+                        color={color}
+                        metalness={0.22}
+                        roughness={0.3}
+                      />
+                    </RoundedBox>
+                  ),
+                )}
               </group>
             ),
           )}
-        </>
-      )}
 
 
-      {/* =====================================================
-          STEPWAY-LIKE DARK EXTERIOR TRIM
-          ===================================================== */}
+          {[-0.79, 0.79].map(
+            (z) => (
+              <RoundedBox
+                key={z}
+                args={[
+                  0.25,
+                  0.16,
+                  0.15,
+                ]}
+                radius={0.06}
+                smoothness={3}
+                position={[
+                  0.79,
+                  1.35,
+                  z,
+                ]}
+              >
+                <meshStandardMaterial
+                  color={color}
+                  metalness={0.18}
+                  roughness={0.3}
+                />
+              </RoundedBox>
+            ),
+          )}
 
-      {hasExteriorTrim && (
-        <>
-          {/* Side rocker cladding */}
-          {[-0.82, 0.82].map(
+
+          <RoundedBox
+            args={[
+              0.13,
+              0.37,
+              1.5,
+            ]}
+            radius={0.055}
+            smoothness={3}
+            position={[
+              2.03,
+              0.59,
+              0,
+            ]}
+          >
+            <meshStandardMaterial
+              color="#252a27"
+              roughness={0.64}
+            />
+          </RoundedBox>
+
+
+          <RoundedBox
+            args={[
+              0.12,
+              0.31,
+              1.47,
+            ]}
+            radius={0.05}
+            smoothness={3}
+            position={[
+              -2.03,
+              0.61,
+              0,
+            ]}
+          >
+            <meshStandardMaterial
+              color="#252a27"
+              roughness={0.64}
+            />
+          </RoundedBox>
+
+
+          <RoundedBox
+            args={[
+              0.055,
+              0.27,
+              0.95,
+            ]}
+            radius={0.035}
+            smoothness={3}
+            position={[
+              2.095,
+              0.7,
+              0,
+            ]}
+          >
+            <meshStandardMaterial
+              color="#171b19"
+              metalness={0.18}
+              roughness={0.4}
+            />
+          </RoundedBox>
+
+
+          {[-0.36, 0.36].map(
             (z) => (
               <mesh
                 key={z}
-                position={[0, 0.52, z]}
+                position={[
+                  2.127,
+                  0.7,
+                  z,
+                ]}
               >
-                <boxGeometry args={[3.3, 0.15, 0.08]} />
+                <boxGeometry
+                  args={[
+                    0.012,
+                    0.035,
+                    0.23,
+                  ]}
+                />
 
                 <meshStandardMaterial
-                  color="#242925"
-                  roughness={0.66}
+                  color="#8c918d"
+                  metalness={0.68}
+                  roughness={0.26}
                 />
               </mesh>
             ),
           )}
 
 
-          {/* Front bumper */}
           <RoundedBox
-            args={[0.2, 0.42, 1.48]}
-            radius={0.08}
-            smoothness={3}
-            position={[1.96, 0.68, 0]}
+            args={[
+              0.035,
+              0.13,
+              0.34,
+            ]}
+            radius={0.025}
+            smoothness={2}
+            position={[
+              2.145,
+              0.71,
+              0,
+            ]}
           >
             <meshStandardMaterial
-              color="#252a27"
-              roughness={0.62}
+              color="#c3c6c2"
+              metalness={0.75}
+              roughness={0.22}
             />
           </RoundedBox>
 
 
-          {/* Rear bumper */}
-          <RoundedBox
-            args={[0.18, 0.38, 1.45]}
-            radius={0.07}
-            smoothness={3}
-            position={[-1.97, 0.67, 0]}
+          <FrontLighting
+            lights={lights}
+          />
+
+          <RearLighting
+            lights={lights}
+          />
+
+
+          <mesh
+            position={[
+              2.105,
+              0.5,
+              0,
+            ]}
           >
-            <meshStandardMaterial
-              color="#252a27"
-              roughness={0.62}
+            <boxGeometry
+              args={[
+                0.025,
+                0.15,
+                0.58,
+              ]}
             />
-          </RoundedBox>
+
+            <meshStandardMaterial
+              color="#eeeeea"
+              roughness={0.5}
+            />
+          </mesh>
 
 
-          {/* Roof rails */}
-          {[-0.53, 0.53].map(
-            (z) => (
-              <RoundedBox
-                key={z}
-                args={[1.82, 0.07, 0.06]}
-                radius={0.025}
-                smoothness={2}
-                position={[-0.18, 1.94, z]}
-              >
-                <meshStandardMaterial
-                  color="#333936"
-                  metalness={0.38}
-                  roughness={0.4}
-                />
-              </RoundedBox>
-            ),
-          )}
+          <mesh
+            position={[
+              -2.105,
+              0.62,
+              0,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                0.025,
+                0.15,
+                0.58,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#eeeeea"
+              roughness={0.5}
+            />
+          </mesh>
 
 
-          {/* Mirrors */}
-          {[-0.83, 0.83].map(
-            (z) => (
-              <RoundedBox
-                key={z}
-                args={[0.28, 0.16, 0.14]}
-                radius={0.06}
-                smoothness={3}
-                position={[0.67, 1.43, z]}
-              >
-                <meshStandardMaterial
-                  color="#2e3430"
-                  roughness={0.38}
-                />
-              </RoundedBox>
-            ),
-          )}
+          <mesh
+            position={[
+              -0.76,
+              1.79,
+              0,
+            ]}
+            rotation-z={-0.22}
+          >
+            <cylinderGeometry
+              args={[
+                0.018,
+                0.024,
+                0.28,
+                10,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#292e2b"
+              metalness={0.35}
+              roughness={0.4}
+            />
+          </mesh>
         </>
       )}
 
-
-      {/* =====================================================
-          FRONT IDENTITY
-          ===================================================== */}
-
-      {hasExteriorTrim && (
-        <>
-          {/* Grille */}
-          <RoundedBox
-            args={[0.06, 0.38, 0.92]}
-            radius={0.03}
-            smoothness={3}
-            position={[2.065, 0.87, 0]}
-          >
-            <meshStandardMaterial
-              color="#171c19"
-              metalness={0.22}
-              roughness={0.42}
-            />
-          </RoundedBox>
-
-
-          {/* Headlights */}
-          {[-0.5, 0.5].map(
-            (z) => (
-              <RoundedBox
-                key={z}
-                args={[0.075, 0.22, 0.42]}
-                radius={0.05}
-                smoothness={3}
-                position={[2.07, 1.08, z]}
-              >
-                <meshStandardMaterial
-                  color="#e6ece9"
-                  emissive="#cdd8d3"
-                  emissiveIntensity={0.25}
-                  roughness={0.16}
-                />
-              </RoundedBox>
-            ),
-          )}
-
-
-          {/* Rear lights */}
-          {[-0.52, 0.52].map(
-            (z) => (
-              <RoundedBox
-                key={z}
-                args={[0.06, 0.35, 0.28]}
-                radius={0.04}
-                smoothness={3}
-                position={[-2.07, 1.03, z]}
-              >
-                <meshStandardMaterial
-                  color="#8e302b"
-                  emissive="#6d211e"
-                  emissiveIntensity={0.18}
-                  roughness={0.26}
-                />
-              </RoundedBox>
-            ),
-          )}
-        </>
-      )}
-
-
-      {/* =====================================================
-          WHEELS
-          ===================================================== */}
 
       {hasWheels && (
         <>
-          <Wheel position={[-1.23, 0.39, -0.82]} />
-          <Wheel position={[-1.23, 0.39, 0.82]} />
+          <Wheel
+            position={[
+              -1.28,
+              0.38,
+              -0.8,
+            ]}
+          />
 
-          <Wheel position={[1.24, 0.39, -0.82]} />
-          <Wheel position={[1.24, 0.39, 0.82]} />
+          <Wheel
+            position={[
+              -1.28,
+              0.38,
+              0.8,
+            ]}
+          />
+
+          <Wheel
+            position={[
+              1.28,
+              0.38,
+              -0.8,
+            ]}
+          />
+
+          <Wheel
+            position={[
+              1.28,
+              0.38,
+              0.8,
+            ]}
+          />
+
+          {[
+            [-1.28, -SIDE_SURFACE],
+            [-1.28, SIDE_SURFACE],
+            [1.28, -SIDE_SURFACE],
+            [1.28, SIDE_SURFACE],
+          ].map(
+            ([x, z], index) => (
+              <mesh
+                key={index}
+                position={[
+                  x,
+                  0.38,
+                  z,
+                ]}
+              >
+                <torusGeometry
+                  args={[
+                    0.39,
+                    0.045,
+                    10,
+                    28,
+                  ]}
+                />
+
+                <meshStandardMaterial
+                  color="#292e2b"
+                  roughness={0.65}
+                />
+              </mesh>
+            ),
+          )}
         </>
       )}
 
+      {!hasWheels && (
+        <>
+          <WheelHub
+            position={[-1.28, 0.38, -0.8]}
+          />
 
-      {/* =====================================================
-          PRODUCTION DOCUMENT ON WINDSHIELD
-          ===================================================== */}
+          <WheelHub
+            position={[-1.28, 0.38, 0.8]}
+          />
+
+          <WheelHub
+            position={[1.28, 0.38, -0.8]}
+          />
+
+          <WheelHub
+            position={[1.28, 0.38, 0.8]}
+          />
+        </>
+      )}
 
       {hasDocument && (
         <mesh
-          position={[0.88, 1.52, -0.3]}
-          rotation-z={-0.34}
+          position={[
+            1.055,
+            1.47,
+            -0.31,
+          ]}
+          rotation-z={-0.56}
         >
-          <boxGeometry args={[0.025, 0.24, 0.34]} />
+          <boxGeometry
+            args={[
+              0.018,
+              0.21,
+              0.31,
+            ]}
+          />
 
           <meshStandardMaterial
-            color="#f5f3ec"
-            roughness={0.88}
+            color="#f4f2eb"
+            roughness={0.9}
           />
         </mesh>
       )}
