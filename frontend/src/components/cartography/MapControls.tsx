@@ -1,8 +1,136 @@
-import { Icon } from '../common/Icon'
-import type { InteractionMode } from './scene/SceneCameraControls'
+import {
+  Icon,
+} from '../common/Icon'
 
-interface MapControlsProps { zoom: number; interactionMode: InteractionMode; onSelectMode: () => void; onPanMode: () => void; onZoomIn: () => void; onZoomOut: () => void; onReset: () => void }
+import type {
+  NavigationMode,
+} from './scene/SceneCameraControls'
 
-export function MapControls({ zoom, interactionMode, onSelectMode, onPanMode, onZoomIn, onZoomOut, onReset }: MapControlsProps) {
-  return <div className="map-controls" aria-label="Contrôles de la cartographie"><button className={`map-control-button ${interactionMode === 'select' ? 'map-control-button--active' : ''}`} type="button" onClick={onSelectMode} aria-label="Mode sélection" aria-pressed={interactionMode === 'select'} title="Inspecter et sélectionner"><Icon name="cursor" size={19} /></button><button className={`map-control-button ${interactionMode === 'pan' ? 'map-control-button--active' : ''}`} type="button" onClick={onPanMode} aria-label="Mode déplacement" aria-pressed={interactionMode === 'pan'} title="Déplacer la cartographie"><Icon name="hand" size={19} /></button><span className="map-controls__divider" /><button className="map-control-button" type="button" onClick={onZoomOut} aria-label="Zoom arrière"><Icon name="minus" size={19} /></button><span className="map-controls__zoom" aria-live="polite">{zoom}%</span><button className="map-control-button" type="button" onClick={onZoomIn} aria-label="Zoom avant"><Icon name="plus" size={19} /></button><span className="map-controls__divider" /><button className="map-control-button" type="button" onClick={onReset} aria-label="Recentrer la carte"><Icon name="focus" size={19} /></button><button className="map-controls__3d" type="button" aria-pressed="true">3D</button></div>
+
+interface MapControlsProps {
+  zoom: number
+
+  navigationMode:
+    NavigationMode
+
+  onToggleNavigation:
+    () => void
+
+  onZoomIn:
+    () => void
+
+  onZoomOut:
+    () => void
+
+  onReset:
+    () => void
+}
+
+
+export function MapControls({
+  zoom,
+  navigationMode,
+  onToggleNavigation,
+  onZoomIn,
+  onZoomOut,
+  onReset,
+}: MapControlsProps) {
+  return (
+    <div
+      className="map-controls"
+      aria-label="Contrôles de la cartographie"
+    >
+      <button
+        className="
+          map-control-button
+          map-control-button--active
+          map-navigation-mode
+        "
+        type="button"
+        onClick={
+          onToggleNavigation
+        }
+        title={
+          navigationMode === 'pan'
+            ? 'Déplacer la carte'
+            : 'Changer l’angle de vue'
+        }
+      >
+        <Icon
+          name="hand"
+          size={19}
+        />
+
+        <span>
+          {navigationMode === 'pan'
+            ? 'DÉPLACER'
+            : 'ORIENTER'}
+        </span>
+      </button>
+
+
+      <span
+        className="map-controls__divider"
+      />
+
+
+      <button
+        className="map-control-button"
+        type="button"
+        onClick={onZoomOut}
+        aria-label="Zoom arrière"
+      >
+        <Icon
+          name="minus"
+          size={19}
+        />
+      </button>
+
+
+      <span
+        className="map-controls__zoom"
+      >
+        {zoom}%
+      </span>
+
+
+      <button
+        className="map-control-button"
+        type="button"
+        onClick={onZoomIn}
+        aria-label="Zoom avant"
+      >
+        <Icon
+          name="plus"
+          size={19}
+        />
+      </button>
+
+
+      <span
+        className="map-controls__divider"
+      />
+
+
+      <button
+        className="map-control-button"
+        type="button"
+        onClick={onReset}
+        aria-label="Recentrer"
+      >
+        <Icon
+          name="focus"
+          size={19}
+        />
+      </button>
+
+
+      <button
+        className="map-controls__3d"
+        type="button"
+      >
+        3D
+      </button>
+    </div>
+  )
 }
