@@ -30,16 +30,13 @@ interface MontageSceneProps {
   }
 
   onZoomChange:
-  (zoom: number) => void
+    (zoom: number) => void
 
   selectedPole:
-  PoleConfig | null
+    PoleConfig | null
 
   onPoleSelect:
-  (pole: PoleConfig) => void
-
-  onClearPoleSelection:
-  () => void
+    (pole: PoleConfig) => void
 }
 
 
@@ -48,7 +45,6 @@ export function MontageScene({
   onZoomChange,
   selectedPole,
   onPoleSelect,
-  onClearPoleSelection,
 }: MontageSceneProps) {
   return (
     <>
@@ -63,8 +59,8 @@ export function MontageScene({
         attach="fog"
         args={[
           '#c9cbc6',
-          55,
-          120,
+          65,
+          150,
         ]}
       />
 
@@ -92,11 +88,21 @@ export function MontageScene({
           2048,
           2048,
         ]}
-        shadow-camera-left={-55}
-        shadow-camera-right={75}
-        shadow-camera-top={45}
-        shadow-camera-bottom={-45}
-        shadow-bias={-0.00015}
+        shadow-camera-left={
+          -55
+        }
+        shadow-camera-right={
+          75
+        }
+        shadow-camera-top={
+          45
+        }
+        shadow-camera-bottom={
+          -45
+        }
+        shadow-bias={
+          -0.00015
+        }
       />
 
       {[
@@ -106,53 +112,31 @@ export function MontageScene({
         [-20, -16],
         [20, -16],
         [60, -16],
-      ].map(([x, z]) => (
-        <pointLight
-          key={`${x}-${z}`}
-          position={[
-            x,
-            7.1,
-            z,
-          ]}
-          color="#f1eee1"
-          intensity={0.3}
-          distance={24}
-          decay={2}
-        />
-      ))}
+      ].map(
+        ([x, z]) => (
+          <pointLight
+            key={`${x}-${z}`}
+            position={[
+              x,
+              7.1,
+              z,
+            ]}
+            color="#f1eee1"
+            intensity={0.3}
+            distance={24}
+            decay={2}
+          />
+        ),
+      )}
 
       <FactoryFloor />
-
-      <mesh
-        position={[15, -0.01, 0]}
-        rotation-x={-Math.PI / 2}
-        onPointerDown={(event) => {
-          event.stopPropagation()
-        }}
-        onClick={(event) => {
-          event.stopPropagation()
-          onClearPoleSelection()
-        }}
-      >
-        <planeGeometry
-          args={[
-            130,
-            100,
-          ]}
-        />
-
-        <meshBasicMaterial
-          transparent
-          opacity={0}
-          depthWrite={false}
-        />
-      </mesh>
 
       <FactoryEnvelope />
 
       <MontageLayout
         selectedPoleId={
-          selectedPole?.id ?? null
+          selectedPole?.id ??
+          null
         }
         onPoleSelect={
           onPoleSelect

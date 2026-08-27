@@ -1,86 +1,141 @@
 export type VehicleJourneyPoint = {
-  position: [number, number, number]
+  position: [
+    number,
+    number,
+    number,
+  ]
   rotation: number
 }
 
+
 export const VEHICLE_JOURNEY = {
   lowered: {
-    position: [17, 0.02, -12.5],
-    rotation: Math.PI / 2,
+    position: [
+      17,
+      0.02,
+      -12.5,
+    ],
+    rotation:
+      Math.PI / 2,
   },
 
-
-
   handoffStraight: {
-    position: [17, 0.02, -18],
-    rotation: Math.PI / 2,
+    position: [
+      17,
+      0.02,
+      -18,
+    ],
+    rotation:
+      Math.PI / 2,
   },
 
   finalControlEntry: {
-    position: [18.5, 0.02, -19],
+    position: [
+      18.5,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   finalControl: {
-    position: [21, 0.02, -19],
+    position: [
+      21,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   validationEntry: {
-    position: [26, 0.02, -19],
+    position: [
+      26,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   validation: {
-    position: [30, 0.02, -19],
+    position: [
+      30,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   validationExit: {
-    position: [36, 0.02, -19],
+    position: [
+      36,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   releaseGate: {
-    position: [40, 0.02, -19],
+    position: [
+      40,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
   parkingApproach: {
-    position: [44.2, 0.02, -17.25],
-    rotation: -0.18,
-  },
-
-  parkingEntry: {
-    position: [47, 0.02, -17],
+    position: [
+      41.8,
+      0.02,
+      -19,
+    ],
     rotation: 0,
   },
 
+  parkingEntry: {
+    position: [
+      42.3,
+      0.02,
+      -17.2,
+    ],
+    rotation:
+      -Math.PI / 3,
+  },
+
   parkingBay: {
-    position: [54, 0.02, -16.75],
-    rotation: Math.PI / 2,
+    position: [
+      44,
+      0.02,
+      -16.75,
+    ],
+    rotation:
+      Math.PI / 2,
   },
 } satisfies Record<
   string,
   VehicleJourneyPoint
 >
 
+
 export type VehicleJourneyKey =
   keyof typeof VEHICLE_JOURNEY
 
-export const VEHICLE_JOURNEY_ORDER: VehicleJourneyKey[] = [
-  'lowered',
-  'handoffStraight',
-  'finalControlEntry',
-  'finalControl',
-  'validationEntry',
-  'validation',
-  'validationExit',
-  'releaseGate',
-  'parkingApproach',
-  'parkingEntry',
-  'parkingBay',
-]
+
+export const VEHICLE_JOURNEY_ORDER:
+  VehicleJourneyKey[] = [
+    'lowered',
+    'handoffStraight',
+    'finalControlEntry',
+    'finalControl',
+    'validationEntry',
+    'validation',
+    'validationExit',
+    'releaseGate',
+    'parkingApproach',
+    'parkingEntry',
+    'parkingBay',
+  ]
+
 
 export const VEHICLE_JOURNEY_SEGMENTS = [
   {
@@ -121,12 +176,12 @@ export const VEHICLE_JOURNEY_SEGMENTS = [
   {
     from: 'releaseGate',
     to: 'parkingApproach',
-    kind: 'turn',
+    kind: 'straight',
   },
   {
     from: 'parkingApproach',
     to: 'parkingEntry',
-    kind: 'straight',
+    kind: 'turn',
   },
   {
     from: 'parkingEntry',
@@ -136,5 +191,7 @@ export const VEHICLE_JOURNEY_SEGMENTS = [
 ] satisfies Array<{
   from: VehicleJourneyKey
   to: VehicleJourneyKey
-  kind: 'straight' | 'turn'
+  kind:
+    | 'straight'
+    | 'turn'
 }>

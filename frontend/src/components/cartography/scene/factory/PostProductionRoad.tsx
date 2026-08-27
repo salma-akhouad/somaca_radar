@@ -2,13 +2,11 @@ import {
   VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
 
-
 interface RoadSegmentProps {
   start: [number, number, number]
   end: [number, number, number]
   width?: number
 }
-
 
 function RoadSegment({
   start,
@@ -57,13 +55,11 @@ function RoadSegment({
   )
 }
 
-
 interface RoadEdgeProps {
   start: [number, number, number]
   end: [number, number, number]
   offset: number
 }
-
 
 function RoadEdge({
   start,
@@ -117,7 +113,6 @@ function RoadEdge({
     </mesh>
   )
 }
-
 
 export function PostProductionRoad() {
   const {

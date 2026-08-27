@@ -43,8 +43,12 @@ import {
 } from './factory/OverheadAssemblyLine'
 
 import {
-  RaisedAccessStation,
-} from './factory/RaisedAccessStation'
+  AutomatedCarrier,
+} from './factory/AutomatedCarrier'
+
+import {
+  FactoryWorker,
+} from './factory/FactoryWorker'
 
 import {
   FinalControlZone,
@@ -289,8 +293,8 @@ export function MontageLayout({
 
       <ProductionHandoff />
 
-      {/* Raised intervention zone */}
-      <RaisedAccessStation />
+      {/* Internal material logistics */}
+      <AutomatedCarrier />
 
 
       {/* =====================================================
@@ -346,6 +350,48 @@ export function MontageLayout({
 
       <SupervisorBooth
         position={[30, 0, 8]}
+      />
+
+      {/* Factory operators */}
+      <FactoryWorker
+        position={[
+          21.5,
+          0,
+          -7.2,
+        ]}
+        rotation={
+          -Math.PI / 2
+        }
+      />
+
+      <FactoryWorker
+        position={[
+          -21.3,
+          0,
+          7.2,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+      <FactoryWorker
+        position={[
+          21.2,
+          0,
+          -16.4,
+        ]}
+        rotation={
+          Math.PI
+        }
+      />
+
+      <FactoryWorker
+        position={[
+          27.8,
+          0,
+          5.4,
+        ]}
       />
 
 

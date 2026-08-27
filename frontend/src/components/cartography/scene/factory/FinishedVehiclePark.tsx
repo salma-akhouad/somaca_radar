@@ -1,4 +1,6 @@
-import { Text } from '@react-three/drei'
+import {
+  Text,
+} from '@react-three/drei'
 
 import {
   VehicleBody,
@@ -8,6 +10,7 @@ import {
   VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
 
+
 interface ParkedVehicle {
   x: number
   z: number
@@ -15,70 +18,55 @@ interface ParkedVehicle {
 }
 
 
-/*
- * One bay is intentionally NOT represented here.
- *
- * That empty location becomes the destination for the
- * newly finished vehicle later when we animate the
- * post-production journey.
- */
-const parkedVehicles: ParkedVehicle[] = [
-  {
-    x: -5,
-    z: -2.25,
-    color: '#e8e9e5',
-  },
+const parkedVehicles:
+  ParkedVehicle[] = [
+    {
+      x: -5,
+      z: -2.25,
+      color: '#e8e9e5',
+    },
+    {
+      x: -1.7,
+      z: -2.25,
+      color: '#242826',
+    },
+    {
+      x: 1.7,
+      z: -2.25,
+      color: '#314f64',
+    },
+    {
+      x: 5,
+      z: -2.25,
+      color: '#53614d',
+    },
 
-  {
-    x: -1.7,
-    z: -2.25,
-    color: '#242826',
-  },
+    // x = -5, z = 2.25
+    // Reserved arrival bay.
 
-  {
-    x: 1.7,
-    z: -2.25,
-    color: '#314f64',
-  },
-
-  {
-    x: 5,
-    z: -2.25,
-    color: '#53614d',
-  },
-
-
-  {
-    x: -5,
-    z: 2.25,
-    color: '#8a8c87',
-  },
-
-  {
-    x: -1.7,
-    z: 2.25,
-    color: '#a17d32',
-  },
-
-  {
-    x: 1.7,
-    z: 2.25,
-    color: '#633d32',
-  },
-
-  /*
-   * x = 5, z = 2.25
-   *
-   * EMPTY ON PURPOSE.
-   *
-   * This is the future arrival bay.
-   */
-]
+    {
+      x: -1.7,
+      z: 2.25,
+      color: '#a17d32',
+    },
+    {
+      x: 1.7,
+      z: 2.25,
+      color: '#633d32',
+    },
+    {
+      x: 5,
+      z: 2.25,
+      color: '#8a8c87',
+    },
+  ]
 
 
 export function FinishedVehiclePark() {
   const parkingBay =
-    VEHICLE_JOURNEY.parkingBay
+    VEHICLE_JOURNEY
+      .parkingBay
+
   return (
     <group
       position={[
@@ -87,17 +75,6 @@ export function FinishedVehiclePark() {
         -19,
       ]}
     >
-      {/* =====================================================
-          PARKING SURFACE
-
-          This is intentionally extremely thin.
-
-          The structural factory floor already exists beneath
-          us, so this behaves visually like a darker treatment
-          of the same industrial floor rather than a separate
-          raised parking platform.
-          ===================================================== */}
-
       <mesh
         position={[
           0,
@@ -121,11 +98,7 @@ export function FinishedVehiclePark() {
         />
       </mesh>
 
-
-      {/* =====================================================
-          PARKING BAY DIVIDERS
-          ===================================================== */}
-
+      {/* Parking bay dividers */}
       {[
         -6.7,
         -3.35,
@@ -156,8 +129,6 @@ export function FinishedVehiclePark() {
         </mesh>
       ))}
 
-
-      {/* Divider between the two rows */}
       <mesh
         position={[
           0,
@@ -179,15 +150,7 @@ export function FinishedVehiclePark() {
         />
       </mesh>
 
-
-      {/* =====================================================
-          ENTRY / MANOEUVRE CORRIDOR
-
-          A subtle opening toward the post-production road
-          helps the parking visually belong to the vehicle
-          journey rather than appearing as an isolated square.
-          ===================================================== */}
-
+      {/* Parking entrance */}
       <mesh
         position={[
           -7.7,
@@ -213,48 +176,43 @@ export function FinishedVehiclePark() {
         [-6.2, 0],
         [-5.2, 0.7],
         [-4.2, 1.4],
-      ].map(([x, z]) => (
-        <mesh
-          key={`${x}-${z}`}
-          position={[
-            x,
-            0.04,
-            z,
-          ]}
-          rotation-y={-0.18}
-        >
-          <boxGeometry
-            args={[
-              1.1,
-              0.012,
-              0.055,
+      ].map(
+        ([x, z]) => (
+          <mesh
+            key={`${x}-${z}`}
+            position={[
+              x,
+              0.04,
+              z,
             ]}
-          />
+            rotation-y={-0.18}
+          >
+            <boxGeometry
+              args={[
+                1.1,
+                0.012,
+                0.055,
+              ]}
+            />
 
-          <meshStandardMaterial
-            color="#b89229"
-            roughness={0.76}
-          />
-        </mesh>
-      ))}
+            <meshStandardMaterial
+              color="#b89229"
+              roughness={0.76}
+            />
+          </mesh>
+        ),
+      )}
 
-      {/* =====================================================
-          PARKED FINISHED VEHICLES
-
-          All use the SAME reusable vehicle architecture.
-
-          When Batch 2 replaces VehicleBody with our
-          Sandero-3-inspired model, these vehicles improve
-          automatically.
-          ===================================================== */}
-
+      {/* Existing finished vehicles */}
       {parkedVehicles.map(
         (
           vehicle,
           index,
         ) => (
           <VehicleBody
-            key={`${vehicle.x}-${vehicle.z}-${index}`}
+            key={
+              `${vehicle.x}-${vehicle.z}-${index}`
+            }
             position={[
               vehicle.x,
               0.02,
@@ -271,28 +229,29 @@ export function FinishedVehiclePark() {
         ),
       )}
 
-
-      {/* =====================================================
-          EMPTY ARRIVAL BAY
-
-          We mark it very subtly.
-
-          Later the animated finished white Sandero will
-          enter this exact location.
-          ===================================================== */}
-
+      {/* Reserved first accessible bay */}
       <group
         position={[
-          parkingBay.position[0] - 49,
+          parkingBay.position[0] -
+            49,
           0,
-          parkingBay.position[2] + 19,
+          parkingBay.position[2] +
+            19,
         ]}
       >
         <mesh
-          position={[0, 0.038, 0]}
+          position={[
+            0,
+            0.038,
+            0,
+          ]}
         >
           <boxGeometry
-            args={[2.7, 0.012, 0.07]}
+            args={[
+              2.7,
+              0.012,
+              0.07,
+            ]}
           />
 
           <meshStandardMaterial
@@ -302,10 +261,18 @@ export function FinishedVehiclePark() {
         </mesh>
 
         <mesh
-          position={[0, 0.039, -1.05]}
+          position={[
+            0,
+            0.039,
+            -1.05,
+          ]}
         >
           <boxGeometry
-            args={[2.7, 0.012, 0.055]}
+            args={[
+              2.7,
+              0.012,
+              0.055,
+            ]}
           />
 
           <meshStandardMaterial
@@ -315,7 +282,11 @@ export function FinishedVehiclePark() {
         </mesh>
 
         <Text
-          position={[0, 0.05, 0.58]}
+          position={[
+            0,
+            0.05,
+            0.58,
+          ]}
           rotation={[
             -Math.PI / 2,
             0,
@@ -330,8 +301,6 @@ export function FinishedVehiclePark() {
         </Text>
       </group>
 
-
-      {/* Parking identification */}
       <Text
         position={[
           0,

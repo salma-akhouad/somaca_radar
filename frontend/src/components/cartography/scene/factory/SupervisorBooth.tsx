@@ -15,12 +15,6 @@ export function SupervisorBooth({
       position={position}
       rotation-y={rotation}
     >
-      {/* =====================================================
-          FLOOR
-          Slightly darker than the factory floor so the room
-          clearly reads as an enclosed office space.
-          ===================================================== */}
-
       <mesh
         position={[0, 0.04, 0]}
         receiveShadow
@@ -33,13 +27,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* =====================================================
-          WALLS
-          Industrial warm light gray.
-          ===================================================== */}
-
-      {/* Back wall */}
       <mesh
         position={[0, 1.4, -2.35]}
         castShadow
@@ -52,8 +39,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Left wall */}
       <mesh
         position={[-2.83, 1.4, 0]}
         castShadow
@@ -66,8 +51,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Front wall */}
       <mesh
         position={[0, 1.4, 2.35]}
         castShadow
@@ -80,13 +63,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* =====================================================
-          RIGHT WALL WITH DOOR OPENING
-          Door stays on the outer side of the room.
-          ===================================================== */}
-
-      {/* Right wall — back section */}
       <mesh
         position={[2.83, 1.4, -1.55]}
         castShadow
@@ -99,8 +75,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Right wall — front section */}
       <mesh
         position={[2.83, 1.4, 1.55]}
         castShadow
@@ -112,11 +86,6 @@ export function SupervisorBooth({
           roughness={0.88}
         />
       </mesh>
-
-
-      {/* =====================================================
-          DOOR
-          ===================================================== */}
 
       <mesh
         position={[2.78, 1.05, 0]}
@@ -131,8 +100,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Door handle */}
       <mesh
         position={[2.72, 1.05, -0.33]}
       >
@@ -145,12 +112,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* =====================================================
-          FRONT WALL IDENTITY
-          Stable 3D text physically attached to the wall.
-          ===================================================== */}
-
       <Text
         position={[0.7, 1.42, 2.435]}
         fontSize={0.28}
@@ -162,8 +123,6 @@ export function SupervisorBooth({
         BUREAU DE PRODUCTION
       </Text>
 
-
-      {/* Small industrial-yellow identity accent */}
       <mesh
         position={[0.7, 1.13, 2.43]}
       >
@@ -174,13 +133,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* =====================================================
-          WORKSTATION
-          Kept away from the entrance.
-          Clear path remains from the door into the room.
-          ===================================================== */}
-
       <group
         position={[-0.75, 0.08, 0.55]}
         scale={[0.5, 0.5, 0.5]}
@@ -190,11 +142,6 @@ export function SupervisorBooth({
           rotation={0}
         />
       </group>
-
-
-      {/* =====================================================
-          DOCUMENT SHELF
-          ===================================================== */}
 
       <group position={[1.65, 0, -1.65]}>
         <mesh
@@ -210,8 +157,6 @@ export function SupervisorBooth({
           />
         </mesh>
 
-
-        {/* Shelf separators */}
         {[-0.45, 0.05, 0.55].map((y) => (
           <mesh
             key={y}
@@ -226,8 +171,6 @@ export function SupervisorBooth({
           </mesh>
         ))}
 
-
-        {/* Document binders */}
         {[-0.38, -0.12, 0.14, 0.4].map((x) => (
           <mesh
             key={x}
@@ -243,11 +186,6 @@ export function SupervisorBooth({
         ))}
       </group>
 
-
-      {/* =====================================================
-          PRINTER / EQUIPMENT CABINET
-          ===================================================== */}
-
       <group position={[-2.0, 0, -1.5]}>
         <mesh
           position={[0, 0.48, 0]}
@@ -261,7 +199,6 @@ export function SupervisorBooth({
           />
         </mesh>
 
-
         <mesh
           position={[0, 1.03, 0]}
           castShadow
@@ -274,8 +211,6 @@ export function SupervisorBooth({
           />
         </mesh>
 
-
-        {/* Printer paper slot */}
         <mesh
           position={[0, 1.13, 0.05]}
         >
@@ -288,11 +223,6 @@ export function SupervisorBooth({
         </mesh>
       </group>
 
-
-      {/* =====================================================
-          PRODUCTION INFORMATION BOARD
-          ===================================================== */}
-
       <mesh
         position={[-0.55, 1.78, -2.27]}
       >
@@ -304,8 +234,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Board frame */}
       <mesh
         position={[-0.55, 1.78, -2.235]}
       >
@@ -318,8 +246,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Board content */}
       {[
         [-1.1, 1.98],
         [-0.65, 1.98],
@@ -344,11 +270,6 @@ export function SupervisorBooth({
         </mesh>
       ))}
 
-
-      {/* =====================================================
-          SMALL INDUSTRIAL WALL CLOCK
-          ===================================================== */}
-
       <mesh
         position={[1.7, 2.05, -2.24]}
       >
@@ -362,8 +283,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Clock border */}
       <mesh
         position={[1.7, 2.05, -2.205]}
       >
@@ -377,8 +296,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Clock hands */}
       <mesh
         position={[1.7, 2.12, -2.16]}
         rotation-z={0.3}
@@ -401,11 +318,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* =====================================================
-          SAFETY / PROCEDURE NOTICE
-          ===================================================== */}
-
       <group position={[-2.74, 1.55, 0.6]}>
         <mesh
           rotation-y={Math.PI / 2}
@@ -418,8 +330,6 @@ export function SupervisorBooth({
           />
         </mesh>
 
-
-        {/* Yellow header */}
         <mesh
           position={[-0.022, 0.32, 0]}
           rotation-y={Math.PI / 2}
@@ -431,8 +341,6 @@ export function SupervisorBooth({
           />
         </mesh>
 
-
-        {/* Graphite information lines */}
         {[-0.02, -0.18, -0.34].map((y) => (
           <mesh
             key={y}
@@ -448,13 +356,6 @@ export function SupervisorBooth({
         ))}
       </group>
 
-
-      {/* =====================================================
-          SMALL PLANT
-          Softens the office without making it decorative.
-          ===================================================== */}
-
-      {/* Pot */}
       <mesh
         position={[-2.2, 0.3, 1.55]}
         castShadow
@@ -474,8 +375,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Stem */}
       <mesh
         position={[-2.2, 0.85, 1.55]}
       >
@@ -494,8 +393,6 @@ export function SupervisorBooth({
         />
       </mesh>
 
-
-      {/* Leaves */}
       {[
         [-0.22, 1.05, 0],
         [0.2, 1.15, 0.05],
@@ -531,11 +428,6 @@ export function SupervisorBooth({
           </mesh>
         ),
       )}
-
-
-      {/* =====================================================
-          ENTRANCE SAFETY MARKING
-          ===================================================== */}
 
       <mesh
         position={[2.87, 0.04, 0]}

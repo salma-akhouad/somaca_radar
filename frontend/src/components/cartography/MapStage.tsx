@@ -35,23 +35,30 @@ export function MapStage() {
   const [
     zoom,
     setZoom,
-  ] = useState(100)
+  ] =
+    useState(100)
 
   const [
     command,
     setCommand,
-  ] = useState<{
-    type: CameraAction
-    id: number
-  }>({
-    type: 'none',
-    id: 0,
-  })
+  ] =
+    useState<{
+      type: CameraAction
+      id: number
+    }>({
+      type: 'none',
+      id: 0,
+    })
 
   const [
     selectedPole,
     setSelectedPole,
-  ] = useState<PoleConfig | null>(null)
+  ] =
+    useState<
+      PoleConfig |
+      null
+    >(null)
+
 
   function sendCameraCommand(
     type: CameraAction,
@@ -60,10 +67,12 @@ export function MapStage() {
       (current) => ({
         type,
         id:
-          current.id + 1,
+          current.id +
+          1,
       }),
     )
   }
+
 
   return (
     <section
@@ -73,52 +82,55 @@ export function MapStage() {
       <div className="map-stage__canvas">
         <Canvas
           shadows
-
           dpr={[
             1,
             1.5,
           ]}
-
           camera={{
             position: [
               24,
               24,
               30,
             ],
-
             fov: 42,
             near: 0.1,
-            far: 120,
+            far: 180,
           }}
-
           gl={{
             antialias: true,
           }}
+          onPointerMissed={() =>
+            setSelectedPole(
+              null,
+            )
+          }
         >
           <MontageScene
             command={command}
             onZoomChange={
               setZoom
             }
-            selectedPole={selectedPole}
+            selectedPole={
+              selectedPole
+            }
             onPoleSelect={
               setSelectedPole
-            }
-            onClearPoleSelection={() =>
-              setSelectedPole(null)
             }
           />
         </Canvas>
       </div>
 
-
       <MapLegend />
 
       {selectedPole && (
         <PoleDetailsPanel
-          pole={selectedPole}
+          pole={
+            selectedPole
+          }
           onClose={() =>
-            setSelectedPole(null)
+            setSelectedPole(
+              null,
+            )
           }
         />
       )}
@@ -130,13 +142,11 @@ export function MapStage() {
             'zoom-in',
           )
         }
-
         onZoomOut={() =>
           sendCameraCommand(
             'zoom-out',
           )
         }
-
         onReset={() =>
           sendCameraCommand(
             'reset',

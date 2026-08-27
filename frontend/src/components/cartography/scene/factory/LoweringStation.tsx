@@ -38,7 +38,6 @@ export function LoweringStation() {
                 />
             </RoundedBox>
 
-
             {[-1.35, 1.35].map(
                 (x) => (
                     <mesh
@@ -66,7 +65,6 @@ export function LoweringStation() {
                     </mesh>
                 ),
             )}
-
 
             {[-0.78, 0.78].map(
                 (z) => (
@@ -96,7 +94,6 @@ export function LoweringStation() {
                 ),
             )}
 
-
             <RoundedBox
                 args={[
                     3,
@@ -118,7 +115,6 @@ export function LoweringStation() {
                     roughness={0.4}
                 />
             </RoundedBox>
-
 
             {[-1.1, 1.1].map(
                 (x) => (

@@ -27,27 +27,6 @@ export type CameraAction =
   | 'zoom-out'
   | 'reset'
 
-function clampTarget(
-  target: Vector3,
-) {
-  target.x = Math.min(
-    TARGET_MAX_X,
-    Math.max(
-      TARGET_MIN_X,
-      target.x,
-    ),
-  )
-
-  target.z = Math.min(
-    TARGET_MAX_Z,
-    Math.max(
-      TARGET_MIN_Z,
-      target.z,
-    ),
-  )
-
-  target.y = 0
-}
 
 interface SceneCameraControlsProps {
   command: {
@@ -55,9 +34,8 @@ interface SceneCameraControlsProps {
     id: number
   }
 
-  onZoomChange: (
-    zoom: number
-  ) => void
+  onZoomChange:
+    (zoom: number) => void
 }
 
 
@@ -80,10 +58,18 @@ const MIN_ZOOM = 55
 const MAX_ZOOM = 190
 const ZOOM_STEP = 10
 
+const TARGET_MIN_X = -40
+const TARGET_MAX_X = 64
+
+const TARGET_MIN_Z = -32
+const TARGET_MAX_Z = 32
+
+
 const DEFAULT_DISTANCE =
   DEFAULT_POSITION.distanceTo(
     DEFAULT_TARGET,
   )
+
 
 const MIN_DISTANCE =
   DEFAULT_DISTANCE /
@@ -92,6 +78,7 @@ const MIN_DISTANCE =
     DEFAULT_ZOOM
   )
 
+
 const MAX_DISTANCE =
   DEFAULT_DISTANCE /
   (
@@ -99,11 +86,31 @@ const MAX_DISTANCE =
     DEFAULT_ZOOM
   )
 
-const TARGET_MIN_X = -42
-const TARGET_MAX_X = 68
 
-const TARGET_MIN_Z = -34
-const TARGET_MAX_Z = 34
+function clampTarget(
+  target: Vector3,
+) {
+  target.x =
+    Math.min(
+      TARGET_MAX_X,
+      Math.max(
+        TARGET_MIN_X,
+        target.x,
+      ),
+    )
+
+  target.z =
+    Math.min(
+      TARGET_MAX_Z,
+      Math.max(
+        TARGET_MIN_Z,
+        target.z,
+      ),
+    )
+
+  target.y = 0
+}
+
 
 function clampZoom(
   zoom: number,
@@ -139,7 +146,8 @@ function distanceToZoom(
       (
         DEFAULT_DISTANCE /
         distance
-      ) * DEFAULT_ZOOM,
+      ) *
+      DEFAULT_ZOOM,
     ),
   )
 }
@@ -163,31 +171,38 @@ export function SceneCameraControls({
   onZoomChange,
 }: SceneCameraControlsProps) {
   const controls =
-    useRef<OrbitControlsImpl>(
-      null,
-    )
+    useRef<
+      OrbitControlsImpl
+    >(null)
 
   const camera =
     useThree(
-      (state) => state.camera,
+      (state) =>
+        state.camera,
     )
 
 
   function reportZoom() {
     const target =
-      controls.current?.target ??
+      controls.current
+        ?.target ??
       DEFAULT_TARGET
-    if (controls.current) {
+
+    if (
+      controls.current
+    ) {
       clampTarget(
-        controls.current.target,
+        controls.current
+          .target,
       )
     }
 
     onZoomChange(
       distanceToZoom(
-        camera.position.distanceTo(
-          target,
-        ),
+        camera.position
+          .distanceTo(
+            target,
+          ),
       ),
     )
   }
@@ -201,7 +216,8 @@ export function SceneCameraControls({
   useEffect(() => {
     if (
       !controls.current ||
-      command.type === 'none'
+      command.type ===
+        'none'
     ) {
       return
     }
@@ -210,7 +226,8 @@ export function SceneCameraControls({
       controls.current.target
 
     if (
-      command.type === 'reset'
+      command.type ===
+      'reset'
     ) {
       camera.position.copy(
         DEFAULT_POSITION,
@@ -220,7 +237,8 @@ export function SceneCameraControls({
         DEFAULT_TARGET,
       )
 
-      controls.current.update()
+      controls.current
+        .update()
 
       onZoomChange(
         DEFAULT_ZOOM,
@@ -229,12 +247,12 @@ export function SceneCameraControls({
       return
     }
 
-
     const currentZoom =
       distanceToZoom(
-        camera.position.distanceTo(
-          target,
-        ),
+        camera.position
+          .distanceTo(
+            target,
+          ),
       )
 
     const nextZoom =
@@ -242,7 +260,7 @@ export function SceneCameraControls({
         currentZoom +
         (
           command.type ===
-            'zoom-in'
+          'zoom-in'
             ? ZOOM_STEP
             : -ZOOM_STEP
         ),
@@ -257,14 +275,16 @@ export function SceneCameraControls({
     camera.position
       .copy(target)
       .add(
-        direction.multiplyScalar(
-          zoomToDistance(
-            nextZoom,
+        direction
+          .multiplyScalar(
+            zoomToDistance(
+              nextZoom,
+            ),
           ),
-        ),
       )
 
-    controls.current.update()
+    controls.current
+      .update()
 
     onZoomChange(
       nextZoom,
@@ -283,26 +303,34 @@ export function SceneCameraControls({
       enableZoom
       enablePan
       enableRotate
-      screenSpacePanning
-      panSpeed={1.05}
-      rotateSpeed={0.7}
-      minDistance={MIN_DISTANCE}
-      maxDistance={MAX_DISTANCE}
-      minPolarAngle={0.3}
+      screenSpacePanning={false}
+      panSpeed={0.9}
+      rotateSpeed={0.62}
+      minDistance={
+        MIN_DISTANCE
+      }
+      maxDistance={
+        MAX_DISTANCE
+      }
+      minPolarAngle={0.32}
       maxPolarAngle={
-        Math.PI / 2.25
+        Math.PI / 2.3
       }
       mouseButtons={{
-        LEFT: MOUSE.ROTATE,
-        MIDDLE: MOUSE.DOLLY,
-        RIGHT: MOUSE.PAN,
+        LEFT: MOUSE.PAN,
+        MIDDLE:
+          MOUSE.DOLLY,
+        RIGHT:
+          MOUSE.ROTATE,
       }}
       target={[
         DEFAULT_TARGET.x,
         DEFAULT_TARGET.y,
         DEFAULT_TARGET.z,
       ]}
-      onChange={reportZoom}
+      onChange={
+        reportZoom
+      }
     />
   )
 }

@@ -17,9 +17,6 @@ export function UetArea({
 
   return (
     <group position={position}>
-      {/* UET boundaries are painted markings,
-          not a second floor surface. */}
-
       {[-depth / 2, depth / 2].map((z) => (
         <mesh
           key={`horizontal-${z}`}
@@ -51,10 +48,6 @@ export function UetArea({
           />
         </mesh>
       ))}
-
-      {/* Corner emphasis:
-          small marks make the work-zone boundary readable
-          without filling the entire floor with color. */}
 
       {[
         [-width / 2, -depth / 2],

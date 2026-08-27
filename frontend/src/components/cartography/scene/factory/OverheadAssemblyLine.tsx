@@ -1,5 +1,6 @@
 import {
   useRef,
+  useState,
 } from 'react'
 
 import {
@@ -19,121 +20,186 @@ import {
 } from './VehicleBody'
 
 
-interface SuspendedVehicleProps {
-  position: [
-    number,
-    number,
-    number,
-  ]
+const CONVEYOR_PATH = [
+  [-17, -16],
+  [-17, 16],
+  [17, 16],
+  [17, -12.5],
+] as const
 
-  rotation?: number
-  raised?: boolean
-  stage: VehicleStage
+const CONVEYOR_SPEED = 0.28
+const RETURN_DURATION = 50
+const VEHICLE_COUNT = 6
+
+
+const segmentLengths =
+  CONVEYOR_PATH
+    .slice(0, -1)
+    .map((point, index) => {
+      const next =
+        CONVEYOR_PATH[index + 1]
+
+      const dx =
+        next[0] - point[0]
+
+      const dz =
+        next[1] - point[1]
+
+      return Math.sqrt(
+        dx * dx +
+        dz * dz,
+      )
+    })
+
+
+const totalLength =
+  segmentLengths.reduce(
+    (sum, length) =>
+      sum + length,
+    0,
+  )
+
+
+const visibleDuration =
+  totalLength /
+  CONVEYOR_SPEED
+
+
+const totalCycleDuration =
+  visibleDuration +
+  RETURN_DURATION
+
+
+function stageForDistance(
+  distance: number,
+): VehicleStage {
+  const progress =
+    Math.max(
+      0,
+      Math.min(
+        1,
+        distance /
+        totalLength,
+      ),
+    )
+
+  if (progress < 0.19) {
+    return 'shell'
+  }
+
+  if (progress < 0.36) {
+    return 'glazing'
+  }
+
+  if (progress < 0.62) {
+    return 'assembly'
+  }
+
+  if (progress < 0.81) {
+    return 'documented'
+  }
+
+  return 'finished'
 }
 
 
-function SuspendedVehicle({
-  position,
-  rotation = 0,
-  raised = false,
-  stage,
-}: SuspendedVehicleProps) {
-  const bodyHeight =
-    raised
-      ? 2.5
-      : 1.85
+function samplePath(
+  distance: number,
+) {
+  let remaining =
+    Math.max(
+      0,
+      Math.min(
+        totalLength - 0.0001,
+        distance,
+      ),
+    )
 
-  return (
-    <group
-      position={position}
-      rotation-y={rotation}
-    >
-      <mesh
-        position={[0, 3.72, 0]}
-        castShadow
-      >
-        <boxGeometry
-          args={[0.12, 1.85, 0.12]}
-        />
+  for (
+    let index = 0;
+    index < segmentLengths.length;
+    index += 1
+  ) {
+    const segmentLength =
+      segmentLengths[index]
 
-        <meshStandardMaterial
-          color="#343a36"
-          metalness={0.64}
-          roughness={0.32}
-        />
-      </mesh>
+    if (
+      remaining >
+      segmentLength
+    ) {
+      remaining -= segmentLength
+      continue
+    }
 
-      <mesh
-        position={[0, 2.82, 0]}
-        castShadow
-      >
-        <boxGeometry
-          args={[2.85, 0.13, 0.16]}
-        />
+    const start =
+      CONVEYOR_PATH[index]
 
-        <meshStandardMaterial
-          color="#343a36"
-          metalness={0.64}
-          roughness={0.32}
-        />
-      </mesh>
+    const end =
+      CONVEYOR_PATH[index + 1]
 
-      <mesh
-        position={[
-          0,
-          bodyHeight - 0.18,
-          0,
-        ]}
-        castShadow
-      >
-        <boxGeometry
-          args={[2.95, 0.11, 0.16]}
-        />
+    const progress =
+      segmentLength === 0
+        ? 0
+        : remaining /
+          segmentLength
 
-        <meshStandardMaterial
-          color="#303632"
-          metalness={0.6}
-          roughness={0.34}
-        />
-      </mesh>
+    const x =
+      start[0] +
+      (
+        end[0] -
+        start[0]
+      ) *
+      progress
 
-      {[-0.95, 0.95].map((x) => (
-        <mesh
-          key={x}
-          position={[
-            x,
-            bodyHeight + 0.12,
-            0,
-          ]}
-          rotation-z={
-            x < 0
-              ? -0.33
-              : 0.33
-          }
-          castShadow
-        >
-          <boxGeometry
-            args={[0.11, 0.88, 0.11]}
-          />
+    const z =
+      start[1] +
+      (
+        end[1] -
+        start[1]
+      ) *
+      progress
 
-          <meshStandardMaterial
-            color="#373d39"
-            metalness={0.58}
-            roughness={0.35}
-          />
-        </mesh>
-      ))}
+    const dx =
+      end[0] -
+      start[0]
 
-      <VehicleBody
-        position={[
-          0,
-          bodyHeight - 0.62,
-          0,
-        ]}
-        stage={stage}
-      />
-    </group>
-  )
+    const dz =
+      end[1] -
+      start[1]
+
+    return {
+      position: [
+        x,
+        0,
+        z,
+      ] as [
+        number,
+        number,
+        number,
+      ],
+
+      rotation:
+        Math.atan2(
+          -dz,
+          dx,
+        ),
+    }
+  }
+
+  return {
+    position: [
+      17,
+      0,
+      -12.5,
+    ] as [
+      number,
+      number,
+      number,
+    ],
+
+    rotation:
+      Math.PI / 2,
+  }
 }
 
 
@@ -148,9 +214,9 @@ function Support({
   ]
 
   direction:
-  | 'left'
-  | 'right'
-  | 'top'
+    | 'left'
+    | 'right'
+    | 'top'
 }) {
   return (
     <group position={position}>
@@ -159,7 +225,11 @@ function Support({
         castShadow
       >
         <boxGeometry
-          args={[0.16, 5, 0.16]}
+          args={[
+            0.16,
+            5,
+            0.16,
+          ]}
         />
 
         <meshStandardMaterial
@@ -181,7 +251,11 @@ function Support({
           castShadow
         >
           <boxGeometry
-            args={[1.95, 0.14, 0.14]}
+            args={[
+              1.95,
+              0.14,
+              0.14,
+            ]}
           />
 
           <meshStandardMaterial
@@ -192,11 +266,19 @@ function Support({
         </mesh>
       ) : (
         <mesh
-          position={[0, 4.92, -0.9]}
+          position={[
+            0,
+            4.92,
+            -0.9,
+          ]}
           castShadow
         >
           <boxGeometry
-            args={[0.14, 0.14, 1.95]}
+            args={[
+              0.14,
+              0.14,
+              1.95,
+            ]}
           />
 
           <meshStandardMaterial
@@ -211,257 +293,23 @@ function Support({
 }
 
 
-/*
-  The overhead rail follows the same U shape as
-  the production line:
-
-  left side -> top -> right side
-
-  These points describe only the conveyor rail.
-*/
-const CONVEYOR_PATH = [
-  [-17, 5, -16],
-  [-17, 5, 16],
-  [17, 5, 16],
-  [17, 5, -16],
-] as const
-
-
-const CONVEYOR_SPEED = 0.32
-
-const CONVEYOR_RETURN_DURATION = 40
-
-/*
-  Six carriers remain evenly spaced.
-
-  Because they all use the same clock and speed,
-  their relative spacing never changes.
-*/
-const CONVEYOR_CARRIER_COUNT = 6
-
-
-const segmentLengths =
-  CONVEYOR_PATH
-    .slice(0, -1)
-    .map((point, index) => {
-      const next =
-        CONVEYOR_PATH[index + 1]
-
-      const dx =
-        next[0] - point[0]
-
-      const dz =
-        next[2] - point[2]
-
-      return Math.sqrt(
-        dx * dx +
-        dz * dz,
-      )
-    })
-
-
-const totalConveyorLength =
-  segmentLengths.reduce(
-    (total, length) =>
-      total + length,
-    0,
-  )
-
-const visibleConveyorDuration =
-  totalConveyorLength /
-  CONVEYOR_SPEED
-
-
-const totalConveyorCycleDuration =
-  visibleConveyorDuration +
-  CONVEYOR_RETURN_DURATION
-
-
-function sampleConveyorPath(
-  distance: number,
-) {
-  let remaining =
-    (
-      distance %
-      totalConveyorLength +
-      totalConveyorLength
-    ) %
-    totalConveyorLength
-
-  for (
-    let index = 0;
-    index < segmentLengths.length;
-    index += 1
-  ) {
-    const segmentLength =
-      segmentLengths[index]
-
-    if (
-      remaining >
-      segmentLength
-    ) {
-      remaining -=
-        segmentLength
-
-      continue
-    }
-
-    const start =
-      CONVEYOR_PATH[index]
-
-    const end =
-      CONVEYOR_PATH[index + 1]
-
-    const progress =
-      segmentLength === 0
-        ? 0
-        : remaining /
-        segmentLength
-
-    const x =
-      start[0] +
-      (
-        end[0] -
-        start[0]
-      ) *
-      progress
-
-    const z =
-      start[2] +
-      (
-        end[2] -
-        start[2]
-      ) *
-      progress
-
-    const dx =
-      end[0] -
-      start[0]
-
-    const dz =
-      end[2] -
-      start[2]
-
-    return {
-      position: [
-        x,
-        4.94,
-        z,
-      ] as [
-          number,
-          number,
-          number,
-        ],
-
-      rotation:
-        Math.atan2(
-          -dz,
-          dx,
-        ),
-    }
-  }
-
-  return {
-    position: [
-      17,
-      4.94,
-      -16,
-    ] as [
-        number,
-        number,
-        number,
-      ],
-
-    rotation:
-      Math.PI / 2,
-  }
-}
-
-
-function AnimatedConveyorCarrier({
-  offset,
+function SuspendedVehiclePayload({
+  stage,
 }: {
-  offset: number
+  stage: VehicleStage
 }) {
-  const carrier =
-    useRef<Group>(null)
-
-  useFrame((state) => {
-    if (!carrier.current) {
-      return
-    }
-
-
-    const cycleTime =
-      (
-        state.clock.elapsedTime +
-        offset
-      ) %
-      totalConveyorCycleDuration
-
-
-    const isReturning =
-      cycleTime >=
-      visibleConveyorDuration
-
-
-    carrier.current.visible =
-      !isReturning
-
-
-    if (isReturning) {
-      return
-    }
-
-
-    const travelledDistance =
-      cycleTime *
-      CONVEYOR_SPEED
-
-
-    const sample =
-      sampleConveyorPath(
-        travelledDistance,
-      )
-
-
-    carrier.current.position.set(
-      ...sample.position,
-    )
-
-    carrier.current.rotation.y =
-      sample.rotation
-  })
-
-
-  const initialCycleTime =
-    offset %
-    totalConveyorCycleDuration
-
-
-  const initiallyVisible =
-    initialCycleTime <
-    visibleConveyorDuration
-
-
-  const initial =
-    sampleConveyorPath(
-      Math.min(
-        initialCycleTime,
-        visibleConveyorDuration,
-      ) *
-      CONVEYOR_SPEED,
-    )
-
+  const bodyHeight =
+    stage === 'glazing'
+      ? 2.25
+      : 1.85
 
   return (
-    <group
-      ref={carrier}
-      position={initial.position}
-      rotation-y={initial.rotation}
-      visible={initiallyVisible}
-    >
-      <mesh castShadow>
+    <group>
+      {/* Moving rail trolley */}
+      <mesh
+        position={[0, 4.9, 0]}
+        castShadow
+      >
         <boxGeometry
           args={[
             0.72,
@@ -472,46 +320,245 @@ function AnimatedConveyorCarrier({
 
         <meshStandardMaterial
           color="#303632"
-          metalness={0.7}
+          metalness={0.68}
           roughness={0.3}
+        />
+      </mesh>
+
+      {/* Vertical hanger */}
+      <mesh
+        position={[0, 3.82, 0]}
+        castShadow
+      >
+        <boxGeometry
+          args={[
+            0.12,
+            2.05,
+            0.12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#343a36"
+          metalness={0.62}
+          roughness={0.34}
+        />
+      </mesh>
+
+      {/* Suspension beam */}
+      <mesh
+        position={[0, 2.82, 0]}
+        castShadow
+      >
+        <boxGeometry
+          args={[
+            2.85,
+            0.13,
+            0.16,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#343a36"
+          metalness={0.62}
+          roughness={0.34}
         />
       </mesh>
 
       <mesh
         position={[
           0,
-          -0.22,
+          bodyHeight - 0.18,
           0,
         ]}
         castShadow
       >
         <boxGeometry
           args={[
-            0.18,
-            0.34,
-            0.18,
+            2.95,
+            0.11,
+            0.16,
           ]}
         />
 
         <meshStandardMaterial
-          color="#454b47"
-          metalness={0.58}
-          roughness={0.36}
+          color="#303632"
+          metalness={0.6}
+          roughness={0.34}
         />
       </mesh>
+
+      {[-0.95, 0.95].map(
+        (x) => (
+          <mesh
+            key={x}
+            position={[
+              x,
+              bodyHeight + 0.12,
+              0,
+            ]}
+            rotation-z={
+              x < 0
+                ? -0.33
+                : 0.33
+            }
+            castShadow
+          >
+            <boxGeometry
+              args={[
+                0.11,
+                0.88,
+                0.11,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#373d39"
+              metalness={0.58}
+              roughness={0.35}
+            />
+          </mesh>
+        ),
+      )}
+
+      <VehicleBody
+        position={[
+          0,
+          bodyHeight - 0.62,
+          0,
+        ]}
+        stage={stage}
+      />
     </group>
   )
 }
 
+
+function AnimatedSuspendedVehicle({
+  offset,
+}: {
+  offset: number
+}) {
+  const group =
+    useRef<Group>(null)
+
+  const initialCycle =
+    offset %
+    totalCycleDuration
+
+  const initialDistance =
+    Math.min(
+      initialCycle *
+      CONVEYOR_SPEED,
+      totalLength - 0.0001,
+    )
+
+  const [
+    stage,
+    setStage,
+  ] =
+    useState<VehicleStage>(
+      stageForDistance(
+        initialDistance,
+      ),
+    )
+
+  const stageRef =
+    useRef(stage)
+
+  const initial =
+    samplePath(
+      initialDistance,
+    )
+
+  useFrame((state) => {
+    if (!group.current) {
+      return
+    }
+
+    const cycleTime =
+      (
+        state.clock.elapsedTime +
+        offset
+      ) %
+      totalCycleDuration
+
+    const returning =
+      cycleTime >=
+      visibleDuration
+
+    group.current.visible =
+      !returning
+
+    if (returning) {
+      return
+    }
+
+    const distance =
+      Math.min(
+        cycleTime *
+        CONVEYOR_SPEED,
+        totalLength - 0.0001,
+      )
+
+    const sample =
+      samplePath(distance)
+
+    group.current.position.set(
+      ...sample.position,
+    )
+
+    group.current.rotation.y =
+      sample.rotation
+
+    const nextStage =
+      stageForDistance(
+        distance,
+      )
+
+    if (
+      nextStage !==
+      stageRef.current
+    ) {
+      stageRef.current =
+        nextStage
+
+      setStage(nextStage)
+    }
+  })
+
+  return (
+    <group
+      ref={group}
+      position={initial.position}
+      rotation-y={initial.rotation}
+      visible={
+        initialCycle <
+        visibleDuration
+      }
+    >
+      <SuspendedVehiclePayload
+        stage={stage}
+      />
+    </group>
+  )
+}
+
+
 export function OverheadAssemblyLine() {
   return (
     <group>
+      {/* Main U-shaped rail */}
       <mesh
         position={[-17, 5, 0]}
         castShadow
       >
         <boxGeometry
-          args={[0.22, 0.2, 32]}
+          args={[
+            0.22,
+            0.2,
+            32,
+          ]}
         />
 
         <meshStandardMaterial
@@ -526,7 +573,11 @@ export function OverheadAssemblyLine() {
         castShadow
       >
         <boxGeometry
-          args={[34, 0.2, 0.22]}
+          args={[
+            34,
+            0.2,
+            0.22,
+          ]}
         />
 
         <meshStandardMaterial
@@ -537,11 +588,15 @@ export function OverheadAssemblyLine() {
       </mesh>
 
       <mesh
-        position={[17, 5, 0]}
+        position={[17, 5, 1.75]}
         castShadow
       >
         <boxGeometry
-          args={[0.22, 0.2, 32]}
+          args={[
+            0.22,
+            0.2,
+            28.5,
+          ]}
         />
 
         <meshStandardMaterial
@@ -551,133 +606,64 @@ export function OverheadAssemblyLine() {
         />
       </mesh>
 
+      {/* Moving work-in-process vehicles */}
       {Array.from({
-        length:
-          CONVEYOR_CARRIER_COUNT,
+        length: VEHICLE_COUNT,
       }).map((_, index) => (
-        <AnimatedConveyorCarrier
+        <AnimatedSuspendedVehicle
           key={index}
           offset={
             (
-              totalConveyorCycleDuration /
-              CONVEYOR_CARRIER_COUNT
+              totalCycleDuration /
+              VEHICLE_COUNT
             ) *
             index
           }
         />
       ))}
 
-      {[-12, -5, 2, 9, 14].map((z) => (
-        <Support
-          key={`left-${z}`}
-          position={[
-            -18.7,
-            0,
-            z,
-          ]}
-          direction="left"
-        />
-      ))}
+      {/* Structural supports */}
+      {[-12, -5, 2, 9, 14].map(
+        (z) => (
+          <Support
+            key={`left-${z}`}
+            position={[
+              -18.7,
+              0,
+              z,
+            ]}
+            direction="left"
+          />
+        ),
+      )}
 
-      {[-12, -5, 2, 9, 14].map((z) => (
-        <Support
-          key={`right-${z}`}
-          position={[
-            18.7,
-            0,
-            z,
-          ]}
-          direction="right"
-        />
-      ))}
+      {[-10, -3, 4, 11].map(
+        (z) => (
+          <Support
+            key={`right-${z}`}
+            position={[
+              18.7,
+              0,
+              z,
+            ]}
+            direction="right"
+          />
+        ),
+      )}
 
-      {[-12, -6, 0, 6, 12].map((x) => (
-        <Support
-          key={`top-${x}`}
-          position={[
-            x,
-            0,
-            17.7,
-          ]}
-          direction="top"
-        />
-      ))}
-
-      <SuspendedVehicle
-        position={[
-          -17,
-          0,
-          -12,
-        ]}
-        rotation={
-          -Math.PI / 2
-        }
-        stage="shell"
-      />
-
-      <SuspendedVehicle
-        position={[
-          -17,
-          0,
-          -4,
-        ]}
-        rotation={
-          -Math.PI / 2
-        }
-        stage="glazing"
-        raised
-      />
-
-      <SuspendedVehicle
-        position={[
-          -17,
-          0,
-          5,
-        ]}
-        rotation={
-          -Math.PI / 2
-        }
-        stage="assembly"
-      />
-
-      <SuspendedVehicle
-        position={[
-          -11,
-          0,
-          16,
-        ]}
-        stage="assembly"
-      />
-
-      <SuspendedVehicle
-        position={[
-          -2,
-          0,
-          16,
-        ]}
-        stage="documented"
-      />
-
-      <SuspendedVehicle
-        position={[
-          7,
-          0,
-          16,
-        ]}
-        stage="finished"
-      />
-
-      <SuspendedVehicle
-        position={[
-          17,
-          0,
-          7,
-        ]}
-        rotation={
-          Math.PI / 2
-        }
-        stage="finished"
-      />
+      {[-12, -6, 0, 6, 12].map(
+        (x) => (
+          <Support
+            key={`top-${x}`}
+            position={[
+              x,
+              0,
+              17.7,
+            ]}
+            direction="top"
+          />
+        ),
+      )}
     </group>
   )
 }

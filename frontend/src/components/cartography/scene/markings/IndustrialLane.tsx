@@ -15,14 +15,6 @@ export function IndustrialLane({
   corner = false,
   color = '#b9932b',
 }: IndustrialLaneProps) {
-  /*
-   * IndustrialLane now represents route MARKINGS,
-   * not a solid painted road.
-   *
-   * The continuous concrete factory floor remains visible
-   * between the two safety lines.
-   */
-
   if (corner) {
     const radius = length
 

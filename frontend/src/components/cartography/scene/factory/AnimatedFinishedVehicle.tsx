@@ -1,5 +1,6 @@
 import {
   useRef,
+  useState,
 } from 'react'
 
 import {
@@ -23,16 +24,38 @@ import {
   VehicleBody,
 } from './VehicleBody'
 
+import {
+  FINAL_CONTROL_LIGHTING,
+} from './FinalControlTest'
 
-const SPEED = 2.4
+import type {
+  FinalControlPhase,
+} from './FinalControlTest'
+
+import type {
+  VehicleLightingState,
+} from './VehicleLighting'
+
+import {
+  VEHICLE_LIGHTS_OFF,
+} from './VehicleLighting'
+
+
+const SPEED = 2.2
 const TURN_RESPONSE = 5
 
+
 const PAUSE_BY_DESTINATION:
-  Partial<Record<VehicleJourneyKey, number>> = {
-    finalControl: 3.5,
+  Partial<
+    Record<
+      VehicleJourneyKey,
+      number
+    >
+  > = {
+    finalControl: 6.5,
     validation: 2.5,
-    releaseGate: 1.4,
-    parkingBay: 4,
+    releaseGate: 1.5,
+    parkingBay: 5,
   }
 
 
@@ -50,7 +73,11 @@ function lerp(
 ) {
   return (
     start +
-    (end - start) * amount
+    (
+      end -
+      start
+    ) *
+    amount
   )
 }
 
@@ -61,17 +88,20 @@ function lerpAngle(
   amount: number,
 ) {
   let difference =
-    end - start
+    end -
+    start
 
   while (
-    difference > Math.PI
+    difference >
+    Math.PI
   ) {
     difference -=
       Math.PI * 2
   }
 
   while (
-    difference < -Math.PI
+    difference <
+    -Math.PI
   ) {
     difference +=
       Math.PI * 2
@@ -79,7 +109,28 @@ function lerpAngle(
 
   return (
     start +
-    difference * amount
+    difference *
+    amount
+  )
+}
+
+
+function smoothStep(
+  value: number,
+) {
+  const clamped =
+    Math.max(
+      0,
+      Math.min(1, value),
+    )
+
+  return (
+    clamped *
+    clamped *
+    (
+      3 -
+      2 * clamped
+    )
   )
 }
 
@@ -91,7 +142,9 @@ function getSegmentLength(
     routePoints[index]
 
   const end =
-    routePoints[index + 1]
+    routePoints[
+      index + 1
+    ]
 
   const dx =
     end.position[0] -
@@ -115,7 +168,9 @@ function getMovementRotation(
     routePoints[index]
 
   const end =
-    routePoints[index + 1]
+    routePoints[
+      index + 1
+    ]
 
   const dx =
     end.position[0] -
@@ -132,20 +187,26 @@ function getMovementRotation(
 }
 
 
-function smoothStep(
-  value: number,
-) {
-  const clamped =
-    Math.max(
-      0,
-      Math.min(1, value),
-    )
+function getFinalControlPhase(
+  elapsed: number,
+): FinalControlPhase {
+  if (elapsed < 1.25) {
+    return 'headlights'
+  }
 
-  return (
-    clamped *
-    clamped *
-    (3 - 2 * clamped)
-  )
+  if (elapsed < 2.5) {
+    return 'left-indicator'
+  }
+
+  if (elapsed < 3.75) {
+    return 'right-indicator'
+  }
+
+  if (elapsed < 5) {
+    return 'brakes'
+  }
+
+  return 'complete'
 }
 
 
@@ -162,6 +223,42 @@ export function AnimatedFinishedVehicle() {
   const pauseRemaining =
     useRef(0)
 
+  const pauseDestination =
+    useRef<
+      VehicleJourneyKey |
+      null
+    >(null)
+
+  const lightingKey =
+    useRef('off')
+
+  const [
+    lights,
+    setLights,
+  ] =
+    useState<VehicleLightingState>(
+      VEHICLE_LIGHTS_OFF,
+    )
+
+
+  function applyLights(
+    key: string,
+    next:
+      VehicleLightingState,
+  ) {
+    if (
+      lightingKey.current ===
+      key
+    ) {
+      return
+    }
+
+    lightingKey.current =
+      key
+
+    setLights(next)
+  }
+
 
   function resetJourney() {
     const start =
@@ -170,6 +267,12 @@ export function AnimatedFinishedVehicle() {
     segmentIndex.current = 0
     segmentDistance.current = 0
     pauseRemaining.current = 0
+    pauseDestination.current = null
+
+    applyLights(
+      'off',
+      VEHICLE_LIGHTS_OFF,
+    )
 
     if (!vehicle.current) {
       return
@@ -189,19 +292,66 @@ export function AnimatedFinishedVehicle() {
       return
     }
 
-
     if (
-      pauseRemaining.current > 0
+      pauseRemaining.current >
+      0
     ) {
       pauseRemaining.current -=
         delta
 
+      const destination =
+        pauseDestination.current
+
       if (
-        pauseRemaining.current > 0
+        destination ===
+        'finalControl'
+      ) {
+        const duration =
+          PAUSE_BY_DESTINATION
+            .finalControl ?? 0
+
+        const elapsed =
+          duration -
+          Math.max(
+            0,
+            pauseRemaining.current,
+          )
+
+        const phase =
+          getFinalControlPhase(
+            elapsed,
+          )
+
+        applyLights(
+          `final-${phase}`,
+          FINAL_CONTROL_LIGHTING[
+            phase
+          ],
+        )
+      }
+
+      if (
+        pauseRemaining.current >
+        0
       ) {
         return
       }
 
+      const completedPause =
+        pauseDestination.current
+
+      pauseDestination.current =
+        null
+
+      if (
+        completedPause ===
+        'finalControl'
+      ) {
+        applyLights(
+          'off',
+          VEHICLE_LIGHTS_OFF,
+        )
+      }
 
       if (
         segmentIndex.current >=
@@ -223,16 +373,16 @@ export function AnimatedFinishedVehicle() {
       return
     }
 
-
     const start =
       routePoints[index]
 
     const end =
-      routePoints[index + 1]
+      routePoints[
+        index + 1
+      ]
 
     const segmentLength =
       getSegmentLength(index)
-
 
     segmentDistance.current =
       Math.min(
@@ -241,13 +391,11 @@ export function AnimatedFinishedVehicle() {
           SPEED * delta,
       )
 
-
     const progress =
       segmentLength === 0
         ? 1
         : segmentDistance.current /
           segmentLength
-
 
     vehicle.current.position.set(
       lerp(
@@ -255,13 +403,11 @@ export function AnimatedFinishedVehicle() {
         end.position[0],
         progress,
       ),
-
       lerp(
         start.position[1],
         end.position[1],
         progress,
       ),
-
       lerp(
         start.position[2],
         end.position[2],
@@ -269,26 +415,30 @@ export function AnimatedFinishedVehicle() {
       ),
     )
 
-
     const movementRotation =
-      getMovementRotation(index)
-
+      getMovementRotation(
+        index,
+      )
 
     let desiredRotation =
       movementRotation
 
+    const destinationKey =
+      VEHICLE_JOURNEY_ORDER[
+        index + 1
+      ]
 
-    const isParkingSegment =
-      index ===
-      routePoints.length - 2
-
-
-    if (isParkingSegment) {
+    if (
+      destinationKey ===
+      'parkingBay'
+    ) {
       const parkingTurn =
         smoothStep(
           (
-            progress - 0.55
-          ) / 0.45,
+            progress -
+            0.42
+          ) /
+          0.58,
         )
 
       desiredRotation =
@@ -299,21 +449,20 @@ export function AnimatedFinishedVehicle() {
         )
     }
 
-
     const turnAmount =
       1 -
       Math.exp(
-        -TURN_RESPONSE * delta,
+        -TURN_RESPONSE *
+        delta,
       )
-
 
     vehicle.current.rotation.y =
       lerpAngle(
-        vehicle.current.rotation.y,
+        vehicle.current
+          .rotation.y,
         desiredRotation,
         turnAmount,
       )
-
 
     if (
       segmentDistance.current <
@@ -322,38 +471,54 @@ export function AnimatedFinishedVehicle() {
       return
     }
 
-
-    const destinationKey =
-      VEHICLE_JOURNEY_ORDER[
-        index + 1
-      ]
-
-
     vehicle.current.position.set(
       ...end.position,
     )
 
-
     segmentIndex.current += 1
     segmentDistance.current = 0
-
 
     const pause =
       PAUSE_BY_DESTINATION[
         destinationKey
       ] ?? 0
 
-
     if (pause > 0) {
       pauseRemaining.current =
         pause
+
+      pauseDestination.current =
+        destinationKey
+
+      if (
+        destinationKey ===
+        'finalControl'
+      ) {
+        applyLights(
+          'final-headlights',
+          FINAL_CONTROL_LIGHTING
+            .headlights,
+        )
+      }
+
+      if (
+        destinationKey ===
+        'parkingBay'
+      ) {
+        applyLights(
+          'parking-brakes',
+          {
+            ...VEHICLE_LIGHTS_OFF,
+            brakeLights: true,
+          },
+        )
+      }
     }
   })
 
 
   const start =
     VEHICLE_JOURNEY.lowered
-
 
   return (
     <group
@@ -364,6 +529,7 @@ export function AnimatedFinishedVehicle() {
       <VehicleBody
         stage="finished"
         color="#eceee9"
+        lights={lights}
       />
     </group>
   )

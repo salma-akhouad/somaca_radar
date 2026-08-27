@@ -4,10 +4,6 @@ import {
 } from '@react-three/drei'
 
 import {
-  useRef,
-} from 'react'
-
-import {
   MachineVisual,
 } from './MachineVisuals'
 
@@ -26,15 +22,23 @@ interface ProductionStationProps {
 const machineSlots: Array<
   [number, number, number]
 > = [
-    [-0.48, 0, -0.08],
-    [0.7, 0, 0.18],
-    [0.08, 0, 0.58],
-  ]
+  [-0.48, 0, -0.08],
+  [0.7, 0, 0.18],
+  [0.08, 0, 0.58],
+]
 
-const stationBorderColor = '#917b38'
-const selectedBorderColor = '#c3a34b'
-const stationPlateColor = '#e2e1da'
-const selectedPlateColor = '#f1ead3'
+
+const stationBorderColor =
+  '#917b38'
+
+const selectedBorderColor =
+  '#c3a34b'
+
+const stationPlateColor =
+  '#e2e1da'
+
+const selectedPlateColor =
+  '#f1ead3'
 
 
 export function ProductionStation({
@@ -42,55 +46,27 @@ export function ProductionStation({
   selected = false,
   onSelect,
 }: ProductionStationProps) {
-  const pointerDown =
-    useRef<{
-      x: number
-      y: number
-    } | null>(null)
   return (
     <group
       position={pole.position}
-      rotation-y={pole.rotation ?? 0}
-      onPointerDown={(event) => {
+      rotation-y={
+        pole.rotation ??
+        0
+      }
+
+      onClick={(event) => {
         event.stopPropagation()
 
-        pointerDown.current = {
-          x: event.clientX,
-          y: event.clientY,
-        }
-      }}
-
-      onPointerUp={(event) => {
-        event.stopPropagation()
-
-        const start =
-          pointerDown.current
-
-        pointerDown.current = null
-
-        if (!start) {
-          return
-        }
-
-        const dx =
-          event.clientX - start.x
-
-        const dy =
-          event.clientY - start.y
-
-        const distance =
-          Math.sqrt(
-            dx * dx +
-            dy * dy,
-          )
-
-        if (distance <= 5) {
+        if (
+          event.delta <= 5
+        ) {
           onSelect?.(pole)
         }
       }}
 
       onPointerEnter={(event) => {
         event.stopPropagation()
+
         document.body.style.cursor =
           'pointer'
       }}
@@ -99,15 +75,23 @@ export function ProductionStation({
         document.body.style.cursor =
           'default'
       }}
-
     >
       {selected && (
         <mesh
-          position={[0, 0.018, 0]}
-          rotation-x={-Math.PI / 2}
+          position={[
+            0,
+            0.018,
+            0,
+          ]}
+          rotation-x={
+            -Math.PI / 2
+          }
         >
           <circleGeometry
-            args={[1.7, 48]}
+            args={[
+              1.7,
+              48,
+            ]}
           />
 
           <meshStandardMaterial
@@ -119,13 +103,26 @@ export function ProductionStation({
           />
         </mesh>
       )}
-      {[-1.42, 1.42].map((x) => (
+
+
+      {[
+        -1.42,
+        1.42,
+      ].map((x) => (
         <mesh
           key={`side-${x}`}
-          position={[x, 0.041, 0]}
+          position={[
+            x,
+            0.041,
+            0,
+          ]}
         >
           <boxGeometry
-            args={[0.055, 0.012, 1.9]}
+            args={[
+              0.055,
+              0.012,
+              1.9,
+            ]}
           />
 
           <meshStandardMaterial
@@ -139,13 +136,25 @@ export function ProductionStation({
         </mesh>
       ))}
 
-      {[-0.95, 0.95].map((z) => (
+
+      {[
+        -0.95,
+        0.95,
+      ].map((z) => (
         <mesh
           key={`edge-${z}`}
-          position={[0, 0.041, z]}
+          position={[
+            0,
+            0.041,
+            z,
+          ]}
         >
           <boxGeometry
-            args={[2.9, 0.012, 0.055]}
+            args={[
+              2.9,
+              0.012,
+              0.055,
+            ]}
           />
 
           <meshStandardMaterial
@@ -159,11 +168,20 @@ export function ProductionStation({
         </mesh>
       ))}
 
+
       <RoundedBox
-        args={[0.2, 3.05, 0.2]}
+        args={[
+          0.2,
+          3.05,
+          0.2,
+        ]}
         radius={0.035}
         smoothness={2}
-        position={[-1.2, 1.53, -0.68]}
+        position={[
+          -1.2,
+          1.53,
+          -0.68,
+        ]}
         castShadow
       >
         <meshStandardMaterial
@@ -173,11 +191,20 @@ export function ProductionStation({
         />
       </RoundedBox>
 
+
       <RoundedBox
-        args={[0.44, 0.32, 0.44]}
+        args={[
+          0.44,
+          0.32,
+          0.44,
+        ]}
         radius={0.055}
         smoothness={2}
-        position={[-1.2, 0.16, -0.68]}
+        position={[
+          -1.2,
+          0.16,
+          -0.68,
+        ]}
       >
         <meshStandardMaterial
           color="#aa8b32"
@@ -185,11 +212,20 @@ export function ProductionStation({
         />
       </RoundedBox>
 
+
       <RoundedBox
-        args={[2.05, 0.13, 0.13]}
+        args={[
+          2.05,
+          0.13,
+          0.13,
+        ]}
         radius={0.035}
         smoothness={2}
-        position={[-0.22, 2.95, -0.68]}
+        position={[
+          -0.22,
+          2.95,
+          -0.68,
+        ]}
         castShadow
       >
         <meshStandardMaterial
@@ -199,11 +235,21 @@ export function ProductionStation({
         />
       </RoundedBox>
 
+
       <mesh
-        position={[0.48, 2.36, -0.68]}
+        position={[
+          0.48,
+          2.36,
+          -0.68,
+        ]}
       >
         <cylinderGeometry
-          args={[0.022, 0.022, 1.05, 8]}
+          args={[
+            0.022,
+            0.022,
+            1.05,
+            8,
+          ]}
         />
 
         <meshStandardMaterial
@@ -212,11 +258,20 @@ export function ProductionStation({
         />
       </mesh>
 
+
       <RoundedBox
-        args={[0.72, 0.34, 0.055]}
+        args={[
+          0.72,
+          0.34,
+          0.055,
+        ]}
         radius={0.04}
         smoothness={2}
-        position={[-1.2, 3.34, -0.68]}
+        position={[
+          -1.2,
+          3.34,
+          -0.68,
+        ]}
       >
         <meshStandardMaterial
           color={
@@ -229,9 +284,16 @@ export function ProductionStation({
         />
       </RoundedBox>
 
+
       <Text
-        position={[-1.2, 3.34, -0.715]}
-        rotation-y={Math.PI}
+        position={[
+          -1.2,
+          3.34,
+          -0.715,
+        ]}
+        rotation-y={
+          Math.PI
+        }
         fontSize={0.18}
         color="#303531"
         anchorX="center"
@@ -240,11 +302,20 @@ export function ProductionStation({
         {pole.id}
       </Text>
 
+
       <mesh
-        position={[-1.2, 3.08, -0.68]}
+        position={[
+          -1.2,
+          3.08,
+          -0.68,
+        ]}
       >
         <boxGeometry
-          args={[0.46, 0.045, 0.05]}
+          args={[
+            0.46,
+            0.045,
+            0.05,
+          ]}
         />
 
         <meshStandardMaterial
@@ -257,15 +328,26 @@ export function ProductionStation({
         />
       </mesh>
 
+
       {pole.machines.map(
-        (machine, index) => (
+        (
+          machine,
+          index,
+        ) => (
           <MachineVisual
-            key={machine.id}
-            kind={machine.kind}
-            status={machine.status}
+            key={
+              machine.id
+            }
+            kind={
+              machine.kind
+            }
+            status={
+              machine.status
+            }
             position={
               machineSlots[
-              index % machineSlots.length
+                index %
+                machineSlots.length
               ]
             }
           />
