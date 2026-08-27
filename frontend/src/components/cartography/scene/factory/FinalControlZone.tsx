@@ -3,28 +3,13 @@ import {
 } from '@react-three/drei'
 
 import {
-  FINAL_CONTROL_LIGHTING,
-} from './FinalControlTest'
-
-import {
   VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
-
-import {
-  VehicleBody,
-} from './VehicleBody'
 
 
 export function FinalControlZone() {
   const finalControl =
     VEHICLE_JOURNEY.finalControl
-
-  const testPhase = 'complete'
-
-  const lighting =
-    FINAL_CONTROL_LIGHTING[testPhase]
-
-
   return (
     <group
       position={[
@@ -108,16 +93,6 @@ export function FinalControlZone() {
           ))}
         </group>
       ))}
-
-
-      <VehicleBody
-        position={[0, 0.02, 0]}
-        rotation={finalControl.rotation}
-        stage="finished"
-        color="#eceee9"
-        lights={lighting}
-      />
-
 
       <group
         position={[3.15, 0, 0]}
@@ -232,19 +207,6 @@ export function FinalControlZone() {
           />
         </mesh>
       </group>
-
-
-      {[-0.53, 0.53].map((z) => (
-        <pointLight
-          key={`headlight-${z}`}
-          position={[2.28, 0.94, z]}
-          color="#fff0c2"
-          intensity={1.45}
-          distance={3.5}
-          decay={2}
-        />
-      ))}
-
 
       {[-2.75, 2.75].map((x) => (
         <group

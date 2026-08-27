@@ -84,6 +84,9 @@ import type {
   PoleConfig,
 } from './factory/data/montageLayoutData'
 
+import {
+  AnimatedFinishedVehicle,
+} from './factory/AnimatedFinishedVehicle'
 
 interface MontageLayoutProps {
   selectedPoleId?: string | null
@@ -359,6 +362,8 @@ export function MontageLayout({
       <ReleaseGate />
 
       <FinishedVehiclePark />
+
+      <AnimatedFinishedVehicle />
 
 
       {/* =====================================================
