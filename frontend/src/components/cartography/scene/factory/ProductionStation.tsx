@@ -4,6 +4,10 @@ import {
 } from '@react-three/drei'
 
 import {
+  useRef,
+} from 'react'
+
+import {
   MachineVisual,
 } from './MachineVisuals'
 
@@ -14,6 +18,7 @@ import type {
 
 interface ProductionStationProps {
   pole: PoleConfig
+  selected?: boolean
   onSelect?: (pole: PoleConfig) => void
 }
 
@@ -21,25 +26,99 @@ interface ProductionStationProps {
 const machineSlots: Array<
   [number, number, number]
 > = [
-  [-0.48, 0, -0.08],
-  [0.7, 0, 0.18],
-  [0.08, 0, 0.58],
-]
+    [-0.48, 0, -0.08],
+    [0.7, 0, 0.18],
+    [0.08, 0, 0.58],
+  ]
+
+const stationBorderColor = '#917b38'
+const selectedBorderColor = '#c3a34b'
+const stationPlateColor = '#e2e1da'
+const selectedPlateColor = '#f1ead3'
 
 
 export function ProductionStation({
   pole,
+  selected = false,
   onSelect,
 }: ProductionStationProps) {
+  const pointerDown =
+    useRef<{
+      x: number
+      y: number
+    } | null>(null)
   return (
     <group
       position={pole.position}
       rotation-y={pole.rotation ?? 0}
-      onClick={(event) => {
+      onPointerDown={(event) => {
         event.stopPropagation()
-        onSelect?.(pole)
+
+        pointerDown.current = {
+          x: event.clientX,
+          y: event.clientY,
+        }
       }}
+
+      onPointerUp={(event) => {
+        event.stopPropagation()
+
+        const start =
+          pointerDown.current
+
+        pointerDown.current = null
+
+        if (!start) {
+          return
+        }
+
+        const dx =
+          event.clientX - start.x
+
+        const dy =
+          event.clientY - start.y
+
+        const distance =
+          Math.sqrt(
+            dx * dx +
+            dy * dy,
+          )
+
+        if (distance <= 5) {
+          onSelect?.(pole)
+        }
+      }}
+
+      onPointerEnter={(event) => {
+        event.stopPropagation()
+        document.body.style.cursor =
+          'pointer'
+      }}
+
+      onPointerLeave={() => {
+        document.body.style.cursor =
+          'default'
+      }}
+
     >
+      {selected && (
+        <mesh
+          position={[0, 0.018, 0]}
+          rotation-x={-Math.PI / 2}
+        >
+          <circleGeometry
+            args={[1.7, 48]}
+          />
+
+          <meshStandardMaterial
+            color="#c6b269"
+            transparent
+            opacity={0.12}
+            roughness={1}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
       {[-1.42, 1.42].map((x) => (
         <mesh
           key={`side-${x}`}
@@ -50,7 +129,11 @@ export function ProductionStation({
           />
 
           <meshStandardMaterial
-            color="#917b38"
+            color={
+              selected
+                ? selectedBorderColor
+                : stationBorderColor
+            }
             roughness={0.78}
           />
         </mesh>
@@ -66,7 +149,11 @@ export function ProductionStation({
           />
 
           <meshStandardMaterial
-            color="#917b38"
+            color={
+              selected
+                ? selectedBorderColor
+                : stationBorderColor
+            }
             roughness={0.78}
           />
         </mesh>
@@ -132,7 +219,11 @@ export function ProductionStation({
         position={[-1.2, 3.34, -0.68]}
       >
         <meshStandardMaterial
-          color="#e2e1da"
+          color={
+            selected
+              ? selectedPlateColor
+              : stationPlateColor
+          }
           metalness={0.06}
           roughness={0.68}
         />
@@ -157,7 +248,11 @@ export function ProductionStation({
         />
 
         <meshStandardMaterial
-          color="#967e36"
+          color={
+            selected
+              ? '#c4a34a'
+              : '#967e36'
+          }
           roughness={0.7}
         />
       </mesh>
@@ -170,7 +265,7 @@ export function ProductionStation({
             status={machine.status}
             position={
               machineSlots[
-                index % machineSlots.length
+              index % machineSlots.length
               ]
             }
           />

@@ -18,6 +18,11 @@ import {
   FactoryEnvelope,
 } from './factory/FactoryEnvelope'
 
+import type {
+  PoleConfig,
+} from './factory/data/montageLayoutData'
+
+
 interface MontageSceneProps {
   command: {
     type: CameraAction
@@ -26,12 +31,24 @@ interface MontageSceneProps {
 
   onZoomChange:
   (zoom: number) => void
+
+  selectedPole:
+  PoleConfig | null
+
+  onPoleSelect:
+  (pole: PoleConfig) => void
+
+  onClearPoleSelection:
+  () => void
 }
 
 
 export function MontageScene({
   command,
   onZoomChange,
+  selectedPole,
+  onPoleSelect,
+  onClearPoleSelection,
 }: MontageSceneProps) {
   return (
     <>
@@ -106,9 +123,41 @@ export function MontageScene({
 
       <FactoryFloor />
 
+      <mesh
+        position={[15, -0.01, 0]}
+        rotation-x={-Math.PI / 2}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+        }}
+        onClick={(event) => {
+          event.stopPropagation()
+          onClearPoleSelection()
+        }}
+      >
+        <planeGeometry
+          args={[
+            130,
+            100,
+          ]}
+        />
+
+        <meshBasicMaterial
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
+      </mesh>
+
       <FactoryEnvelope />
 
-      <MontageLayout />
+      <MontageLayout
+        selectedPoleId={
+          selectedPole?.id ?? null
+        }
+        onPoleSelect={
+          onPoleSelect
+        }
+      />
 
       <SceneCameraControls
         command={command}

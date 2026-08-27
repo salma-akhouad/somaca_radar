@@ -22,6 +22,14 @@ import type {
   CameraAction,
 } from './scene/SceneCameraControls'
 
+import type {
+  PoleConfig,
+} from './scene/factory/data/montageLayoutData'
+
+import {
+  PoleDetailsPanel,
+} from './PoleDetailsPanel'
+
 
 export function MapStage() {
   const [
@@ -40,6 +48,10 @@ export function MapStage() {
     id: 0,
   })
 
+  const [
+    selectedPole,
+    setSelectedPole,
+  ] = useState<PoleConfig | null>(null)
 
   function sendCameraCommand(
     type: CameraAction,
@@ -88,6 +100,13 @@ export function MapStage() {
             onZoomChange={
               setZoom
             }
+            selectedPole={selectedPole}
+            onPoleSelect={
+              setSelectedPole
+            }
+            onClearPoleSelection={() =>
+              setSelectedPole(null)
+            }
           />
         </Canvas>
       </div>
@@ -95,6 +114,14 @@ export function MapStage() {
 
       <MapLegend />
 
+      {selectedPole && (
+        <PoleDetailsPanel
+          pole={selectedPole}
+          onClose={() =>
+            setSelectedPole(null)
+          }
+        />
+      )}
 
       <MapControls
         zoom={zoom}

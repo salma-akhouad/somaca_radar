@@ -86,11 +86,13 @@ import type {
 
 
 interface MontageLayoutProps {
+  selectedPoleId?: string | null
   onPoleSelect?: (pole: PoleConfig) => void
 }
 
 
 export function MontageLayout({
+  selectedPoleId,
   onPoleSelect,
 }: MontageLayoutProps) {
   const uets = Object.values(UET_LAYOUT)
@@ -265,6 +267,9 @@ export function MontageLayout({
           <ProductionStation
             key={pole.id}
             pole={pole}
+            selected={
+              selectedPoleId === pole.id
+            }
             onSelect={onPoleSelect}
           />
         ),
