@@ -1,3 +1,15 @@
+import {
+  useRef,
+} from 'react'
+
+import {
+  useFrame,
+} from '@react-three/fiber'
+
+import type {
+  Group,
+} from 'three'
+
 import type {
   VehicleStage,
 } from './VehicleBody'
@@ -136,9 +148,9 @@ function Support({
   ]
 
   direction:
-    | 'left'
-    | 'right'
-    | 'top'
+  | 'left'
+  | 'right'
+  | 'top'
 }) {
   return (
     <group position={position}>
@@ -199,6 +211,298 @@ function Support({
 }
 
 
+/*
+  The overhead rail follows the same U shape as
+  the production line:
+
+  left side -> top -> right side
+
+  These points describe only the conveyor rail.
+*/
+const CONVEYOR_PATH = [
+  [-17, 5, -16],
+  [-17, 5, 16],
+  [17, 5, 16],
+  [17, 5, -16],
+] as const
+
+
+const CONVEYOR_SPEED = 0.32
+
+const CONVEYOR_RETURN_DURATION = 40
+
+/*
+  Six carriers remain evenly spaced.
+
+  Because they all use the same clock and speed,
+  their relative spacing never changes.
+*/
+const CONVEYOR_CARRIER_COUNT = 6
+
+
+const segmentLengths =
+  CONVEYOR_PATH
+    .slice(0, -1)
+    .map((point, index) => {
+      const next =
+        CONVEYOR_PATH[index + 1]
+
+      const dx =
+        next[0] - point[0]
+
+      const dz =
+        next[2] - point[2]
+
+      return Math.sqrt(
+        dx * dx +
+        dz * dz,
+      )
+    })
+
+
+const totalConveyorLength =
+  segmentLengths.reduce(
+    (total, length) =>
+      total + length,
+    0,
+  )
+
+const visibleConveyorDuration =
+  totalConveyorLength /
+  CONVEYOR_SPEED
+
+
+const totalConveyorCycleDuration =
+  visibleConveyorDuration +
+  CONVEYOR_RETURN_DURATION
+
+
+function sampleConveyorPath(
+  distance: number,
+) {
+  let remaining =
+    (
+      distance %
+      totalConveyorLength +
+      totalConveyorLength
+    ) %
+    totalConveyorLength
+
+  for (
+    let index = 0;
+    index < segmentLengths.length;
+    index += 1
+  ) {
+    const segmentLength =
+      segmentLengths[index]
+
+    if (
+      remaining >
+      segmentLength
+    ) {
+      remaining -=
+        segmentLength
+
+      continue
+    }
+
+    const start =
+      CONVEYOR_PATH[index]
+
+    const end =
+      CONVEYOR_PATH[index + 1]
+
+    const progress =
+      segmentLength === 0
+        ? 0
+        : remaining /
+        segmentLength
+
+    const x =
+      start[0] +
+      (
+        end[0] -
+        start[0]
+      ) *
+      progress
+
+    const z =
+      start[2] +
+      (
+        end[2] -
+        start[2]
+      ) *
+      progress
+
+    const dx =
+      end[0] -
+      start[0]
+
+    const dz =
+      end[2] -
+      start[2]
+
+    return {
+      position: [
+        x,
+        4.94,
+        z,
+      ] as [
+          number,
+          number,
+          number,
+        ],
+
+      rotation:
+        Math.atan2(
+          -dz,
+          dx,
+        ),
+    }
+  }
+
+  return {
+    position: [
+      17,
+      4.94,
+      -16,
+    ] as [
+        number,
+        number,
+        number,
+      ],
+
+    rotation:
+      Math.PI / 2,
+  }
+}
+
+
+function AnimatedConveyorCarrier({
+  offset,
+}: {
+  offset: number
+}) {
+  const carrier =
+    useRef<Group>(null)
+
+  useFrame((state) => {
+    if (!carrier.current) {
+      return
+    }
+
+
+    const cycleTime =
+      (
+        state.clock.elapsedTime +
+        offset
+      ) %
+      totalConveyorCycleDuration
+
+
+    const isReturning =
+      cycleTime >=
+      visibleConveyorDuration
+
+
+    carrier.current.visible =
+      !isReturning
+
+
+    if (isReturning) {
+      return
+    }
+
+
+    const travelledDistance =
+      cycleTime *
+      CONVEYOR_SPEED
+
+
+    const sample =
+      sampleConveyorPath(
+        travelledDistance,
+      )
+
+
+    carrier.current.position.set(
+      ...sample.position,
+    )
+
+    carrier.current.rotation.y =
+      sample.rotation
+  })
+
+
+  const initialCycleTime =
+    offset %
+    totalConveyorCycleDuration
+
+
+  const initiallyVisible =
+    initialCycleTime <
+    visibleConveyorDuration
+
+
+  const initial =
+    sampleConveyorPath(
+      Math.min(
+        initialCycleTime,
+        visibleConveyorDuration,
+      ) *
+      CONVEYOR_SPEED,
+    )
+
+
+  return (
+    <group
+      ref={carrier}
+      position={initial.position}
+      rotation-y={initial.rotation}
+      visible={initiallyVisible}
+    >
+      <mesh castShadow>
+        <boxGeometry
+          args={[
+            0.72,
+            0.18,
+            0.42,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#303632"
+          metalness={0.7}
+          roughness={0.3}
+        />
+      </mesh>
+
+      <mesh
+        position={[
+          0,
+          -0.22,
+          0,
+        ]}
+        castShadow
+      >
+        <boxGeometry
+          args={[
+            0.18,
+            0.34,
+            0.18,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#454b47"
+          metalness={0.58}
+          roughness={0.36}
+        />
+      </mesh>
+    </group>
+  )
+}
+
 export function OverheadAssemblyLine() {
   return (
     <group>
@@ -246,6 +550,22 @@ export function OverheadAssemblyLine() {
           roughness={0.3}
         />
       </mesh>
+
+      {Array.from({
+        length:
+          CONVEYOR_CARRIER_COUNT,
+      }).map((_, index) => (
+        <AnimatedConveyorCarrier
+          key={index}
+          offset={
+            (
+              totalConveyorCycleDuration /
+              CONVEYOR_CARRIER_COUNT
+            ) *
+            index
+          }
+        />
+      ))}
 
       {[-12, -5, 2, 9, 14].map((z) => (
         <Support
@@ -358,7 +678,6 @@ export function OverheadAssemblyLine() {
         }
         stage="finished"
       />
-
     </group>
   )
 }

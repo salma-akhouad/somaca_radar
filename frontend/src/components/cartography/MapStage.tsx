@@ -81,9 +81,9 @@ export function MapStage() {
 
           camera={{
             position: [
-              17,
-              17,
-              17,
+              24,
+              24,
+              30,
             ],
 
             fov: 42,
