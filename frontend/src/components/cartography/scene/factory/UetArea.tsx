@@ -13,7 +13,7 @@ export function UetArea({
   depth = 6,
   label,
 }: UetAreaProps) {
-  const borderColor = '#b8942b'
+  const borderColor = '#9e8436'
 
   return (
     <group position={position}>
@@ -71,7 +71,7 @@ export function UetArea({
           />
 
           <meshStandardMaterial
-            color="#a98326"
+            color="#917a34"
             roughness={0.76}
           />
         </mesh>
@@ -80,8 +80,8 @@ export function UetArea({
       <Text
         position={[0, 0.052, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={0.72}
-        color="#4b504c"
+        fontSize={0.6}
+        color="#343936"
         anchorX="center"
         anchorY="middle"
       >

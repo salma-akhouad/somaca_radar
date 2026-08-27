@@ -20,7 +20,6 @@ import {
 
 import type {
   CameraAction,
-  NavigationMode,
 } from './scene/SceneCameraControls'
 
 
@@ -29,16 +28,6 @@ export function MapStage() {
     zoom,
     setZoom,
   ] = useState(100)
-
-
-  const [
-    navigationMode,
-    setNavigationMode,
-  ] =
-    useState<NavigationMode>(
-      'pan',
-    )
-
 
   const [
     command,
@@ -63,17 +52,6 @@ export function MapStage() {
       }),
     )
   }
-
-
-  function toggleNavigation() {
-    setNavigationMode(
-      (current) =>
-        current === 'pan'
-          ? 'rotate'
-          : 'pan',
-    )
-  }
-
 
   return (
     <section
@@ -107,9 +85,6 @@ export function MapStage() {
         >
           <MontageScene
             command={command}
-            navigationMode={
-              navigationMode
-            }
             onZoomChange={
               setZoom
             }
@@ -123,15 +98,6 @@ export function MapStage() {
 
       <MapControls
         zoom={zoom}
-
-        navigationMode={
-          navigationMode
-        }
-
-        onToggleNavigation={
-          toggleNavigation
-        }
-
         onZoomIn={() =>
           sendCameraCommand(
             'zoom-in',

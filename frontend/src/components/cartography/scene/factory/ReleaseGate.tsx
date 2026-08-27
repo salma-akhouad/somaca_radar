@@ -7,8 +7,21 @@ import {
   VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
 
-export function ReleaseGate() {
+import type {
+  ReleaseGateStatus,
+} from './ReleaseGateStatus'
+
+import {
+  RELEASE_GATE_COLORS,
+} from './ReleaseGateStatus'
+
+interface ReleaseGateProps {
+  status?: ReleaseGateStatus
+}
+
+export function ReleaseGate({ status = 'approved' }: ReleaseGateProps) {
   const release = VEHICLE_JOURNEY.releaseGate
+  const statusColors = RELEASE_GATE_COLORS[status]
   return (
     <group
       position={[
@@ -129,56 +142,47 @@ export function ReleaseGate() {
         />
       </RoundedBox>
 
-
-      {/* Green release indicator */}
-      <mesh
-        position={[
-          0.19,
-          3.64,
-          0,
-        ]}
-      >
-        <sphereGeometry
-          args={[
-            0.085,
-            16,
-            16,
+      {[
+        {
+          y: 3.68,
+          color: statusColors.green,
+          active: status === 'approved',
+        },
+        {
+          y: 3.5,
+          color: statusColors.amber,
+          active: status === 'waiting',
+        },
+        {
+          y: 3.32,
+          color: statusColors.red,
+          active: status === 'blocked',
+        },
+      ].map((light) => (
+        <mesh
+          key={light.y}
+          position={[
+            0.19,
+            light.y,
+            0,
           ]}
-        />
+        >
+          <sphereGeometry
+            args={[0.065, 16, 16]}
+          />
 
-        <meshStandardMaterial
-          color="#6fa775"
-          emissive="#4f8f59"
-          emissiveIntensity={0.48}
-          roughness={0.34}
-        />
-      </mesh>
-
-
-      {/* Amber standby indicator */}
-      <mesh
-        position={[
-          0.19,
-          3.4,
-          0,
-        ]}
-      >
-        <sphereGeometry
-          args={[
-            0.065,
-            16,
-            16,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#b99233"
-          emissive="#8c6d25"
-          emissiveIntensity={0.18}
-          roughness={0.4}
-        />
-      </mesh>
-
+          <meshStandardMaterial
+            color={light.color}
+            emissive={light.color}
+            emissiveIntensity={
+              light.active
+                ? 0.55
+                : 0.04
+            }
+            roughness={0.36}
+          />
+        </mesh>
+      ))}
 
       {/* =====================================================
           IDENTIFICATION

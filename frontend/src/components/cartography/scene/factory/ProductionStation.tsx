@@ -14,159 +14,167 @@ import type {
 
 interface ProductionStationProps {
   pole: PoleConfig
+  onSelect?: (pole: PoleConfig) => void
 }
+
+
+const machineSlots: Array<
+  [number, number, number]
+> = [
+  [-0.48, 0, -0.08],
+  [0.7, 0, 0.18],
+  [0.08, 0, 0.58],
+]
 
 
 export function ProductionStation({
   pole,
+  onSelect,
 }: ProductionStationProps) {
-  const machineSlots: Array<
-    [number, number, number]
-  > = [
-    [-0.45, 0, -0.15],
-    [0.72, 0, 0.18],
-    [0.15, 0, 0.6],
-  ]
-
-
   return (
     <group
       position={pole.position}
-      rotation-y={
-        pole.rotation ?? 0
-      }
+      rotation-y={pole.rotation ?? 0}
+      onClick={(event) => {
+        event.stopPropagation()
+        onSelect?.(pole)
+      }}
     >
-      {/* =====================================================
-          LOCAL POTEAU WORKSPACE
-          ===================================================== */}
+      {[-1.42, 1.42].map((x) => (
+        <mesh
+          key={`side-${x}`}
+          position={[x, 0.041, 0]}
+        >
+          <boxGeometry
+            args={[0.055, 0.012, 1.9]}
+          />
+
+          <meshStandardMaterial
+            color="#917b38"
+            roughness={0.78}
+          />
+        </mesh>
+      ))}
+
+      {[-0.95, 0.95].map((z) => (
+        <mesh
+          key={`edge-${z}`}
+          position={[0, 0.041, z]}
+        >
+          <boxGeometry
+            args={[2.9, 0.012, 0.055]}
+          />
+
+          <meshStandardMaterial
+            color="#917b38"
+            roughness={0.78}
+          />
+        </mesh>
+      ))}
 
       <RoundedBox
-        args={[3.15, 0.08, 2]}
-        radius={0.08}
-        smoothness={3}
-        position={[0, 0.04, 0]}
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color="#b7bab5"
-          roughness={0.9}
-        />
-      </RoundedBox>
-
-
-      {/* Safety edge */}
-      <mesh
-        position={[0, 0.09, 0.94]}
-      >
-        <boxGeometry args={[2.85, 0.025, 0.07]} />
-
-        <meshStandardMaterial
-          color="#d2a514"
-          roughness={0.72}
-        />
-      </mesh>
-
-
-      {/* =====================================================
-          STRUCTURAL POTEAU
-          ===================================================== */}
-
-      <RoundedBox
-        args={[0.18, 3.05, 0.18]}
+        args={[0.2, 3.05, 0.2]}
         radius={0.035}
         smoothness={2}
-        position={[-1.28, 1.53, -0.72]}
+        position={[-1.2, 1.53, -0.68]}
         castShadow
       >
         <meshStandardMaterial
-          color="#4c514d"
+          color="#484e4a"
           metalness={0.48}
           roughness={0.42}
         />
       </RoundedBox>
 
-
-      {/* Foot protection */}
       <RoundedBox
-        args={[0.38, 0.3, 0.38]}
-        radius={0.05}
+        args={[0.44, 0.32, 0.44]}
+        radius={0.055}
         smoothness={2}
-        position={[-1.28, 0.15, -0.72]}
+        position={[-1.2, 0.16, -0.68]}
       >
         <meshStandardMaterial
-          color="#d2a514"
-          roughness={0.66}
+          color="#aa8b32"
+          roughness={0.68}
         />
       </RoundedBox>
 
-
-      {/* Upper tool/cable support */}
       <RoundedBox
-        args={[2.15, 0.13, 0.13]}
+        args={[2.05, 0.13, 0.13]}
         radius={0.035}
         smoothness={2}
-        position={[-0.25, 2.95, -0.72]}
+        position={[-0.22, 2.95, -0.68]}
         castShadow
       >
         <meshStandardMaterial
-          color="#4c514d"
+          color="#484e4a"
           metalness={0.48}
           roughness={0.42}
         />
       </RoundedBox>
 
-
-      {/* Hanging cable detail */}
       <mesh
-        position={[0.55, 2.35, -0.72]}
+        position={[0.48, 2.36, -0.68]}
       >
-        <cylinderGeometry args={[0.025, 0.025, 1.1, 8]} />
+        <cylinderGeometry
+          args={[0.022, 0.022, 1.05, 8]}
+        />
 
         <meshStandardMaterial
-          color="#252a27"
-          roughness={0.62}
+          color="#292e2b"
+          roughness={0.64}
         />
       </mesh>
 
-
-      {/* =====================================================
-          POTEAU IDENTIFIER
-          ===================================================== */}
+      <RoundedBox
+        args={[0.72, 0.34, 0.055]}
+        radius={0.04}
+        smoothness={2}
+        position={[-1.2, 3.34, -0.68]}
+      >
+        <meshStandardMaterial
+          color="#e2e1da"
+          metalness={0.06}
+          roughness={0.68}
+        />
+      </RoundedBox>
 
       <Text
-        position={[-1.28, 3.32, -0.72]}
-        fontSize={0.37}
-        color="#272c29"
+        position={[-1.2, 3.34, -0.715]}
+        rotation-y={Math.PI}
+        fontSize={0.18}
+        color="#303531"
         anchorX="center"
         anchorY="middle"
       >
         {pole.id}
       </Text>
 
+      <mesh
+        position={[-1.2, 3.08, -0.68]}
+      >
+        <boxGeometry
+          args={[0.46, 0.045, 0.05]}
+        />
 
-      {/* =====================================================
-          MACHINES ATTACHED TO THIS POTEAU
-          ===================================================== */}
+        <meshStandardMaterial
+          color="#967e36"
+          roughness={0.7}
+        />
+      </mesh>
 
       {pole.machines.map(
-        (
-          machine,
-          index,
-        ) => {
-          const slot =
-            machineSlots[
-              index %
-                machineSlots.length
-            ]
-
-          return (
-            <MachineVisual
-              key={machine.id}
-              kind={machine.kind}
-              position={slot}
-            />
-          )
-        },
+        (machine, index) => (
+          <MachineVisual
+            key={machine.id}
+            kind={machine.kind}
+            status={machine.status}
+            position={
+              machineSlots[
+                index % machineSlots.length
+              ]
+            }
+          />
+        ),
       )}
     </group>
   )

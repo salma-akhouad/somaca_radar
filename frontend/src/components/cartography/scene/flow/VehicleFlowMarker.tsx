@@ -83,7 +83,7 @@ export function VehicleFlowMarker({
         />
 
         <meshStandardMaterial
-          color="#414743"
+          color="#5a605c"
           roughness={0.74}
         />
       </mesh>

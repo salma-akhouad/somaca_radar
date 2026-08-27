@@ -2,35 +2,17 @@ import {
   Icon,
 } from '../common/Icon'
 
-import type {
-  NavigationMode,
-} from './scene/SceneCameraControls'
-
 
 interface MapControlsProps {
   zoom: number
-
-  navigationMode:
-    NavigationMode
-
-  onToggleNavigation:
-    () => void
-
-  onZoomIn:
-    () => void
-
-  onZoomOut:
-    () => void
-
-  onReset:
-    () => void
+  onZoomIn:() => void
+  onZoomOut:() => void
+  onReset:() => void
 }
 
 
 export function MapControls({
   zoom,
-  navigationMode,
-  onToggleNavigation,
   onZoomIn,
   onZoomOut,
   onReset,
@@ -40,39 +22,6 @@ export function MapControls({
       className="map-controls"
       aria-label="Contrôles de la cartographie"
     >
-      <button
-        className="
-          map-control-button
-          map-control-button--active
-          map-navigation-mode
-        "
-        type="button"
-        onClick={
-          onToggleNavigation
-        }
-        title={
-          navigationMode === 'pan'
-            ? 'Déplacer la carte'
-            : 'Changer l’angle de vue'
-        }
-      >
-        <Icon
-          name="hand"
-          size={19}
-        />
-
-        <span>
-          {navigationMode === 'pan'
-            ? 'DÉPLACER'
-            : 'ORIENTER'}
-        </span>
-      </button>
-
-
-      <span
-        className="map-controls__divider"
-      />
-
 
       <button
         className="map-control-button"
@@ -124,13 +73,6 @@ export function MapControls({
         />
       </button>
 
-
-      <button
-        className="map-controls__3d"
-        type="button"
-      >
-        3D
-      </button>
     </div>
   )
 }

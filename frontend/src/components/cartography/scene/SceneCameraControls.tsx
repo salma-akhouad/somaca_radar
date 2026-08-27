@@ -27,19 +27,33 @@ export type CameraAction =
   | 'zoom-out'
   | 'reset'
 
+function clampTarget(
+  target: Vector3,
+) {
+  target.x = Math.min(
+    TARGET_MAX_X,
+    Math.max(
+      TARGET_MIN_X,
+      target.x,
+    ),
+  )
 
-export type NavigationMode =
-  | 'pan'
-  | 'rotate'
+  target.z = Math.min(
+    TARGET_MAX_Z,
+    Math.max(
+      TARGET_MIN_Z,
+      target.z,
+    ),
+  )
 
+  target.y = 0
+}
 
 interface SceneCameraControlsProps {
   command: {
     type: CameraAction
     id: number
   }
-
-  navigationMode: NavigationMode
 
   onZoomChange: (
     zoom: number
@@ -49,21 +63,27 @@ interface SceneCameraControlsProps {
 
 const DEFAULT_POSITION =
   new Vector3(
-    17,
-    17,
-    17,
+    24,
+    24,
+    30,
   )
 
+const DEFAULT_TARGET =
+  new Vector3(
+    10,
+    0,
+    -2,
+  )
 
 const DEFAULT_ZOOM = 100
-const MIN_ZOOM = 70
-const MAX_ZOOM = 180
+const MIN_ZOOM = 55
+const MAX_ZOOM = 190
 const ZOOM_STEP = 10
 
-
 const DEFAULT_DISTANCE =
-  DEFAULT_POSITION.length()
-
+  DEFAULT_POSITION.distanceTo(
+    DEFAULT_TARGET,
+  )
 
 const MIN_DISTANCE =
   DEFAULT_DISTANCE /
@@ -72,7 +92,6 @@ const MIN_DISTANCE =
     DEFAULT_ZOOM
   )
 
-
 const MAX_DISTANCE =
   DEFAULT_DISTANCE /
   (
@@ -80,6 +99,11 @@ const MAX_DISTANCE =
     DEFAULT_ZOOM
   )
 
+const TARGET_MIN_X = -42
+const TARGET_MAX_X = 68
+
+const TARGET_MIN_Z = -34
+const TARGET_MAX_Z = 34
 
 function clampZoom(
   zoom: number,
@@ -136,7 +160,6 @@ function zoomToDistance(
 
 export function SceneCameraControls({
   command,
-  navigationMode,
   onZoomChange,
 }: SceneCameraControlsProps) {
   const controls =
@@ -153,7 +176,12 @@ export function SceneCameraControls({
   function reportZoom() {
     const target =
       controls.current?.target ??
-      new Vector3()
+      DEFAULT_TARGET
+    if (controls.current) {
+      clampTarget(
+        controls.current.target,
+      )
+    }
 
     onZoomChange(
       distanceToZoom(
@@ -181,7 +209,6 @@ export function SceneCameraControls({
     const target =
       controls.current.target
 
-
     if (
       command.type === 'reset'
     ) {
@@ -189,10 +216,8 @@ export function SceneCameraControls({
         DEFAULT_POSITION,
       )
 
-      target.set(
-        0,
-        0,
-        0,
+      target.copy(
+        DEFAULT_TARGET,
       )
 
       controls.current.update()
@@ -212,25 +237,22 @@ export function SceneCameraControls({
         ),
       )
 
-
     const nextZoom =
       clampZoom(
         currentZoom +
         (
           command.type ===
-          'zoom-in'
+            'zoom-in'
             ? ZOOM_STEP
             : -ZOOM_STEP
         ),
       )
-
 
     const direction =
       camera.position
         .clone()
         .sub(target)
         .normalize()
-
 
     camera.position
       .copy(target)
@@ -241,7 +263,6 @@ export function SceneCameraControls({
           ),
         ),
       )
-
 
     controls.current.update()
 
@@ -257,50 +278,31 @@ export function SceneCameraControls({
     <OrbitControls
       ref={controls}
       makeDefault
-
       enableDamping
       dampingFactor={0.08}
-
       enableZoom
       enablePan
       enableRotate
-
       screenSpacePanning
-      panSpeed={1.15}
-      rotateSpeed={0.8}
-
+      panSpeed={1.05}
+      rotateSpeed={0.7}
       minDistance={MIN_DISTANCE}
       maxDistance={MAX_DISTANCE}
-
-      minPolarAngle={0.32}
+      minPolarAngle={0.3}
       maxPolarAngle={
-        Math.PI / 2.35
+        Math.PI / 2.25
       }
-
       mouseButtons={{
-        LEFT:
-          navigationMode === 'pan'
-            ? MOUSE.PAN
-            : MOUSE.ROTATE,
-
-        MIDDLE:
-          MOUSE.DOLLY,
-
-        RIGHT:
-          navigationMode === 'pan'
-            ? MOUSE.ROTATE
-            : MOUSE.PAN,
+        LEFT: MOUSE.ROTATE,
+        MIDDLE: MOUSE.DOLLY,
+        RIGHT: MOUSE.PAN,
       }}
-
       target={[
-        0,
-        0,
-        0,
+        DEFAULT_TARGET.x,
+        DEFAULT_TARGET.y,
+        DEFAULT_TARGET.z,
       ]}
-
-      onChange={
-        reportZoom
-      }
+      onChange={reportZoom}
     />
   )
 }

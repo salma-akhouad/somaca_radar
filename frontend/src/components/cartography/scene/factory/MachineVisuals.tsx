@@ -2,6 +2,14 @@ import {
   RoundedBox,
 } from '@react-three/drei'
 
+import {
+  MACHINE_STATUS_COLORS,
+} from './MachineStatus'
+
+import type {
+  MachineStatus,
+} from './MachineStatus'
+
 
 export type MachineKind =
   | 'printer'
@@ -20,6 +28,7 @@ interface MachineVisualProps {
   ]
 
   rotation?: number
+  status?: MachineStatus
 }
 
 
@@ -27,7 +36,7 @@ const machineMetal = '#626762'
 const machineDark = '#303531'
 const machineBlack = '#222725'
 const screenColor = '#c9ded4'
-const screenGlow = '#6fa58b'
+const screenGlow = '#769487'
 
 
 export function IndustrialPrinter({
@@ -75,19 +84,6 @@ export function IndustrialPrinter({
         <meshStandardMaterial
           color="#efeee8"
           roughness={0.92}
-        />
-      </mesh>
-
-      {/* Status light */}
-      <mesh
-        position={[0.26, 0.86, 0.32]}
-      >
-        <sphereGeometry args={[0.045, 12, 12]} />
-
-        <meshStandardMaterial
-          color="#70bb78"
-          emissive="#55a961"
-          emissiveIntensity={0.7}
         />
       </mesh>
     </group>
@@ -156,7 +152,7 @@ export function TabletTerminal({
         <meshStandardMaterial
           color={screenColor}
           emissive={screenGlow}
-          emissiveIntensity={0.5}
+          emissiveIntensity={0.26}
           roughness={0.18}
         />
       </mesh>
@@ -209,7 +205,7 @@ export function ControlCabinet({
         <meshStandardMaterial
           color={screenColor}
           emissive={screenGlow}
-          emissiveIntensity={0.45}
+          emissiveIntensity={0.24}
           roughness={0.2}
         />
       </mesh>
@@ -228,7 +224,7 @@ export function ControlCabinet({
           <meshStandardMaterial
             color={String(color)}
             emissive={String(color)}
-            emissiveIntensity={0.35}
+            emissiveIntensity={0.12}
           />
         </mesh>
       ))}
@@ -292,7 +288,7 @@ export function InspectionDisplay({
         <meshStandardMaterial
           color={screenColor}
           emissive={screenGlow}
-          emissiveIntensity={0.46}
+          emissiveIntensity={0.25}
           roughness={0.18}
         />
       </mesh>
@@ -347,7 +343,7 @@ export function ScannerTerminal({
         <meshStandardMaterial
           color="#9cc6bb"
           emissive="#5d9f8d"
-          emissiveIntensity={0.55}
+          emissiveIntensity={0.28}
         />
       </mesh>
     </group>
@@ -414,7 +410,7 @@ export function WorkstationPC({
         <meshStandardMaterial
           color="#d4e3dc"
           emissive="#73a78e"
-          emissiveIntensity={0.42}
+          emissiveIntensity={0.24}
           roughness={0.18}
         />
       </mesh>
@@ -433,54 +429,92 @@ export function MachineVisual({
   kind,
   position,
   rotation = 0,
+  status = 'online',
 }: MachineVisualRouterProps) {
-  switch (kind) {
-    case 'printer':
-      return (
-        <IndustrialPrinter
-          position={position}
-          rotation={rotation}
-        />
-      )
+  const statusColor =
+    MACHINE_STATUS_COLORS[status]
 
-    case 'tablet':
-      return (
-        <TabletTerminal
-          position={position}
-          rotation={rotation}
-        />
-      )
+  const visual = (() => {
+    switch (kind) {
+      case 'printer':
+        return (
+          <IndustrialPrinter
+            position={position}
+            rotation={rotation}
+          />
+        )
 
-    case 'control':
-      return (
-        <ControlCabinet
-          position={position}
-          rotation={rotation}
-        />
-      )
+      case 'tablet':
+        return (
+          <TabletTerminal
+            position={position}
+            rotation={rotation}
+          />
+        )
 
-    case 'inspection':
-      return (
-        <InspectionDisplay
-          position={position}
-          rotation={rotation}
-        />
-      )
+      case 'control':
+        return (
+          <ControlCabinet
+            position={position}
+            rotation={rotation}
+          />
+        )
 
-    case 'scanner':
-      return (
-        <ScannerTerminal
-          position={position}
-          rotation={rotation}
-        />
-      )
+      case 'inspection':
+        return (
+          <InspectionDisplay
+            position={position}
+            rotation={rotation}
+          />
+        )
 
-    case 'pc':
-      return (
-        <WorkstationPC
-          position={position}
-          rotation={rotation}
+      case 'scanner':
+        return (
+          <ScannerTerminal
+            position={position}
+            rotation={rotation}
+          />
+        )
+
+      case 'pc':
+        return (
+          <WorkstationPC
+            position={position}
+            rotation={rotation}
+          />
+        )
+    }
+  })()
+
+  return (
+    <group>
+      {visual}
+
+      <mesh
+        position={[
+          position[0] + 0.34,
+          1.58,
+          position[2] + 0.08,
+        ]}
+      >
+        <sphereGeometry
+          args={[0.04, 12, 12]}
         />
-      )
-  }
+
+        <meshStandardMaterial
+          color={statusColor}
+          emissive={statusColor}
+          emissiveIntensity={
+            status === 'offline'
+              ? 0
+              : status === 'fault'
+                ? 0.42
+                : status === 'warning'
+                  ? 0.32
+                  : 0.18
+          }
+        />
+      </mesh>
+    </group>
+  )
 }

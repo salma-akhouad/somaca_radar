@@ -60,7 +60,7 @@ export function FlowEndpointMarker({
         />
 
         <meshStandardMaterial
-          color="#e3b51d"
+          color="#cda52d"
         />
       </mesh>
 
@@ -76,7 +76,7 @@ export function FlowEndpointMarker({
           0,
           0,
         ]}
-        fontSize={0.52}
+        fontSize={0.46}
         color="#f7f5ed"
         anchorX="center"
         anchorY="middle"

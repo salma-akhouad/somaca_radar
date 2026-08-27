@@ -1,171 +1,196 @@
-interface RoadSectionProps {
-  position: [
-    number,
-    number,
-    number,
-  ]
+import {
+  VEHICLE_JOURNEY,
+} from './data/vehicleJourney'
 
-  length: number
+
+interface RoadSegmentProps {
+  start: [number, number, number]
+  end: [number, number, number]
   width?: number
-  rotation?: number
 }
 
 
-function RoadSection({
-  position,
-  length,
+function RoadSegment({
+  start,
+  end,
   width = 4.4,
-  rotation = 0,
-}: RoadSectionProps) {
+}: RoadSegmentProps) {
+  const dx = end[0] - start[0]
+  const dz = end[2] - start[2]
+
+  const length =
+    Math.sqrt(dx * dx + dz * dz)
+
+  const centerX =
+    (start[0] + end[0]) / 2
+
+  const centerZ =
+    (start[2] + end[2]) / 2
+
+  const rotation =
+    -Math.atan2(dz, dx)
+
   return (
-    <group
-      position={position}
+    <mesh
+      position={[
+        centerX,
+        0.012,
+        centerZ,
+      ]}
+      rotation-y={rotation}
+      receiveShadow
+    >
+      <boxGeometry
+        args={[
+          length,
+          0.018,
+          width,
+        ]}
+      />
+
+      <meshStandardMaterial
+        color="#4d514e"
+        roughness={0.96}
+        metalness={0}
+      />
+    </mesh>
+  )
+}
+
+
+interface RoadEdgeProps {
+  start: [number, number, number]
+  end: [number, number, number]
+  offset: number
+}
+
+
+function RoadEdge({
+  start,
+  end,
+  offset,
+}: RoadEdgeProps) {
+  const dx = end[0] - start[0]
+  const dz = end[2] - start[2]
+
+  const length =
+    Math.sqrt(dx * dx + dz * dz)
+
+  const centerX =
+    (start[0] + end[0]) / 2
+
+  const centerZ =
+    (start[2] + end[2]) / 2
+
+  const rotation =
+    -Math.atan2(dz, dx)
+
+  const perpendicularX =
+    -dz / length
+
+  const perpendicularZ =
+    dx / length
+
+  return (
+    <mesh
+      position={[
+        centerX +
+          perpendicularX * offset,
+        0.027,
+        centerZ +
+          perpendicularZ * offset,
+      ]}
       rotation-y={rotation}
     >
-      {/* =====================================================
-          ROAD SURFACE
-
-          Very thin because this is a surface treatment on the
-          factory floor, NOT another structural platform.
-          ===================================================== */}
-
-      <mesh
-        position={[
-          0,
-          0.018,
-          0,
+      <boxGeometry
+        args={[
+          length,
+          0.012,
+          0.075,
         ]}
-        receiveShadow
-      >
-        <boxGeometry
-          args={[
-            length,
-            0.025,
-            width,
-          ]}
-        />
+      />
 
-        <meshStandardMaterial
-          color="#555a57"
-          roughness={0.96}
-          metalness={0}
-        />
-      </mesh>
-
-
-      {/* =====================================================
-          SAFETY / ROUTE EDGES
-
-          Two continuous yellow lines define the vehicle route.
-
-          They deliberately sit near the edges rather than
-          crossing through the centre of the road.
-          ===================================================== */}
-
-      {[
-        -(width / 2 - 0.22),
-        width / 2 - 0.22,
-      ].map((z) => (
-        <mesh
-          key={z}
-          position={[
-            0,
-            0.037,
-            z,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              length - 0.15,
-              0.012,
-              0.085,
-            ]}
-          />
-
-          <meshStandardMaterial
-            color="#c89d18"
-            roughness={0.72}
-          />
-        </mesh>
-      ))}
-    </group>
+      <meshStandardMaterial
+        color="#b89229"
+        roughness={0.78}
+      />
+    </mesh>
   )
 }
 
 
 export function PostProductionRoad() {
+  const {
+    lowered,
+    handoffStraight,
+    finalControlEntry,
+    validationExit,
+    releaseGate,
+    parkingApproach,
+    parkingEntry,
+  } = VEHICLE_JOURNEY
+
+  const roadSegments = [
+    [
+      lowered.position,
+      handoffStraight.position,
+    ],
+
+    [
+      handoffStraight.position,
+      finalControlEntry.position,
+    ],
+
+    [
+      finalControlEntry.position,
+      validationExit.position,
+    ],
+
+    [
+      validationExit.position,
+      releaseGate.position,
+    ],
+
+    [
+      releaseGate.position,
+      parkingApproach.position,
+    ],
+
+    [
+      parkingApproach.position,
+      parkingEntry.position,
+    ],
+  ] as const
+
   return (
     <group>
-      {/* =====================================================
-          CONTINUOUS POST-PRODUCTION VEHICLE ROUTE
+      {roadSegments.map(
+        ([start, end], index) => (
+          <RoadSegment
+            key={`road-${index}`}
+            start={start}
+            end={end}
+          />
+        ),
+      )}
 
-          Montage
-             ↓
-          Final control
-             ↓
-          Validation
-             ↓
-          Release
-             ↓
-          Finished vehicle parking
+      {roadSegments.map(
+        ([start, end], index) => (
+          <group key={`edges-${index}`}>
+            <RoadEdge
+              start={start}
+              end={end}
+              offset={2.08}
+            />
 
-          Each section overlaps the next slightly so the eye
-          reads ONE continuous industrial circulation route.
-          ===================================================== */}
-
-
-      {/* Production exit → final control */}
-      <RoadSection
-        position={[
-          21.5,
-          0,
-          -19,
-        ]}
-        length={11}
-      />
-
-
-      {/* Final control → validation */}
-      <RoadSection
-        position={[
-          31.5,
-          0,
-          -19,
-        ]}
-        length={10}
-      />
-
-
-      {/* =====================================================
-          GENTLE ROUTE TRANSITION
-
-          The route begins turning toward the finished vehicle
-          release / parking side.
-
-          A small rotation keeps it industrial and believable
-          without making the trajectory unnecessarily complex.
-          ===================================================== */}
-
-      <RoadSection
-        position={[
-          39,
-          0,
-          -18.25,
-        ]}
-        length={6.5}
-        rotation={-0.18}
-      />
-
-
-      {/* Parking approach */}
-      <RoadSection
-        position={[
-          44.2,
-          0,
-          -17.25,
-        ]}
-        length={5.4}
-      />
+            <RoadEdge
+              start={start}
+              end={end}
+              offset={-2.08}
+            />
+          </group>
+        ),
+      )}
     </group>
   )
 }

@@ -4,6 +4,9 @@ import {
   VehicleBody,
 } from './VehicleBody'
 
+import {
+  VEHICLE_JOURNEY,
+} from './data/vehicleJourney'
 
 interface ParkedVehicle {
   x: number
@@ -74,6 +77,8 @@ const parkedVehicles: ParkedVehicle[] = [
 
 
 export function FinishedVehiclePark() {
+  const parkingBay =
+    VEHICLE_JOURNEY.parkingBay
   return (
     <group
       position={[
@@ -204,6 +209,34 @@ export function FinishedVehiclePark() {
         />
       </mesh>
 
+      {[
+        [-6.2, 0],
+        [-5.2, 0.7],
+        [-4.2, 1.4],
+      ].map(([x, z]) => (
+        <mesh
+          key={`${x}-${z}`}
+          position={[
+            x,
+            0.04,
+            z,
+          ]}
+          rotation-y={-0.18}
+        >
+          <boxGeometry
+            args={[
+              1.1,
+              0.012,
+              0.055,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#b89229"
+            roughness={0.76}
+          />
+        </mesh>
+      ))}
 
       {/* =====================================================
           PARKED FINISHED VEHICLES
@@ -248,26 +281,54 @@ export function FinishedVehiclePark() {
           enter this exact location.
           ===================================================== */}
 
-      <mesh
+      <group
         position={[
-          5,
-          0.038,
-          2.25,
+          parkingBay.position[0] - 49,
+          0,
+          parkingBay.position[2] + 19,
         ]}
       >
-        <boxGeometry
-          args={[
-            2.7,
-            0.012,
-            0.07,
-          ]}
-        />
+        <mesh
+          position={[0, 0.038, 0]}
+        >
+          <boxGeometry
+            args={[2.7, 0.012, 0.07]}
+          />
 
-        <meshStandardMaterial
-          color="#758d72"
-          roughness={0.8}
-        />
-      </mesh>
+          <meshStandardMaterial
+            color="#73866f"
+            roughness={0.82}
+          />
+        </mesh>
+
+        <mesh
+          position={[0, 0.039, -1.05]}
+        >
+          <boxGeometry
+            args={[2.7, 0.012, 0.055]}
+          />
+
+          <meshStandardMaterial
+            color="#73866f"
+            roughness={0.82}
+          />
+        </mesh>
+
+        <Text
+          position={[0, 0.05, 0.58]}
+          rotation={[
+            -Math.PI / 2,
+            0,
+            0,
+          ]}
+          fontSize={0.28}
+          color="#e2e4df"
+          anchorX="center"
+          anchorY="middle"
+        >
+          ARRIVÉE
+        </Text>
+      </group>
 
 
       {/* Parking identification */}
@@ -282,8 +343,8 @@ export function FinishedVehiclePark() {
           0,
           0,
         ]}
-        fontSize={0.52}
-        color="#363b38"
+        fontSize={0.46}
+        color="#2f3431"
         anchorX="center"
         anchorY="middle"
       >

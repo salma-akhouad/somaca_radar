@@ -12,9 +12,11 @@ import {
 
 import type {
   CameraAction,
-  NavigationMode,
 } from './SceneCameraControls'
 
+import {
+  FactoryEnvelope,
+} from './factory/FactoryEnvelope'
 
 interface MontageSceneProps {
   command: {
@@ -22,17 +24,13 @@ interface MontageSceneProps {
     id: number
   }
 
-  navigationMode:
-    NavigationMode
-
   onZoomChange:
-    (zoom: number) => void
+  (zoom: number) => void
 }
 
 
 export function MontageScene({
   command,
-  navigationMode,
   onZoomChange,
 }: MontageSceneProps) {
   return (
@@ -40,60 +38,80 @@ export function MontageScene({
       <color
         attach="background"
         args={[
-          '#e7e7e1',
+          '#c9cbc6',
         ]}
       />
 
       <fog
         attach="fog"
         args={[
-          '#e7e7e1',
-          40,
-          95,
+          '#c9cbc6',
+          55,
+          120,
         ]}
       />
 
       <hemisphereLight
         args={[
-          '#fffdf6',
-          '#a5a69f',
-          1.25,
+          '#f4f2e9',
+          '#858984',
+          0.85,
         ]}
       />
 
       <ambientLight
-        intensity={0.35}
+        intensity={0.22}
       />
 
       <directionalLight
         castShadow
         position={[
+          22,
+          30,
           18,
-          26,
-          14,
         ]}
-        intensity={1.45}
+        intensity={1.05}
         shadow-mapSize={[
-          1024,
-          1024,
+          2048,
+          2048,
         ]}
-        shadow-camera-left={-32}
-        shadow-camera-right={32}
-        shadow-camera-top={32}
-        shadow-camera-bottom={-32}
+        shadow-camera-left={-55}
+        shadow-camera-right={75}
+        shadow-camera-top={45}
+        shadow-camera-bottom={-45}
+        shadow-bias={-0.00015}
       />
 
+      {[
+        [-20, 16],
+        [20, 16],
+        [60, 16],
+        [-20, -16],
+        [20, -16],
+        [60, -16],
+      ].map(([x, z]) => (
+        <pointLight
+          key={`${x}-${z}`}
+          position={[
+            x,
+            7.1,
+            z,
+          ]}
+          color="#f1eee1"
+          intensity={0.3}
+          distance={24}
+          decay={2}
+        />
+      ))}
+
       <FactoryFloor />
+
+      <FactoryEnvelope />
 
       <MontageLayout />
 
       <SceneCameraControls
         command={command}
-
-        navigationMode={
-          navigationMode
-        }
-
         onZoomChange={
           onZoomChange
         }

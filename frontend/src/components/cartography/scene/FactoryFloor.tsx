@@ -102,7 +102,7 @@ export function FactoryFloor() {
      * Repeating the texture gives us many concrete sections
      * across the much larger factory.
      */
-    texture.repeat.set(10, 7)
+    texture.repeat.set(8, 6)
 
     /*
      * Linear filtering softens the procedural texture.
@@ -144,38 +144,74 @@ export function FactoryFloor() {
 
         <meshStandardMaterial
           map={floorTexture}
-          color="#c3c4bf"
-          roughness={0.94}
+          color="#bdbfba"
+          roughness={0.96}
           metalness={0}
         />
       </mesh>
 
+      {/* Expansion joints */}
 
-      {/* =====================================================
-          SUBTLE STRUCTURAL FLOOR GRID
+      {[
+        -35,
+        -15,
+        5,
+        25,
+        45,
+        65,
+      ].map((x) => (
+        <mesh
+          key={`joint-x-${x}`}
+          position={[
+            x,
+            0.004,
+            0,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              0.025,
+              0.006,
+              92,
+            ]}
+          />
 
-          This gives scale to the factory without creating the
-          old checkerboard appearance.
-          ===================================================== */}
+          <meshStandardMaterial
+            color="#858984"
+            roughness={0.95}
+          />
+        </mesh>
+      ))}
 
-      <gridHelper
-        args={[
-          100,
-          20,
-          '#9fa19c',
-          '#b0b2ad',
-        ]}
-        position={[
-          15,
-          0.006,
-          0,
-        ]}
-        scale={[
-          1.3,
-          1,
-          1,
-        ]}
-      />
+
+      {[
+        -30,
+        -10,
+        10,
+        30,
+      ].map((z) => (
+        <mesh
+          key={`joint-z-${z}`}
+          position={[
+            15,
+            0.004,
+            z,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              120,
+              0.006,
+              0.025,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#858984"
+            roughness={0.95}
+          />
+        </mesh>
+      ))}
     </group>
   )
 }

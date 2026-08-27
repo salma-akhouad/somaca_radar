@@ -1,10 +1,30 @@
-import { Text } from '@react-three/drei'
+import {
+  Text,
+} from '@react-three/drei'
+
+import {
+  FINAL_CONTROL_LIGHTING,
+} from './FinalControlTest'
+
 import {
   VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
 
+import {
+  VehicleBody,
+} from './VehicleBody'
+
+
 export function FinalControlZone() {
-  const finalControl = VEHICLE_JOURNEY.finalControl
+  const finalControl =
+    VEHICLE_JOURNEY.finalControl
+
+  const testPhase = 'complete'
+
+  const lighting =
+    FINAL_CONTROL_LIGHTING[testPhase]
+
+
   return (
     <group
       position={[
@@ -13,118 +33,61 @@ export function FinalControlZone() {
         finalControl.position[2],
       ]}
     >
-      {/* =====================================================
-          FINAL CONTROL AREA
-
-          IMPORTANT:
-          The road already exists underneath this component.
-
-          Therefore this component does NOT create another
-          large floor/platform.
-
-          It only adds:
-          - painted inspection markings
-          - roller/test equipment
-          - control equipment
-          - identification
-          ===================================================== */}
-
-
-      {/* Inspection-zone side markings */}
       {[-1.78, 1.78].map((z) => (
         <mesh
           key={z}
-          position={[
-            0,
-            0.043,
-            z,
-          ]}
+          position={[0, 0.043, z]}
         >
           <boxGeometry
-            args={[
-              7.6,
-              0.012,
-              0.09,
-            ]}
+            args={[7.6, 0.012, 0.09]}
           />
 
           <meshStandardMaterial
-            color="#c89d18"
-            roughness={0.75}
+            color="#b89229"
+            roughness={0.76}
+          />
+        </mesh>
+      ))}
+
+      {[-3.72, 3.72].map((x) => (
+        <mesh
+          key={x}
+          position={[x, 0.043, 0]}
+        >
+          <boxGeometry
+            args={[0.09, 0.012, 3.65]}
+          />
+
+          <meshStandardMaterial
+            color="#b89229"
+            roughness={0.76}
           />
         </mesh>
       ))}
 
 
-      {/* Entry boundary */}
-      <mesh
-        position={[
-          -3.72,
-          0.043,
-          0,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            0.09,
-            0.012,
-            3.65,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#c89d18"
-          roughness={0.75}
-        />
-      </mesh>
-
-
-      {/* Exit boundary */}
-      <mesh
-        position={[
-          3.72,
-          0.043,
-          0,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            0.09,
-            0.012,
-            3.65,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#c89d18"
-          roughness={0.75}
-        />
-      </mesh>
-
-
-      {/* =====================================================
-          ROLLER TEST EQUIPMENT
-
-          These ARE physical objects, so they are allowed to
-          rise above the road surface.
-
-          The two roller banks correspond approximately to the
-          front and rear axle positions of the future vehicle.
-          ===================================================== */}
-
-      {[-1.25, 1.25].map((x) => (
+      {[-1.28, 1.28].map((x) => (
         <group key={x}>
+          <mesh
+            position={[x, 0.065, 0]}
+            receiveShadow
+          >
+            <boxGeometry
+              args={[0.76, 0.07, 1.86]}
+            />
+
+            <meshStandardMaterial
+              color="#666b67"
+              metalness={0.25}
+              roughness={0.66}
+            />
+          </mesh>
+
           {[-0.68, 0.68].map((z) => (
             <mesh
               key={z}
-              position={[
-                x,
-                0.16,
-                z,
-              ]}
-              rotation-z={
-                Math.PI / 2
-              }
+              position={[x, 0.16, z]}
+              rotation-z={Math.PI / 2}
               castShadow
             >
               <cylinderGeometry
@@ -137,9 +100,9 @@ export function FinalControlZone() {
               />
 
               <meshStandardMaterial
-                color="#303532"
-                metalness={0.58}
-                roughness={0.38}
+                color="#2e3430"
+                metalness={0.6}
+                roughness={0.36}
               />
             </mesh>
           ))}
@@ -147,118 +110,325 @@ export function FinalControlZone() {
       ))}
 
 
-      {/* Roller mounting plates */}
-      {[-1.25, 1.25].map((x) => (
+      <VehicleBody
+        position={[0, 0.02, 0]}
+        rotation={finalControl.rotation}
+        stage="finished"
+        color="#eceee9"
+        lights={lighting}
+      />
+
+
+      <group
+        position={[3.15, 0, 0]}
+      >
+        {[-0.58, 0.58].map((z) => (
+          <group
+            key={z}
+            position={[0, 0, z]}
+          >
+            <mesh
+              position={[0, 0.72, 0]}
+              castShadow
+            >
+              <boxGeometry
+                args={[0.12, 1.44, 0.12]}
+              />
+
+              <meshStandardMaterial
+                color="#454b47"
+                metalness={0.42}
+                roughness={0.46}
+              />
+            </mesh>
+
+            <mesh
+              position={[-0.04, 1.22, 0]}
+            >
+              <boxGeometry
+                args={[0.12, 0.52, 0.5]}
+              />
+
+              <meshStandardMaterial
+                color="#303632"
+                roughness={0.48}
+              />
+            </mesh>
+
+            <mesh
+              position={[-0.105, 1.22, 0]}
+            >
+              <circleGeometry
+                args={[0.16, 24]}
+              />
+
+              <meshStandardMaterial
+                color="#d9d7c9"
+                emissive="#d0c799"
+                emissiveIntensity={0.14}
+                roughness={0.34}
+              />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+
+      <group
+        position={[-3.05, 0, 0]}
+      >
         <mesh
-          key={x}
-          position={[
-            x,
-            0.065,
-            0,
-          ]}
-          receiveShadow
+          position={[0, 0.92, 0]}
+          castShadow
         >
           <boxGeometry
-            args={[
-              0.75,
-              0.07,
-              1.85,
-            ]}
+            args={[0.14, 1.84, 1.65]}
           />
 
           <meshStandardMaterial
-            color="#686d69"
-            metalness={0.25}
-            roughness={0.66}
+            color="#424844"
+            metalness={0.32}
+            roughness={0.5}
           />
         </mesh>
+
+        {[-0.55, 0.55].map((z) => (
+          <mesh
+            key={z}
+            position={[
+              0.08,
+              1.05,
+              z,
+            ]}
+          >
+            <circleGeometry
+              args={[0.13, 20]}
+            />
+
+            <meshStandardMaterial
+              color="#84342f"
+              emissive="#a94139"
+              emissiveIntensity={0.16}
+              roughness={0.3}
+            />
+          </mesh>
+        ))}
+
+        <mesh
+          position={[
+            0.08,
+            0.66,
+            0,
+          ]}
+        >
+          <boxGeometry
+            args={[0.02, 0.11, 0.62]}
+          />
+
+          <meshStandardMaterial
+            color="#aa7c28"
+            emissive="#a27827"
+            emissiveIntensity={0.1}
+          />
+        </mesh>
+      </group>
+
+
+      {[-0.53, 0.53].map((z) => (
+        <pointLight
+          key={`headlight-${z}`}
+          position={[2.28, 0.94, z]}
+          color="#fff0c2"
+          intensity={1.45}
+          distance={3.5}
+          decay={2}
+        />
       ))}
 
 
-      {/* =====================================================
-          CONTROL CABINET
+      {[-2.75, 2.75].map((x) => (
+        <group
+          key={x}
+          position={[x, 0, 2.18]}
+        >
+          <mesh
+            position={[0, 1.25, 0]}
+            castShadow
+          >
+            <boxGeometry
+              args={[0.11, 2.5, 0.11]}
+            />
 
-          Kept outside the vehicle trajectory so that the
-          future Sandero has a clear central inspection area.
-          ===================================================== */}
+            <meshStandardMaterial
+              color="#474d49"
+              metalness={0.42}
+              roughness={0.48}
+            />
+          </mesh>
+
+          <mesh
+            position={[0, 2.28, -0.08]}
+            rotation-x={-0.22}
+          >
+            <boxGeometry
+              args={[0.72, 0.28, 0.16]}
+            />
+
+            <meshStandardMaterial
+              color="#303632"
+              roughness={0.48}
+            />
+          </mesh>
+
+          <mesh
+            position={[0, 2.25, -0.17]}
+            rotation-x={-0.22}
+          >
+            <boxGeometry
+              args={[0.56, 0.14, 0.025]}
+            />
+
+            <meshStandardMaterial
+              color="#dfddce"
+              emissive="#d3cda9"
+              emissiveIntensity={0.16}
+              roughness={0.3}
+            />
+          </mesh>
+        </group>
+      ))}
+
 
       <mesh
-        position={[
-          3.05,
-          0.78,
-          -2.25,
-        ]}
+        position={[3.05, 0.78, -2.25]}
         castShadow
       >
         <boxGeometry
-          args={[
-            0.9,
-            1.56,
-            0.68,
-          ]}
+          args={[0.9, 1.56, 0.68]}
         />
 
         <meshStandardMaterial
-          color="#4d524f"
+          color="#4c524e"
           metalness={0.18}
           roughness={0.64}
         />
       </mesh>
 
 
-      {/* Cabinet front panel */}
+      <group
+        position={[1.65, 0, -2.15]}
+      >
+        <mesh
+          position={[0, 0.68, 0]}
+          castShadow
+        >
+          <boxGeometry
+            args={[1.15, 1.36, 0.5]}
+          />
+
+          <meshStandardMaterial
+            color="#555b57"
+            metalness={0.22}
+            roughness={0.6}
+          />
+        </mesh>
+
+        <mesh
+          position={[
+            0,
+            0.93,
+            0.258,
+          ]}
+        >
+          <boxGeometry
+            args={[0.86, 0.4, 0.018]}
+          />
+
+          <meshStandardMaterial
+            color="#252b28"
+            roughness={0.4}
+          />
+        </mesh>
+
+        <mesh
+          position={[
+            0,
+            0.94,
+            0.27,
+          ]}
+        >
+          <boxGeometry
+            args={[0.72, 0.27, 0.01]}
+          />
+
+          <meshStandardMaterial
+            color="#b9cec4"
+            emissive="#708f80"
+            emissiveIntensity={0.16}
+            roughness={0.26}
+          />
+        </mesh>
+
+        {[
+          [-0.28, '#6f9b76'],
+          [0, '#b69036'],
+          [0.28, '#666b67'],
+        ].map(([x, color]) => (
+          <mesh
+            key={String(x)}
+            position={[
+              Number(x),
+              0.5,
+              0.27,
+            ]}
+          >
+            <sphereGeometry
+              args={[0.04, 12, 12]}
+            />
+
+            <meshStandardMaterial
+              color={String(color)}
+              emissive={String(color)}
+              emissiveIntensity={0.1}
+            />
+          </mesh>
+        ))}
+      </group>
+
+
       <mesh
-        position={[
-          3.05,
-          1.02,
-          -1.902,
-        ]}
+        position={[3.05, 1.02, -1.902]}
       >
         <boxGeometry
-          args={[
-            0.56,
-            0.4,
-            0.018,
-          ]}
+          args={[0.56, 0.4, 0.018]}
         />
 
         <meshStandardMaterial
-          color="#252b28"
+          color="#242a27"
           roughness={0.45}
         />
       </mesh>
 
-
-      {/* Active inspection display */}
       <mesh
-        position={[
-          3.05,
-          1.04,
-          -1.89,
-        ]}
+        position={[3.05, 1.04, -1.89]}
       >
         <boxGeometry
-          args={[
-            0.45,
-            0.28,
-            0.012,
-          ]}
+          args={[0.45, 0.28, 0.012]}
         />
 
         <meshStandardMaterial
-          color="#b9cec4"
-          emissive="#6f9885"
-          emissiveIntensity={0.34}
+          color="#b9cbc2"
+          emissive="#698d7c"
+          emissiveIntensity={0.16}
           roughness={0.3}
         />
       </mesh>
 
 
-      {/* Cabinet status indicators */}
       {[
-        [-0.2, '#72a77a'],
-        [0, '#c99c24'],
-        [0.2, '#9a3e35'],
+        [-0.2, '#6f9b76'],
+        [0, '#b69036'],
+        [0.2, '#666b67'],
       ].map(([offset, color]) => (
         <mesh
           key={String(offset)}
@@ -269,150 +439,27 @@ export function FinalControlZone() {
           ]}
         >
           <sphereGeometry
-            args={[
-              0.035,
-              12,
-              12,
-            ]}
+            args={[0.035, 12, 12]}
           />
 
           <meshStandardMaterial
             color={String(color)}
             emissive={String(color)}
-            emissiveIntensity={0.24}
+            emissiveIntensity={0.1}
           />
         </mesh>
       ))}
 
 
-      {/* =====================================================
-          INSPECTION LIGHT POSTS
-
-          These are NOT the car lights.
-
-          They are fixed equipment used to visually frame the
-          control station. The future Sandero will have its own
-          controllable headlights, indicators and rear lamps.
-          ===================================================== */}
-
-      {[-2.75, 2.75].map((x) => (
-        <group
-          key={x}
-          position={[
-            x,
-            0,
-            2.18,
-          ]}
-        >
-          {/* Vertical post */}
-          <mesh
-            position={[
-              0,
-              1.25,
-              0,
-            ]}
-            castShadow
-          >
-            <boxGeometry
-              args={[
-                0.11,
-                2.5,
-                0.11,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color="#484d4a"
-              metalness={0.42}
-              roughness={0.48}
-            />
-          </mesh>
-
-
-          {/* Inspection lamp housing */}
-          <mesh
-            position={[
-              0,
-              2.28,
-              -0.08,
-            ]}
-            rotation-x={-0.22}
-          >
-            <boxGeometry
-              args={[
-                0.72,
-                0.28,
-                0.16,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color="#333835"
-              roughness={0.48}
-            />
-          </mesh>
-
-
-          {/* Neutral inspection lamp */}
-          <mesh
-            position={[
-              0,
-              2.25,
-              -0.17,
-            ]}
-            rotation-x={-0.22}
-          >
-            <boxGeometry
-              args={[
-                0.56,
-                0.14,
-                0.025,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color="#e2dfce"
-              emissive="#d6d0ae"
-              emissiveIntensity={0.35}
-              roughness={0.3}
-            />
-          </mesh>
-        </group>
-      ))}
-
-
-      {/* =====================================================
-          RESERVED VEHICLE INSPECTION SPACE
-
-          Intentionally empty for now.
-
-               FRONT
-                 →
-          ┌─────────────────────┐
-          │                     │
-          │   future Sandero    │
-          │                     │
-          └─────────────────────┘
-
-          Batch 2 creates the vehicle.
-          Batch 5 activates its lighting tests.
-          ===================================================== */}
-
-
-      {/* Zone label painted on the floor */}
       <Text
-        position={[
-          0,
-          0.055,
-          -2.35,
-        ]}
+        position={[0, 0.055, -2.35]}
         rotation={[
           -Math.PI / 2,
           0,
           0,
         ]}
         fontSize={0.48}
-        color="#3f4441"
+        color="#303532"
         anchorX="center"
         anchorY="middle"
       >

@@ -76,10 +76,24 @@ import {
 
 import {
   montagePoles,
+  UET_LAYOUT,
 } from './factory/data/montageLayoutData'
 
 
-export function MontageLayout() {
+import type {
+  PoleConfig,
+} from './factory/data/montageLayoutData'
+
+
+interface MontageLayoutProps {
+  onPoleSelect?: (pole: PoleConfig) => void
+}
+
+
+export function MontageLayout({
+  onPoleSelect,
+}: MontageLayoutProps) {
+  const uets = Object.values(UET_LAYOUT)
   return (
     <group>
       {/* =====================================================
@@ -230,34 +244,15 @@ export function MontageLayout() {
           Larger because every UET now contains 6 poteaux.
           ===================================================== */}
 
-      <UetArea
-        position={[23, 0, 0]}
-        width={10}
-        depth={28}
-        label="UET 1"
-      />
-
-      <UetArea
-        position={[0, 0, 23]}
-        width={30}
-        depth={8}
-        label="UET 2"
-      />
-
-      <UetArea
-        position={[-23, 0, 0]}
-        width={10}
-        depth={28}
-        label="UET 3"
-      />
-
-      <UetArea
-        position={[0, 0, -23]}
-        width={30}
-        depth={8}
-        label="UET 4"
-      />
-
+      {uets.map((uet) => (
+        <UetArea
+          key={uet.id}
+          position={uet.position}
+          width={uet.width}
+          depth={uet.depth}
+          label={uet.id}
+        />
+      ))}
 
       {/* =====================================================
           ALL 24 POTEAUX
@@ -270,6 +265,7 @@ export function MontageLayout() {
           <ProductionStation
             key={pole.id}
             pole={pole}
+            onSelect={onPoleSelect}
           />
         ),
       )}
