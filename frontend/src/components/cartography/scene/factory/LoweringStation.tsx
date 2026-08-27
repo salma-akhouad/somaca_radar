@@ -3,10 +3,6 @@ import {
 } from '@react-three/drei'
 
 import {
-    VehicleBody,
-} from './VehicleBody'
-
-import {
     VEHICLE_JOURNEY,
 } from './data/vehicleJourney'
 
@@ -122,17 +118,6 @@ export function LoweringStation() {
                     roughness={0.4}
                 />
             </RoundedBox>
-
-
-            <VehicleBody
-                position={[
-                    0,
-                    0.02,
-                    0,
-                ]}
-                rotation={lowered.rotation}
-                stage="finished"
-            />
 
 
             {[-1.1, 1.1].map(

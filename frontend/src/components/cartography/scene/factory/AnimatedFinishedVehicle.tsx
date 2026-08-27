@@ -15,49 +15,31 @@ import {
   VEHICLE_JOURNEY_ORDER,
 } from './data/vehicleJourney'
 
+import type {
+  VehicleJourneyKey,
+} from './data/vehicleJourney'
+
 import {
   VehicleBody,
 } from './VehicleBody'
 
 
 const SPEED = 2.4
-const PARKING_PAUSE = 4
+const TURN_RESPONSE = 5
+
+const PAUSE_BY_DESTINATION:
+  Partial<Record<VehicleJourneyKey, number>> = {
+    finalControl: 3.5,
+    validation: 2.5,
+    releaseGate: 1.4,
+    parkingBay: 4,
+  }
 
 
 const routePoints =
   VEHICLE_JOURNEY_ORDER.map(
     (key) =>
       VEHICLE_JOURNEY[key],
-  )
-
-
-const segmentLengths =
-  routePoints
-    .slice(0, -1)
-    .map((point, index) => {
-      const next =
-        routePoints[index + 1]
-
-      const dx =
-        next.position[0] -
-        point.position[0]
-
-      const dz =
-        next.position[2] -
-        point.position[2]
-
-      return Math.sqrt(
-        dx * dx +
-        dz * dz,
-      )
-    })
-
-
-const totalDistance =
-  segmentLengths.reduce(
-    (sum, length) =>
-      sum + length,
-    0,
   )
 
 
@@ -82,16 +64,14 @@ function lerpAngle(
     end - start
 
   while (
-    difference >
-    Math.PI
+    difference > Math.PI
   ) {
     difference -=
       Math.PI * 2
   }
 
   while (
-    difference <
-    -Math.PI
+    difference < -Math.PI
   ) {
     difference +=
       Math.PI * 2
@@ -104,15 +84,104 @@ function lerpAngle(
 }
 
 
+function getSegmentLength(
+  index: number,
+) {
+  const start =
+    routePoints[index]
+
+  const end =
+    routePoints[index + 1]
+
+  const dx =
+    end.position[0] -
+    start.position[0]
+
+  const dz =
+    end.position[2] -
+    start.position[2]
+
+  return Math.sqrt(
+    dx * dx +
+    dz * dz,
+  )
+}
+
+
+function getMovementRotation(
+  index: number,
+) {
+  const start =
+    routePoints[index]
+
+  const end =
+    routePoints[index + 1]
+
+  const dx =
+    end.position[0] -
+    start.position[0]
+
+  const dz =
+    end.position[2] -
+    start.position[2]
+
+  return Math.atan2(
+    -dz,
+    dx,
+  )
+}
+
+
+function smoothStep(
+  value: number,
+) {
+  const clamped =
+    Math.max(
+      0,
+      Math.min(1, value),
+    )
+
+  return (
+    clamped *
+    clamped *
+    (3 - 2 * clamped)
+  )
+}
+
+
 export function AnimatedFinishedVehicle() {
   const vehicle =
     useRef<Group>(null)
 
-  const travelledDistance =
+  const segmentIndex =
     useRef(0)
 
-  const parkingPause =
+  const segmentDistance =
     useRef(0)
+
+  const pauseRemaining =
+    useRef(0)
+
+
+  function resetJourney() {
+    const start =
+      VEHICLE_JOURNEY.lowered
+
+    segmentIndex.current = 0
+    segmentDistance.current = 0
+    pauseRemaining.current = 0
+
+    if (!vehicle.current) {
+      return
+    }
+
+    vehicle.current.position.set(
+      ...start.position,
+    )
+
+    vehicle.current.rotation.y =
+      start.rotation
+  }
 
 
   useFrame((_, delta) => {
@@ -122,96 +191,162 @@ export function AnimatedFinishedVehicle() {
 
 
     if (
-      travelledDistance.current >=
-      totalDistance
+      pauseRemaining.current > 0
     ) {
-      parkingPause.current +=
+      pauseRemaining.current -=
         delta
 
       if (
-        parkingPause.current >=
-        PARKING_PAUSE
+        pauseRemaining.current > 0
       ) {
-        travelledDistance.current = 0
-        parkingPause.current = 0
-      } else {
+        return
+      }
+
+
+      if (
+        segmentIndex.current >=
+        routePoints.length - 1
+      ) {
+        resetJourney()
         return
       }
     }
 
 
-    travelledDistance.current =
+    const index =
+      segmentIndex.current
+
+    if (
+      index >=
+      routePoints.length - 1
+    ) {
+      return
+    }
+
+
+    const start =
+      routePoints[index]
+
+    const end =
+      routePoints[index + 1]
+
+    const segmentLength =
+      getSegmentLength(index)
+
+
+    segmentDistance.current =
       Math.min(
-        totalDistance,
-        travelledDistance.current +
+        segmentLength,
+        segmentDistance.current +
           SPEED * delta,
       )
 
 
-    let remainingDistance =
-      travelledDistance.current
-
-
-    for (
-      let index = 0;
-      index <
-      segmentLengths.length;
-      index += 1
-    ) {
-      const segmentLength =
-        segmentLengths[index]
-
-      if (
-        remainingDistance >
-        segmentLength
-      ) {
-        remainingDistance -=
+    const progress =
+      segmentLength === 0
+        ? 1
+        : segmentDistance.current /
           segmentLength
 
-        continue
-      }
+
+    vehicle.current.position.set(
+      lerp(
+        start.position[0],
+        end.position[0],
+        progress,
+      ),
+
+      lerp(
+        start.position[1],
+        end.position[1],
+        progress,
+      ),
+
+      lerp(
+        start.position[2],
+        end.position[2],
+        progress,
+      ),
+    )
 
 
-      const start =
-        routePoints[index]
-
-      const end =
-        routePoints[index + 1]
-
-      const progress =
-        segmentLength === 0
-          ? 1
-          : remainingDistance /
-            segmentLength
+    const movementRotation =
+      getMovementRotation(index)
 
 
-      vehicle.current.position.set(
-        lerp(
-          start.position[0],
-          end.position[0],
-          progress,
-        ),
-        lerp(
-          start.position[1],
-          end.position[1],
-          progress,
-        ),
-        lerp(
-          start.position[2],
-          end.position[2],
-          progress,
-        ),
+    let desiredRotation =
+      movementRotation
+
+
+    const isParkingSegment =
+      index ===
+      routePoints.length - 2
+
+
+    if (isParkingSegment) {
+      const parkingTurn =
+        smoothStep(
+          (
+            progress - 0.55
+          ) / 0.45,
+        )
+
+      desiredRotation =
+        lerpAngle(
+          movementRotation,
+          end.rotation,
+          parkingTurn,
+        )
+    }
+
+
+    const turnAmount =
+      1 -
+      Math.exp(
+        -TURN_RESPONSE * delta,
       )
 
 
-      vehicle.current.rotation.y =
-        lerpAngle(
-          start.rotation,
-          end.rotation,
-          progress,
-        )
+    vehicle.current.rotation.y =
+      lerpAngle(
+        vehicle.current.rotation.y,
+        desiredRotation,
+        turnAmount,
+      )
 
-      break
+
+    if (
+      segmentDistance.current <
+      segmentLength
+    ) {
+      return
+    }
+
+
+    const destinationKey =
+      VEHICLE_JOURNEY_ORDER[
+        index + 1
+      ]
+
+
+    vehicle.current.position.set(
+      ...end.position,
+    )
+
+
+    segmentIndex.current += 1
+    segmentDistance.current = 0
+
+
+    const pause =
+      PAUSE_BY_DESTINATION[
+        destinationKey
+      ] ?? 0
+
+
+    if (pause > 0) {
+      pauseRemaining.current =
+        pause
     }
   })
 
