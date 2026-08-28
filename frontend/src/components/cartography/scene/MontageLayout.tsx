@@ -35,6 +35,10 @@ import {
 } from './factory/SupervisorBooth'
 
 import {
+  FactoryManager,
+} from './factory/FactoryManager'
+
+import {
   ProductionStation,
 } from './factory/ProductionStation'
 
@@ -45,6 +49,10 @@ import {
 import {
   AutomatedCarrier,
 } from './factory/AutomatedCarrier'
+
+import {
+  WheelStockArea,
+} from './factory/WheelStockArea'
 
 import {
   FactoryWorker,
@@ -83,7 +91,6 @@ import {
   UET_LAYOUT,
 } from './factory/data/montageLayoutData'
 
-
 import type {
   PoleConfig,
 } from './factory/data/montageLayoutData'
@@ -92,9 +99,32 @@ import {
   AnimatedFinishedVehicle,
 } from './factory/AnimatedFinishedVehicle'
 
+import {
+  SeatStockArea,
+} from './factory/SeatStockArea'
+
+import {
+  WorkerAmenities,
+} from './factory/WorkerAmenities'
+
+import {
+  CentralSafetyCell,
+} from './factory/CentralSafetyCell'
+
+import {
+  SeatAutomatedCarrier,
+} from './factory/SeatAutomatedCarrier'
+
+
 interface MontageLayoutProps {
-  selectedPoleId?: string | null
-  onPoleSelect?: (pole: PoleConfig) => void
+  selectedPoleId?:
+    string | null
+
+  onPoleSelect?:
+    (
+      pole:
+        PoleConfig,
+    ) => void
 }
 
 
@@ -102,172 +132,228 @@ export function MontageLayout({
   selectedPoleId,
   onPoleSelect,
 }: MontageLayoutProps) {
-  const uets = Object.values(UET_LAYOUT)
+  const uets =
+    Object.values(
+      UET_LAYOUT,
+    )
+
+
   return (
     <group>
-      {/* =====================================================
-          LARGER PRODUCTION U
-
-          We increased the physical footprint because
-          24 poteaux need genuine breathing room.
-          ===================================================== */}
-
       <IndustrialLane
-        position={[-17, 0.024, 0]}
+        position={[
+          -17,
+          0.024,
+          0,
+        ]}
         length={32}
         width={1.65}
-        rotation={Math.PI / 2}
+        rotation={
+          Math.PI / 2
+        }
       />
 
       <IndustrialLane
-        position={[0, 0.024, 16]}
+        position={[
+          0,
+          0.024,
+          16,
+        ]}
         length={34}
         width={1.65}
       />
 
       <IndustrialLane
-        position={[17, 0.024, 0]}
+        position={[
+          17,
+          0.024,
+          0,
+        ]}
         length={32}
         width={1.65}
-        rotation={Math.PI / 2}
+        rotation={
+          Math.PI / 2
+        }
       />
 
-
-      {/* Seamless upper corners */}
-
       <IndustrialLane
-        position={[-17, 0.025, 16]}
+        position={[
+          -17,
+          0.025,
+          16,
+        ]}
         length={1.9}
         width={1.9}
       />
 
       <IndustrialLane
-        position={[17, 0.025, 16]}
+        position={[
+          17,
+          0.025,
+          16,
+        ]}
         length={1.9}
         width={1.9}
       />
 
 
-      {/* =====================================================
-          ENTRY / EXIT
-          ===================================================== */}
-
       <IndustrialLane
-        position={[-17, 0.021, -18]}
-        length={4.8}
-        width={1.9}
-        rotation={Math.PI / 2}
+        position={[
+          -17,
+          0.021,
+          -18.2,
+        ]}
+        length={4.4}
+        width={1.65}
+        rotation={
+          Math.PI / 2
+        }
         color="#454b47"
       />
 
       <IndustrialLane
-        position={[17, 0.021, -18]}
-        length={4.8}
-        width={1.9}
-        rotation={Math.PI / 2}
+        position={[
+          17,
+          0.021,
+          -18.2,
+        ]}
+        length={4.4}
+        width={1.65}
+        rotation={
+          Math.PI / 2
+        }
         color="#454b47"
       />
 
 
       <FlowEndpointMarker
-        position={[-17, 0, -20.4]}
+        position={[
+          -17,
+          0,
+          -20.4,
+        ]}
         label="ENTRÉE"
       />
 
       <FlowEndpointMarker
-        position={[17, 0, -20.4]}
+        position={[
+          17,
+          0,
+          -20.4,
+        ]}
         label="SORTIE"
       />
 
 
-      {/* =====================================================
-          VEHICLE FLOW
-          ===================================================== */}
-
-      {/* LEFT: entry → upward */}
-
       <VehicleFlowMarker
-        position={[-17, 0.043, -11]}
+        position={[
+          -17,
+          0.043,
+          -11,
+        ]}
         direction="up"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[-17, 0.043, -3]}
+        position={[
+          -17,
+          0.043,
+          -3,
+        ]}
         direction="up"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[-17, 0.043, 6]}
+        position={[
+          -17,
+          0.043,
+          6,
+        ]}
         direction="up"
         scale={1.45}
       />
 
-
-      {/* TOP: left → right */}
-
       <VehicleFlowMarker
-        position={[-10, 0.043, 16]}
+        position={[
+          -10,
+          0.043,
+          16,
+        ]}
         direction="right"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[0, 0.043, 16]}
+        position={[
+          0,
+          0.043,
+          16,
+        ]}
         direction="right"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[10, 0.043, 16]}
+        position={[
+          10,
+          0.043,
+          16,
+        ]}
         direction="right"
         scale={1.45}
       />
 
-
-      {/* RIGHT: top → exit */}
-
       <VehicleFlowMarker
-        position={[17, 0.043, 8]}
+        position={[
+          17,
+          0.043,
+          8,
+        ]}
         direction="down"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[17, 0.043, 0]}
+        position={[
+          17,
+          0.043,
+          0,
+        ]}
         direction="down"
         scale={1.45}
       />
 
       <VehicleFlowMarker
-        position={[17, 0.043, -10]}
+        position={[
+          17,
+          0.043,
+          -10,
+        ]}
         direction="down"
         scale={1.45}
       />
 
 
-      {/* =====================================================
-          UET AREAS
+      {uets.map(
+        (uet) => (
+          <UetArea
+            key={uet.id}
+            position={
+              uet.position
+            }
+            width={
+              uet.width
+            }
+            depth={
+              uet.depth
+            }
+            label={uet.id}
+          />
+        ),
+      )}
 
-          Larger because every UET now contains 6 poteaux.
-          ===================================================== */}
-
-      {uets.map((uet) => (
-        <UetArea
-          key={uet.id}
-          position={uet.position}
-          width={uet.width}
-          depth={uet.depth}
-          label={uet.id}
-        />
-      ))}
-
-      {/* =====================================================
-          ALL 24 POTEAUX
-
-          This is the key architecture change.
-          ===================================================== */}
 
       {montagePoles.map(
         (pole) => (
@@ -275,17 +361,16 @@ export function MontageLayout({
             key={pole.id}
             pole={pole}
             selected={
-              selectedPoleId === pole.id
+              selectedPoleId ===
+              pole.id
             }
-            onSelect={onPoleSelect}
+            onSelect={
+              onPoleSelect
+            }
           />
         ),
       )}
 
-
-      {/* =====================================================
-          OVERHEAD ASSEMBLY
-          ===================================================== */}
 
       <OverheadAssemblyLine />
 
@@ -293,111 +378,323 @@ export function MontageLayout({
 
       <ProductionHandoff />
 
-      {/* Internal material logistics */}
+
+      <WheelStockArea />
+
       <AutomatedCarrier />
 
 
-      {/* =====================================================
-          PEDESTRIAN CIRCULATION
-          ===================================================== */}
+      <SeatStockArea />
+
+      <SeatAutomatedCarrier />
+
+
+      <WorkerAmenities />
+
+      <CentralSafetyCell />
+
+
+      {/* Existing production pedestrian network */}
 
       <PedestrianPath
-        position={[-20, 0.026, 0]}
+        position={[
+          -20,
+          0.026,
+          0,
+        ]}
         length={32}
-        rotation={Math.PI / 2}
+        rotation={
+          Math.PI / 2
+        }
       />
 
       <PedestrianPath
-        position={[20, 0.026, 0]}
+        position={[
+          20,
+          0.026,
+          0,
+        ]}
         length={32}
-        rotation={Math.PI / 2}
+        rotation={
+          Math.PI / 2
+        }
       />
 
       <PedestrianPath
-        position={[0, 0.026, 19]}
-        length={34}
+        position={[
+          0,
+          0.026,
+          19,
+        ]}
+        length={40}
       />
 
 
-      {/* Controlled crossings */}
+      {/* Employee route to the break / sanitary area */}
+
+      <PedestrianPath
+        position={[
+          36.5,
+          0.027,
+          19,
+        ]}
+        length={33}
+        width={1.05}
+      />
+
+      <PedestrianPath
+        position={[
+          50,
+          0.027,
+          25,
+        ]}
+        length={12}
+        width={1.05}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+      <PedestrianPath
+        position={[
+          52.5,
+          0.027,
+          31,
+        ]}
+        length={5}
+        width={1.05}
+      />
+
+
+      {/* Office / manager route */}
+
+      <PedestrianPath
+        position={[
+          26.9,
+          0.027,
+          11,
+        ]}
+        length={13.8}
+        width={1.05}
+      />
+
+      <PedestrianPath
+        position={[
+          33.75,
+          0.027,
+          9.5,
+        ]}
+        length={3.1}
+        width={1.05}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+      <PedestrianPath
+        position={[
+          18.5,
+          0.027,
+          17.5,
+        ]}
+        length={4.25}
+        width={1.15}
+        rotation={
+          Math.PI / 4
+        }
+      />
+
+      <PedestrianPath
+        position={[
+          -18.5,
+          0.027,
+          17.5,
+        ]}
+        length={4.25}
+        width={1.15}
+        rotation={
+          -Math.PI / 4
+        }
+      />
+
 
       <PedestrianPassage
-        position={[-17, 0.036, 4]}
-        rotation={Math.PI / 2}
+        position={[
+          -17,
+          0.036,
+          4,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
         length={5.8}
         width={5}
       />
 
       <PedestrianPassage
-        position={[0, 0.036, 16]}
+        position={[
+          0,
+          0.036,
+          16,
+        ]}
         length={5.8}
         width={5}
       />
 
       <PedestrianPassage
-        position={[17, 0.036, 4]}
-        rotation={Math.PI / 2}
+        position={[
+          17,
+          0.036,
+          4,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
         length={5.8}
         width={5}
       />
 
-
-      {/* =====================================================
-          PRODUCTION OFFICE
-
-          Moved away from the vehicle-release path.
-          ===================================================== */}
 
       <SupervisorBooth
-        position={[30, 0, 8]}
+        position={[
+          30,
+          0,
+          8,
+        ]}
       />
 
-      {/* Factory operators */}
+
+      <FactoryManager />
+
+
+      {/* Right production operator */}
+
       <FactoryWorker
         position={[
-          21.5,
+          21.1,
           0,
           -7.2,
         ]}
         rotation={
           -Math.PI / 2
         }
+        gender="man"
+        role="production"
+        phaseOffset={0}
+        workerId="right-production"
       />
+
+
+      {/* Left production operator */}
 
       <FactoryWorker
         position={[
-          -21.3,
+          -21.1,
           0,
           7.2,
         ]}
         rotation={
           Math.PI / 2
         }
+        gender="woman"
+        role="production"
+        phaseOffset={3.4}
+        workerId="left-production"
       />
+
+
+      {/* End-of-line quality operator */}
 
       <FactoryWorker
         position={[
-          21.2,
+          20.8,
           0,
-          -16.4,
+          -16.2,
         ]}
         rotation={
           Math.PI
         }
+        gender="man"
+        role="quality"
+        phaseOffset={5.1}
+        workerId="quality"
       />
+
+
+      {/* Wheel logistics operator */}
 
       <FactoryWorker
         position={[
-          27.8,
+          -21.4,
           0,
-          5.4,
+          0,
         ]}
+        rotation={
+          Math.PI / 2
+        }
+        gender="man"
+        role="material"
+        phaseOffset={1.6}
+        workerId="wheel-material"
       />
 
 
-      {/* =====================================================
-          POST-PRODUCTION
-          ===================================================== */}
+      {/* Upper-line terminal operator */}
+
+      <FactoryWorker
+        position={[
+          -8.2,
+          0,
+          20.7,
+        ]}
+        rotation={
+          Math.PI
+        }
+        gender="woman"
+        role="terminal"
+        phaseOffset={6.2}
+        workerId="terminal"
+      />
+
+
+      {/* Seat-stock operator.
+          She loads the second AGV at STOCK SIÈGES. */}
+
+      <FactoryWorker
+        position={[
+          54.7,
+          0,
+          23.7,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
+        gender="woman"
+        role="seat-stock"
+        phaseOffset={2.1}
+        workerId="seat-stock"
+      />
+
+
+      {/* Seat receiver.
+          He takes the seat from the AGV and installs it
+          while the vehicle is stopped on the right U branch. */}
+
+      <FactoryWorker
+        position={[
+          22.1,
+          0,
+          4.2,
+        ]}
+        rotation={
+          -Math.PI / 2
+        }
+        gender="man"
+        role="seat-install"
+        phaseOffset={4.7}
+        workerId="seat-install"
+      />
+
 
       <PostProductionRoad />
 
@@ -411,10 +708,6 @@ export function MontageLayout({
 
       <AnimatedFinishedVehicle />
 
-
-      {/* =====================================================
-          RESTRICTED TECHNICAL AREA
-          ===================================================== */}
 
       <RestrictedZone
         position={[

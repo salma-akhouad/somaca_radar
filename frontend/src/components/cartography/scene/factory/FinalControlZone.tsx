@@ -7,9 +7,96 @@ import {
 } from './data/vehicleJourney'
 
 
+function SensorPost({
+  position,
+  facing,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ]
+
+  facing: number
+}) {
+  return (
+    <group
+      position={position}
+    >
+      <mesh
+        position={[
+          0,
+          0.75,
+          0,
+        ]}
+        castShadow
+      >
+        <boxGeometry
+          args={[
+            0.13,
+            1.5,
+            0.13,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#454b47"
+          metalness={0.4}
+          roughness={0.48}
+        />
+      </mesh>
+
+      <mesh
+        position={[
+          0,
+          1.35,
+          facing * 0.12,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.38,
+            0.22,
+            0.24,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#303632"
+          roughness={0.5}
+        />
+      </mesh>
+
+      <mesh
+        position={[
+          0,
+          1.35,
+          facing * 0.245,
+        ]}
+      >
+        <circleGeometry
+          args={[
+            0.075,
+            14,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#dedbc9"
+          emissive="#c4bb8e"
+          emissiveIntensity={0.28}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+
 export function FinalControlZone() {
   const finalControl =
-    VEHICLE_JOURNEY.finalControl
+    VEHICLE_JOURNEY
+      .finalControl
+
   return (
     <group
       position={[
@@ -18,207 +105,135 @@ export function FinalControlZone() {
         finalControl.position[2],
       ]}
     >
-      {[-1.78, 1.78].map((z) => (
-        <mesh
-          key={z}
-          position={[0, 0.043, z]}
-        >
-          <boxGeometry
-            args={[7.6, 0.012, 0.09]}
-          />
+      {/* Low rolling test bed */}
 
-          <meshStandardMaterial
-            color="#b89229"
-            roughness={0.76}
-          />
-        </mesh>
-      ))}
-
-      {[-3.72, 3.72].map((x) => (
-        <mesh
-          key={x}
-          position={[x, 0.043, 0]}
-        >
-          <boxGeometry
-            args={[0.09, 0.012, 3.65]}
-          />
-
-          <meshStandardMaterial
-            color="#b89229"
-            roughness={0.76}
-          />
-        </mesh>
-      ))}
-
-
-      {[-1.28, 1.28].map((x) => (
-        <group key={x}>
-          <mesh
-            position={[x, 0.065, 0]}
-            receiveShadow
-          >
-            <boxGeometry
-              args={[0.76, 0.07, 1.86]}
-            />
-
-            <meshStandardMaterial
-              color="#666b67"
-              metalness={0.25}
-              roughness={0.66}
-            />
-          </mesh>
-
-          {[-0.68, 0.68].map((z) => (
+      {[
+        -1.25,
+        1.25,
+      ].map(
+        (x) => (
+          <group key={x}>
             <mesh
-              key={z}
-              position={[x, 0.16, z]}
-              rotation-z={Math.PI / 2}
-              castShadow
+              position={[
+                x,
+                0.055,
+                0,
+              ]}
             >
-              <cylinderGeometry
+              <boxGeometry
                 args={[
-                  0.18,
-                  0.18,
-                  0.72,
-                  24,
+                  0.78,
+                  0.055,
+                  1.75,
                 ]}
               />
 
               <meshStandardMaterial
-                color="#2e3430"
-                metalness={0.6}
-                roughness={0.36}
-              />
-            </mesh>
-          ))}
-        </group>
-      ))}
-
-      <group
-        position={[3.15, 0, 0]}
-      >
-        {[-0.58, 0.58].map((z) => (
-          <group
-            key={z}
-            position={[0, 0, z]}
-          >
-            <mesh
-              position={[0, 0.72, 0]}
-              castShadow
-            >
-              <boxGeometry
-                args={[0.12, 1.44, 0.12]}
-              />
-
-              <meshStandardMaterial
-                color="#454b47"
-                metalness={0.42}
-                roughness={0.46}
+                color="#666b67"
+                metalness={0.22}
+                roughness={0.68}
               />
             </mesh>
 
-            <mesh
-              position={[-0.04, 1.22, 0]}
-            >
-              <boxGeometry
-                args={[0.12, 0.52, 0.5]}
-              />
+            {[
+              -0.58,
+              0.58,
+            ].map(
+              (z) => (
+                <mesh
+                  key={z}
+                  position={[
+                    x,
+                    0.14,
+                    z,
+                  ]}
+                  rotation-z={
+                    Math.PI / 2
+                  }
+                >
+                  <cylinderGeometry
+                    args={[
+                      0.16,
+                      0.16,
+                      0.68,
+                      16,
+                    ]}
+                  />
 
-              <meshStandardMaterial
-                color="#303632"
-                roughness={0.48}
-              />
-            </mesh>
-
-            <mesh
-              position={[-0.105, 1.22, 0]}
-            >
-              <circleGeometry
-                args={[0.16, 24]}
-              />
-
-              <meshStandardMaterial
-                color="#d9d7c9"
-                emissive="#d0c799"
-                emissiveIntensity={0.14}
-                roughness={0.34}
-              />
-            </mesh>
+                  <meshStandardMaterial
+                    color="#292e2b"
+                    metalness={0.54}
+                    roughness={0.4}
+                  />
+                </mesh>
+              ),
+            )}
           </group>
-        ))}
-      </group>
+        ),
+      )}
 
 
-      <group
-        position={[-3.05, 0, 0]}
-      >
-        <mesh
-          position={[0, 0.92, 0]}
-          castShadow
-        >
-          <boxGeometry
-            args={[0.14, 1.84, 1.65]}
-          />
+      {/* Sensors stay outside the vehicle corridor */}
 
-          <meshStandardMaterial
-            color="#424844"
-            metalness={0.32}
-            roughness={0.5}
-          />
-        </mesh>
+      <SensorPost
+        position={[
+          -1.9,
+          0,
+          2.65,
+        ]}
+        facing={-1}
+      />
 
-        {[-0.55, 0.55].map((z) => (
+      <SensorPost
+        position={[
+          1.9,
+          0,
+          2.65,
+        ]}
+        facing={-1}
+      />
+
+      <SensorPost
+        position={[
+          -1.9,
+          0,
+          -2.65,
+        ]}
+        facing={1}
+      />
+
+      <SensorPost
+        position={[
+          1.9,
+          0,
+          -2.65,
+        ]}
+        facing={1}
+      />
+
+
+      {/* Over-road inspection gantry */}
+
+      {[
+        -2.55,
+        2.55,
+      ].map(
+        (z) => (
           <mesh
             key={z}
             position={[
-              0.08,
-              1.05,
+              1.9,
+              1.65,
               z,
             ]}
-          >
-            <circleGeometry
-              args={[0.13, 20]}
-            />
-
-            <meshStandardMaterial
-              color="#84342f"
-              emissive="#a94139"
-              emissiveIntensity={0.16}
-              roughness={0.3}
-            />
-          </mesh>
-        ))}
-
-        <mesh
-          position={[
-            0.08,
-            0.66,
-            0,
-          ]}
-        >
-          <boxGeometry
-            args={[0.02, 0.11, 0.62]}
-          />
-
-          <meshStandardMaterial
-            color="#aa7c28"
-            emissive="#a27827"
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-      </group>
-
-      {[-2.75, 2.75].map((x) => (
-        <group
-          key={x}
-          position={[x, 0, 2.18]}
-        >
-          <mesh
-            position={[0, 1.25, 0]}
             castShadow
           >
             <boxGeometry
-              args={[0.11, 2.5, 0.11]}
+              args={[
+                0.12,
+                3.3,
+                0.12,
+              ]}
             />
 
             <meshStandardMaterial
@@ -227,88 +242,83 @@ export function FinalControlZone() {
               roughness={0.48}
             />
           </mesh>
-
-          <mesh
-            position={[0, 2.28, -0.08]}
-            rotation-x={-0.22}
-          >
-            <boxGeometry
-              args={[0.72, 0.28, 0.16]}
-            />
-
-            <meshStandardMaterial
-              color="#303632"
-              roughness={0.48}
-            />
-          </mesh>
-
-          <mesh
-            position={[0, 2.25, -0.17]}
-            rotation-x={-0.22}
-          >
-            <boxGeometry
-              args={[0.56, 0.14, 0.025]}
-            />
-
-            <meshStandardMaterial
-              color="#dfddce"
-              emissive="#d3cda9"
-              emissiveIntensity={0.16}
-              roughness={0.3}
-            />
-          </mesh>
-        </group>
-      ))}
-
+        ),
+      )}
 
       <mesh
-        position={[3.05, 0.78, -2.25]}
-        castShadow
+        position={[
+          1.9,
+          3.25,
+          0,
+        ]}
       >
         <boxGeometry
-          args={[0.9, 1.56, 0.68]}
+          args={[
+            0.14,
+            0.14,
+            5.2,
+          ]}
         />
 
         <meshStandardMaterial
-          color="#4c524e"
-          metalness={0.18}
-          roughness={0.64}
+          color="#3d4340"
+          metalness={0.44}
+          roughness={0.44}
+        />
+      </mesh>
+
+      <mesh
+        position={[
+          1.9,
+          3.03,
+          0,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.44,
+            0.19,
+            0.62,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#dad8cd"
+          emissive="#c7c094"
+          emissiveIntensity={0.2}
         />
       </mesh>
 
 
+      {/* Operator console outside road */}
+
       <group
-        position={[1.65, 0, -2.15]}
+        position={[
+          0.3,
+          0,
+          -2.85,
+        ]}
       >
         <mesh
-          position={[0, 0.68, 0]}
+          position={[
+            0,
+            0.68,
+            0,
+          ]}
           castShadow
         >
           <boxGeometry
-            args={[1.15, 1.36, 0.5]}
+            args={[
+              1.15,
+              1.36,
+              0.52,
+            ]}
           />
 
           <meshStandardMaterial
             color="#555b57"
-            metalness={0.22}
-            roughness={0.6}
-          />
-        </mesh>
-
-        <mesh
-          position={[
-            0,
-            0.93,
-            0.258,
-          ]}
-        >
-          <boxGeometry
-            args={[0.86, 0.4, 0.018]}
-          />
-
-          <meshStandardMaterial
-            color="#252b28"
-            roughness={0.4}
+            metalness={0.2}
+            roughness={0.62}
           />
         </mesh>
 
@@ -320,108 +330,88 @@ export function FinalControlZone() {
           ]}
         >
           <boxGeometry
-            args={[0.72, 0.27, 0.01]}
+            args={[
+              0.75,
+              0.3,
+              0.015,
+            ]}
           />
 
           <meshStandardMaterial
-            color="#b9cec4"
-            emissive="#708f80"
-            emissiveIntensity={0.16}
-            roughness={0.26}
+            color="#bfc3bf"
+            emissive="#747a76"
+            emissiveIntensity={0.2}
           />
         </mesh>
-
-        {[
-          [-0.28, '#6f9b76'],
-          [0, '#b69036'],
-          [0.28, '#666b67'],
-        ].map(([x, color]) => (
-          <mesh
-            key={String(x)}
-            position={[
-              Number(x),
-              0.5,
-              0.27,
-            ]}
-          >
-            <sphereGeometry
-              args={[0.04, 12, 12]}
-            />
-
-            <meshStandardMaterial
-              color={String(color)}
-              emissive={String(color)}
-              emissiveIntensity={0.1}
-            />
-          </mesh>
-        ))}
       </group>
 
 
-      <mesh
-        position={[3.05, 1.02, -1.902]}
-      >
-        <boxGeometry
-          args={[0.56, 0.4, 0.018]}
-        />
-
-        <meshStandardMaterial
-          color="#242a27"
-          roughness={0.45}
-        />
-      </mesh>
-
-      <mesh
-        position={[3.05, 1.04, -1.89]}
-      >
-        <boxGeometry
-          args={[0.45, 0.28, 0.012]}
-        />
-
-        <meshStandardMaterial
-          color="#b9cbc2"
-          emissive="#698d7c"
-          emissiveIntensity={0.16}
-          roughness={0.3}
-        />
-      </mesh>
-
+      {/* Small safety edges, not a box across the road */}
 
       {[
-        [-0.2, '#6f9b76'],
-        [0, '#b69036'],
-        [0.2, '#666b67'],
-      ].map(([offset, color]) => (
-        <mesh
-          key={String(offset)}
-          position={[
-            3.05 + Number(offset),
-            0.74,
-            -1.885,
+        -2.42,
+        2.42,
+      ].map(
+        (z) => (
+          <mesh
+            key={z}
+            position={[
+              0,
+              0.042,
+              z,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                6.6,
+                0.012,
+                0.07,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#c49a25"
+              roughness={0.78}
+            />
+          </mesh>
+        ),
+      )}
+
+
+      <mesh
+        position={[
+          0,
+          0.052,
+          -3.45,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            4.8,
+            0.022,
+            0.78,
           ]}
-        >
-          <sphereGeometry
-            args={[0.035, 12, 12]}
-          />
+        />
 
-          <meshStandardMaterial
-            color={String(color)}
-            emissive={String(color)}
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-      ))}
-
+        <meshStandardMaterial
+          color="#343a37"
+          roughness={0.8}
+        />
+      </mesh>
 
       <Text
-        position={[0, 0.055, -2.35]}
+        position={[
+          0,
+          0.082,
+          -3.45,
+        ]}
         rotation={[
           -Math.PI / 2,
           0,
           0,
         ]}
-        fontSize={0.48}
-        color="#303532"
+        fontSize={0.55}
+        color="#ffffff"
         anchorX="center"
         anchorY="middle"
       >

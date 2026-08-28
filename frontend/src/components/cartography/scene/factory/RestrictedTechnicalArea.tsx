@@ -13,17 +13,6 @@ export function RestrictedTechnicalArea() {
         -23.4,
       ]}
     >
-      {/* =====================================================
-          RESTRICTED TECHNICAL AREA
-
-          This zone belongs beside final-control equipment.
-
-          It represents electrical / automation infrastructure
-          that should not be entered casually by operators.
-          ===================================================== */}
-
-
-      {/* Main electrical cabinet */}
       <RoundedBox
         args={[
           1.5,
@@ -46,8 +35,6 @@ export function RestrictedTechnicalArea() {
         />
       </RoundedBox>
 
-
-      {/* Cabinet door inset */}
       <mesh
         position={[
           0,
@@ -69,8 +56,6 @@ export function RestrictedTechnicalArea() {
         />
       </mesh>
 
-
-      {/* Door handle */}
       <RoundedBox
         args={[
           0.06,
@@ -92,12 +77,10 @@ export function RestrictedTechnicalArea() {
         />
       </RoundedBox>
 
-
-      {/* Warning plate */}
       <RoundedBox
         args={[
-          0.44,
-          0.36,
+          0.5,
+          0.4,
           0.025,
         ]}
         radius={0.025}
@@ -109,31 +92,24 @@ export function RestrictedTechnicalArea() {
         ]}
       >
         <meshStandardMaterial
-          color="#b79530"
+          color="#d0a72d"
           roughness={0.7}
         />
       </RoundedBox>
 
-
-      {/* Small warning symbol */}
       <Text
         position={[
           0,
           1.49,
           0.456,
         ]}
-        fontSize={0.19}
+        fontSize={0.21}
         color="#2d312f"
         anchorX="center"
         anchorY="middle"
       >
         ⚡
       </Text>
-
-
-      {/* =====================================================
-          STATUS INDICATORS
-          ===================================================== */}
 
       <mesh
         position={[
@@ -145,18 +121,17 @@ export function RestrictedTechnicalArea() {
         <sphereGeometry
           args={[
             0.045,
-            12,
-            12,
+            10,
+            10,
           ]}
         />
 
         <meshStandardMaterial
-          color="#6ea777"
-          emissive="#4e8d59"
-          emissiveIntensity={0.38}
+          color="#d3a52d"
+          emissive="#b98923"
+          emissiveIntensity={0.24}
         />
       </mesh>
-
 
       <mesh
         position={[
@@ -168,25 +143,17 @@ export function RestrictedTechnicalArea() {
         <sphereGeometry
           args={[
             0.045,
-            12,
-            12,
+            10,
+            10,
           ]}
         />
 
         <meshStandardMaterial
           color="#8e4039"
           emissive="#722f2b"
-          emissiveIntensity={0.18}
+          emissiveIntensity={0.16}
         />
       </mesh>
-
-
-      {/* =====================================================
-          CABLE CONDUIT
-
-          Small detail, but it gives the cabinet a reason to
-          exist physically rather than looking like decoration.
-          ===================================================== */}
 
       <mesh
         position={[
@@ -194,14 +161,16 @@ export function RestrictedTechnicalArea() {
           0.42,
           -0.28,
         ]}
-        rotation-z={Math.PI / 2}
+        rotation-z={
+          Math.PI / 2
+        }
       >
         <cylinderGeometry
           args={[
             0.045,
             0.045,
             1.15,
-            10,
+            8,
           ]}
         />
 
@@ -212,26 +181,84 @@ export function RestrictedTechnicalArea() {
         />
       </mesh>
 
-
-      {/* Technical access label */}
-      <Text
+      <group
         position={[
           0,
-          0.045,
-          1.2,
+          2.85,
+          0.32,
         ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.28}
-        color="#6f332e"
-        anchorX="center"
-        anchorY="middle"
       >
-        ACCÈS TECHNIQUE
-      </Text>
+        <mesh>
+          <boxGeometry
+            args={[
+              4.4,
+              1.05,
+              0.09,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#deddd5"
+            roughness={0.78}
+          />
+        </mesh>
+
+        <mesh
+          position={[
+            0,
+            0.43,
+            0.052,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              4.15,
+              0.09,
+              0.02,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#8c342e"
+            roughness={0.7}
+          />
+        </mesh>
+
+        <mesh
+          position={[
+            0,
+            -0.43,
+            0.052,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              4.15,
+              0.09,
+              0.02,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#8c342e"
+            roughness={0.7}
+          />
+        </mesh>
+
+        <Text
+          position={[
+            0,
+            0,
+            0.058,
+          ]}
+          fontSize={0.39}
+          color="#702821"
+          anchorX="center"
+          anchorY="middle"
+        >
+          ACCÈS TECHNIQUE RÉSERVÉ
+        </Text>
+      </group>
     </group>
   )
 }

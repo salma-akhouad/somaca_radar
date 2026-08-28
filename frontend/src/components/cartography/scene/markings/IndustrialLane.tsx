@@ -13,7 +13,7 @@ export function IndustrialLane({
   width = 1.1,
   rotation = 0,
   corner = false,
-  color = '#b9932b',
+  color = '#c59a25',
 }: IndustrialLaneProps) {
   if (corner) {
     const radius = length

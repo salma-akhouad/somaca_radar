@@ -1,53 +1,33 @@
-import {
-  VEHICLE_JOURNEY,
-} from './data/vehicleJourney'
+function RoadSurface({
+  position,
+  size,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ]
 
-interface RoadSegmentProps {
-  start: [number, number, number]
-  end: [number, number, number]
-  width?: number
-}
-
-function RoadSegment({
-  start,
-  end,
-  width = 4.4,
-}: RoadSegmentProps) {
-  const dx = end[0] - start[0]
-  const dz = end[2] - start[2]
-
-  const length =
-    Math.sqrt(dx * dx + dz * dz)
-
-  const centerX =
-    (start[0] + end[0]) / 2
-
-  const centerZ =
-    (start[2] + end[2]) / 2
-
-  const rotation =
-    -Math.atan2(dz, dx)
-
+  size: [
+    number,
+    number,
+  ]
+}) {
   return (
     <mesh
-      position={[
-        centerX,
-        0.012,
-        centerZ,
-      ]}
-      rotation-y={rotation}
+      position={position}
       receiveShadow
     >
       <boxGeometry
         args={[
-          length,
+          size[0],
           0.018,
-          width,
+          size[1],
         ]}
       />
 
       <meshStandardMaterial
-        color="#4d514e"
+        color="#484d49"
         roughness={0.96}
         metalness={0}
       />
@@ -55,137 +35,127 @@ function RoadSegment({
   )
 }
 
-interface RoadEdgeProps {
-  start: [number, number, number]
-  end: [number, number, number]
-  offset: number
-}
 
-function RoadEdge({
-  start,
-  end,
-  offset,
-}: RoadEdgeProps) {
-  const dx = end[0] - start[0]
-  const dz = end[2] - start[2]
+function Marking({
+  position,
+  size,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ]
 
-  const length =
-    Math.sqrt(dx * dx + dz * dz)
-
-  const centerX =
-    (start[0] + end[0]) / 2
-
-  const centerZ =
-    (start[2] + end[2]) / 2
-
-  const rotation =
-    -Math.atan2(dz, dx)
-
-  const perpendicularX =
-    -dz / length
-
-  const perpendicularZ =
-    dx / length
-
+  size: [
+    number,
+    number,
+  ]
+}) {
   return (
     <mesh
-      position={[
-        centerX +
-          perpendicularX * offset,
-        0.027,
-        centerZ +
-          perpendicularZ * offset,
-      ]}
-      rotation-y={rotation}
+      position={position}
     >
       <boxGeometry
         args={[
-          length,
+          size[0],
           0.012,
-          0.075,
+          size[1],
         ]}
       />
 
       <meshStandardMaterial
-        color="#b89229"
+        color="#c49a25"
         roughness={0.78}
       />
     </mesh>
   )
 }
 
+
 export function PostProductionRoad() {
-  const {
-    lowered,
-    handoffStraight,
-    finalControlEntry,
-    validationExit,
-    releaseGate,
-    parkingApproach,
-    parkingEntry,
-  } = VEHICLE_JOURNEY
-
-  const roadSegments = [
-    [
-      lowered.position,
-      handoffStraight.position,
-    ],
-
-    [
-      handoffStraight.position,
-      finalControlEntry.position,
-    ],
-
-    [
-      finalControlEntry.position,
-      validationExit.position,
-    ],
-
-    [
-      validationExit.position,
-      releaseGate.position,
-    ],
-
-    [
-      releaseGate.position,
-      parkingApproach.position,
-    ],
-
-    [
-      parkingApproach.position,
-      parkingEntry.position,
-    ],
-  ] as const
-
   return (
     <group>
-      {roadSegments.map(
-        ([start, end], index) => (
-          <RoadSegment
-            key={`road-${index}`}
-            start={start}
-            end={end}
-          />
-        ),
-      )}
+      {/* U exit */}
 
-      {roadSegments.map(
-        ([start, end], index) => (
-          <group key={`edges-${index}`}>
-            <RoadEdge
-              start={start}
-              end={end}
-              offset={2.08}
-            />
+      <RoadSurface
+        position={[
+          17,
+          0.012,
+          -15.75,
+        ]}
+        size={[
+          4.4,
+          6.5,
+        ]}
+      />
 
-            <RoadEdge
-              start={start}
-              end={end}
-              offset={-2.08}
-            />
-          </group>
-        ),
-      )}
+      {/* Main post-production corridor */}
+
+      <RoadSurface
+        position={[
+          29.1,
+          0.013,
+          -19,
+        ]}
+        size={[
+          24.2,
+          4.4,
+        ]}
+      />
+
+
+      {/* U-exit edges stop before the corner */}
+
+      <Marking
+        position={[
+          14.82,
+          0.029,
+          -14.7,
+        ]}
+        size={[
+          0.075,
+          4.4,
+        ]}
+      />
+
+      <Marking
+        position={[
+          19.18,
+          0.029,
+          -14.7,
+        ]}
+        size={[
+          0.075,
+          4.4,
+        ]}
+      />
+
+
+      {/* One continuous pair of road edges */}
+
+      <Marking
+        position={[
+          30.2,
+          0.03,
+          -16.82,
+        ]}
+        size={[
+          21.8,
+          0.075,
+        ]}
+      />
+
+      <Marking
+        position={[
+          30.2,
+          0.03,
+          -21.18,
+        ]}
+        size={[
+          21.8,
+          0.075,
+        ]}
+      />
     </group>
   )
 }

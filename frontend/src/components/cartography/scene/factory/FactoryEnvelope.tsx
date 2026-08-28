@@ -56,42 +56,160 @@ function CeilingLuminaire({
 }) {
   return (
     <group position={position}>
-      <RoundedBox
-        args={[
-          3.1,
-          0.13,
-          0.62,
-        ]}
-        radius={0.04}
-        smoothness={2}
-      >
-        <meshStandardMaterial
-          color="#606762"
-          metalness={0.34}
-          roughness={0.48}
-        />
-      </RoundedBox>
+      {/* Ceiling mount */}
 
       <mesh
         position={[
           0,
-          -0.085,
+          1.05,
           0,
         ]}
       >
-        <boxGeometry
+        <cylinderGeometry
           args={[
-            2.72,
-            0.035,
-            0.46,
+            0.13,
+            0.13,
+            0.1,
+            10,
           ]}
         />
 
         <meshStandardMaterial
-          color="#eee9d1"
-          emissive="#f1ebd0"
-          emissiveIntensity={0.42}
-          roughness={0.28}
+          color="#414743"
+          metalness={0.48}
+          roughness={0.42}
+        />
+      </mesh>
+
+
+      {/* Suspension cable */}
+
+      <mesh
+        position={[
+          0,
+          0.5,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.025,
+            0.025,
+            1.05,
+            8,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#343936"
+          metalness={0.58}
+          roughness={0.36}
+        />
+      </mesh>
+
+
+      {/* Driver housing */}
+
+      <RoundedBox
+        args={[
+          0.48,
+          0.2,
+          0.48,
+        ]}
+        radius={0.06}
+        smoothness={2}
+        position={[
+          0,
+          -0.08,
+          0,
+        ]}
+      >
+        <meshStandardMaterial
+          color="#242927"
+          metalness={0.24}
+          roughness={0.54}
+        />
+      </RoundedBox>
+
+
+      {/* Industrial reflector */}
+
+      <mesh
+        position={[
+          0,
+          -0.32,
+          0,
+        ]}
+      >
+        <coneGeometry
+          args={[
+            0.78,
+            0.5,
+            18,
+            1,
+            true,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#282d2a"
+          metalness={0.16}
+          roughness={0.56}
+          side={2}
+        />
+      </mesh>
+
+
+      {/* Bright visible diffuser */}
+
+      <mesh
+        position={[
+          0,
+          -0.575,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.66,
+            0.66,
+            0.045,
+            18,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#fff7dc"
+          emissive="#fff0c8"
+          emissiveIntensity={2.2}
+          roughness={0.14}
+          toneMapped={false}
+        />
+      </mesh>
+
+
+      {/* Small luminous core visible from high camera */}
+
+      <mesh
+        position={[
+          0,
+          -0.603,
+          0,
+        ]}
+        rotation-x={
+          -Math.PI / 2
+        }
+      >
+        <circleGeometry
+          args={[
+            0.52,
+            18,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color="#fff6d9"
+          toneMapped={false}
         />
       </mesh>
     </group>
@@ -102,7 +220,6 @@ function CeilingLuminaire({
 export function FactoryEnvelope() {
   return (
     <group>
-      {/* Rear wall */}
       <mesh
         position={[
           15,
@@ -148,7 +265,6 @@ export function FactoryEnvelope() {
         />
       </mesh>
 
-      {/* Left wall */}
       <mesh
         position={[
           -49,
@@ -194,7 +310,7 @@ export function FactoryEnvelope() {
         />
       </mesh>
 
-      {/* Structural columns */}
+
       {[
         [-40, 39],
         [-20, 39],
@@ -215,68 +331,77 @@ export function FactoryEnvelope() {
         ),
       )}
 
-      {[
-        -30,
-        -10,
-        10,
-        30,
-      ].map((z) => (
-        <Column
-          key={`left-${z}`}
-          position={[
-            -49,
-            3.8,
-            z,
-          ]}
-        />
-      ))}
 
       {[
         -30,
         -10,
         10,
         30,
-      ].map((z) => (
-        <Column
-          key={`right-${z}`}
-          position={[
-            79,
-            3.8,
-            z,
-          ]}
-        />
-      ))}
-
-      {/* Lighter roof structure */}
-      {[
-        -30,
-        -10,
-        10,
-        30,
-      ].map((z) => (
-        <mesh
-          key={`roof-x-${z}`}
-          position={[
-            15,
-            7.5,
-            z,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              128,
-              0.14,
-              0.18,
+      ].map(
+        (z) => (
+          <Column
+            key={`left-${z}`}
+            position={[
+              -49,
+              3.8,
+              z,
             ]}
           />
+        ),
+      )}
 
-          <meshStandardMaterial
-            color="#68706b"
-            metalness={0.3}
-            roughness={0.56}
+
+      {[
+        -30,
+        -10,
+        10,
+        30,
+      ].map(
+        (z) => (
+          <Column
+            key={`right-${z}`}
+            position={[
+              79,
+              3.8,
+              z,
+            ]}
           />
-        </mesh>
-      ))}
+        ),
+      )}
+
+
+      {[
+        -30,
+        -10,
+        10,
+        30,
+      ].map(
+        (z) => (
+          <mesh
+            key={`roof-x-${z}`}
+            position={[
+              15,
+              7.5,
+              z,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                128,
+                0.14,
+                0.18,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#68706b"
+              metalness={0.3}
+              roughness={0.56}
+            />
+          </mesh>
+        ),
+      )}
+
 
       {[
         -35,
@@ -284,32 +409,34 @@ export function FactoryEnvelope() {
         15,
         40,
         65,
-      ].map((x) => (
-        <mesh
-          key={`roof-z-${x}`}
-          position={[
-            x,
-            7.5,
-            0,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              0.18,
-              0.14,
-              78,
+      ].map(
+        (x) => (
+          <mesh
+            key={`roof-z-${x}`}
+            position={[
+              x,
+              7.5,
+              0,
             ]}
-          />
+          >
+            <boxGeometry
+              args={[
+                0.18,
+                0.14,
+                78,
+              ]}
+            />
 
-          <meshStandardMaterial
-            color="#68706b"
-            metalness={0.3}
-            roughness={0.56}
-          />
-        </mesh>
-      ))}
+            <meshStandardMaterial
+              color="#68706b"
+              metalness={0.3}
+              roughness={0.56}
+            />
+          </mesh>
+        ),
+      )}
 
-      {/* Fixtures correspond to existing scene lights */}
+
       {[
         [-20, 16],
         [20, 16],
@@ -320,10 +447,10 @@ export function FactoryEnvelope() {
       ].map(
         ([x, z]) => (
           <CeilingLuminaire
-            key={`lamp-${x}-${z}`}
+            key={`${x}-${z}`}
             position={[
               x,
-              7.24,
+              6.4,
               z,
             ]}
           />

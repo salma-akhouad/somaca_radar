@@ -3,103 +3,135 @@ import {
 } from 'three'
 
 
-const arrowShape = new Shape()
+const arrowShape =
+  new Shape()
 
-arrowShape.moveTo(-0.55, -0.12)
-arrowShape.lineTo(0.12, -0.12)
-arrowShape.lineTo(0.12, -0.3)
-arrowShape.lineTo(0.62, 0)
-arrowShape.lineTo(0.12, 0.3)
-arrowShape.lineTo(0.12, 0.12)
-arrowShape.lineTo(-0.55, 0.12)
+arrowShape.moveTo(
+  -0.55,
+  -0.12,
+)
+
+arrowShape.lineTo(
+  0.12,
+  -0.12,
+)
+
+arrowShape.lineTo(
+  0.12,
+  -0.3,
+)
+
+arrowShape.lineTo(
+  0.62,
+  0,
+)
+
+arrowShape.lineTo(
+  0.12,
+  0.3,
+)
+
+arrowShape.lineTo(
+  0.12,
+  0.12,
+)
+
+arrowShape.lineTo(
+  -0.55,
+  0.12,
+)
+
 arrowShape.closePath()
+
+
+function FlowArrow({
+  position,
+  rotation = 0,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ]
+
+  rotation?: number
+}) {
+  return (
+    <mesh
+      position={position}
+      rotation-x={
+        -Math.PI / 2
+      }
+      rotation-z={rotation}
+    >
+      <shapeGeometry
+        args={[
+          arrowShape,
+        ]}
+      />
+
+      <meshStandardMaterial
+        color="#e3e2da"
+        roughness={0.76}
+      />
+    </mesh>
+  )
+}
 
 
 export function ProductionHandoff() {
   return (
     <group>
-      {[-0.9, 0.9].map((x) => (
-        <mesh
-          key={x}
-          position={[
-            17 + x,
-            0.041,
-            -15.7,
+      <mesh
+        position={[
+          17,
+          0.041,
+          -16.25,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            2.1,
+            0.012,
+            0.09,
           ]}
-        >
-          <boxGeometry
-            args={[
-              0.075,
-              0.012,
-              6.2,
-            ]}
-          />
-
-          <meshStandardMaterial
-            color="#b9932b"
-            roughness={0.76}
-          />
-        </mesh>
-      ))}
-
-
-      <mesh
-        position={[
-          17,
-          0.046,
-          -15.5,
-        ]}
-        rotation-x={-Math.PI / 2}
-        rotation-z={Math.PI / 2}
-      >
-        <shapeGeometry
-          args={[arrowShape]}
         />
 
         <meshStandardMaterial
-          color="#444a46"
-          roughness={0.74}
+          color="#c49a25"
+          roughness={0.76}
         />
       </mesh>
 
-
-      <mesh
+      <FlowArrow
         position={[
           17,
-          0.046,
-          -18,
+          0.047,
+          -17,
         ]}
-        rotation-x={-Math.PI / 2}
-        rotation-z={Math.PI / 2}
-      >
-        <shapeGeometry
-          args={[arrowShape]}
-        />
+        rotation={
+          Math.PI / 2
+        }
+      />
 
-        <meshStandardMaterial
-          color="#444a46"
-          roughness={0.74}
-        />
-      </mesh>
-
-
-      <mesh
+      <FlowArrow
         position={[
-          19.25,
-          0.046,
+          17,
+          0.047,
+          -18.2,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+      <FlowArrow
+        position={[
+          19.2,
+          0.047,
           -19,
         ]}
-        rotation-x={-Math.PI / 2}
-      >
-        <shapeGeometry
-          args={[arrowShape]}
-        />
-
-        <meshStandardMaterial
-          color="#444a46"
-          roughness={0.74}
-        />
-      </mesh>
+      />
     </group>
   )
 }

@@ -40,6 +40,22 @@ interface MontageSceneProps {
 }
 
 
+const CEILING_LIGHTS:
+  Array<
+    [
+      number,
+      number,
+    ]
+  > = [
+    [-20, 16],
+    [20, 16],
+    [60, 16],
+    [-20, -16],
+    [20, -16],
+    [60, -16],
+  ]
+
+
 export function MontageScene({
   command,
   onZoomChange,
@@ -51,87 +67,90 @@ export function MontageScene({
       <color
         attach="background"
         args={[
-          '#c9cbc6',
+          '#d5d7d2',
         ]}
       />
+
 
       <fog
         attach="fog"
         args={[
-          '#c9cbc6',
-          65,
-          150,
+          '#d5d7d2',
+          72,
+          165,
         ]}
       />
+
 
       <hemisphereLight
         args={[
-          '#f4f2e9',
-          '#858984',
-          0.85,
+          '#f6f4e9',
+          '#8a8f89',
+          0.9,
         ]}
       />
 
+
       <ambientLight
-        intensity={0.22}
+        intensity={0.24}
       />
+
 
       <directionalLight
         castShadow
         position={[
-          22,
-          30,
-          18,
+          26,
+          32,
+          20,
         ]}
-        intensity={1.05}
+        color="#f0eee4"
+        intensity={0.76}
         shadow-mapSize={[
           2048,
           2048,
         ]}
-        shadow-camera-left={
-          -55
-        }
-        shadow-camera-right={
-          75
-        }
-        shadow-camera-top={
-          45
-        }
-        shadow-camera-bottom={
-          -45
-        }
+        shadow-camera-left={-55}
+        shadow-camera-right={75}
+        shadow-camera-top={45}
+        shadow-camera-bottom={-45}
         shadow-bias={
           -0.00015
         }
       />
 
-      {[
-        [-20, 16],
-        [20, 16],
-        [60, 16],
-        [-20, -16],
-        [20, -16],
-        [60, -16],
-      ].map(
-        ([x, z]) => (
-          <pointLight
+
+      {CEILING_LIGHTS.map(
+        (
+          [
+            x,
+            z,
+          ],
+        ) => (
+          <rectAreaLight
             key={`${x}-${z}`}
             position={[
               x,
-              7.1,
+              6.15,
               z,
             ]}
-            color="#f1eee1"
-            intensity={0.3}
-            distance={24}
-            decay={2}
+            rotation={[
+              -Math.PI / 2,
+              0,
+              0,
+            ]}
+            color="#fff0cf"
+            intensity={5.35}
+            width={19}
+            height={15}
           />
         ),
       )}
 
+
       <FactoryFloor />
 
       <FactoryEnvelope />
+
 
       <MontageLayout
         selectedPoleId={
@@ -142,6 +161,7 @@ export function MontageScene({
           onPoleSelect
         }
       />
+
 
       <SceneCameraControls
         command={command}

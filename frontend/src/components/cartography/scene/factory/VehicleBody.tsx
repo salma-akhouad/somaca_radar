@@ -30,10 +30,25 @@ interface VehicleBodyProps {
     number,
     number,
   ]
+
   rotation?: number
+
   stage?: VehicleStage
+
   color?: string
+
   lights?: VehicleLightingState
+
+  /*
+   * Used by assembly vehicles.
+   *
+   * 0 = no wheels
+   * 0 → 1 = wheels being installed
+   * 1 = all wheels installed
+   *
+   * Finished/post-production cars default to 1.
+   */
+  wheelInstallProgress?: number
 }
 
 
@@ -41,21 +56,42 @@ const BODY_WIDTH = 1.72
 
 const SIDE_SURFACE =
   BODY_WIDTH / 2 +
-  0.012
+  0.018
 
 
 const STAGE_BODY_COLORS:
-  Record<VehicleStage, string> = {
-    shell: '#aeb3b0',
-    glazing: '#c4c7c3',
-    assembly: '#d5d7d3',
-    documented: '#e1e2de',
-    finished: '#eceee9',
-  }
+  Record<
+    VehicleStage,
+    string
+  > = {
+  shell: '#aeb3b0',
+  glazing: '#c4c7c3',
+  assembly: '#d5d7d3',
+  documented: '#e1e2de',
+  finished: '#eceee9',
+}
 
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number,
+) {
+  return Math.max(
+    minimum,
+    Math.min(
+      maximum,
+      value,
+    ),
+  )
+}
+
+/* ===========================================================
+   BODY PROFILE
+   =========================================================== */
 
 const bodyProfile =
   new Shape()
+
 
 bodyProfile.moveTo(
   -2.02,
@@ -135,32 +171,36 @@ bodyProfile.lineTo(
 bodyProfile.closePath()
 
 
+/* ===========================================================
+   WINDOW SHAPES
+   =========================================================== */
+
 const frontSideWindow =
   new Shape()
 
 frontSideWindow.moveTo(
-  0.17,
-  1.62,
+  0.15,
+  1.63,
 )
 
 frontSideWindow.lineTo(
   0.58,
-  1.58,
+  1.59,
 )
 
 frontSideWindow.lineTo(
-  0.91,
-  1.29,
+  0.93,
+  1.28,
 )
 
 frontSideWindow.lineTo(
-  0.78,
-  1.15,
+  0.77,
+  1.13,
 )
 
 frontSideWindow.lineTo(
-  0.08,
-  1.15,
+  0.07,
+  1.13,
 )
 
 frontSideWindow.closePath()
@@ -170,23 +210,23 @@ const rearSideWindow =
   new Shape()
 
 rearSideWindow.moveTo(
-  -0.76,
-  1.62,
+  -0.77,
+  1.63,
 )
 
 rearSideWindow.lineTo(
-  0.08,
-  1.62,
+  0.06,
+  1.63,
 )
 
 rearSideWindow.lineTo(
-  -0.03,
-  1.15,
+  -0.04,
+  1.13,
 )
 
 rearSideWindow.lineTo(
-  -0.83,
-  1.15,
+  -0.85,
+  1.13,
 )
 
 rearSideWindow.closePath()
@@ -196,39 +236,53 @@ const quarterWindow =
   new Shape()
 
 quarterWindow.moveTo(
-  -1.28,
-  1.53,
+  -1.31,
+  1.54,
 )
 
 quarterWindow.lineTo(
-  -0.85,
-  1.62,
+  -0.86,
+  1.63,
 )
 
 quarterWindow.lineTo(
-  -0.91,
-  1.16,
+  -0.92,
+  1.14,
 )
 
 quarterWindow.lineTo(
-  -1.38,
-  1.19,
+  -1.4,
+  1.18,
 )
 
 quarterWindow.closePath()
 
 
+/* ===========================================================
+   WHEELS
+   =========================================================== */
+
 function Wheel({
   position,
+  scale = 1,
 }: {
   position: [
     number,
     number,
     number,
   ]
+
+  scale?: number
 }) {
   return (
-    <group position={position}>
+    <group
+      position={position}
+      scale={[
+        scale,
+        scale,
+        scale,
+      ]}
+    >
       <mesh
         rotation-x={
           Math.PI / 2
@@ -250,6 +304,7 @@ function Wheel({
         />
       </mesh>
 
+
       <mesh
         rotation-x={
           Math.PI / 2
@@ -265,13 +320,20 @@ function Wheel({
         />
 
         <meshStandardMaterial
-          color="#828783"
-          metalness={0.68}
-          roughness={0.28}
+          color="#929995"
+          metalness={0.7}
+          roughness={0.24}
         />
       </mesh>
 
-      {[0, 1, 2, 3, 4].map(
+
+      {[
+        0,
+        1,
+        2,
+        3,
+        4,
+      ].map(
         (index) => (
           <mesh
             key={index}
@@ -297,9 +359,9 @@ function Wheel({
             />
 
             <meshStandardMaterial
-              color="#3d433f"
+              color="#454c48"
               metalness={0.68}
-              roughness={0.28}
+              roughness={0.26}
             />
           </mesh>
         ),
@@ -341,6 +403,7 @@ function WheelHub({
         />
       </mesh>
 
+
       <mesh
         rotation-x={
           Math.PI / 2
@@ -366,23 +429,43 @@ function WheelHub({
 }
 
 
+/* ===========================================================
+   GLASS
+   =========================================================== */
+
+function GlassMaterial() {
+  return (
+    <meshStandardMaterial
+      color="#203e47"
+      roughness={0.14}
+      metalness={0.06}
+      transparent
+      opacity={0.98}
+      side={DoubleSide}
+    />
+  )
+}
+
+
+function WindowBorderMaterial() {
+  return (
+    <meshStandardMaterial
+      color="#0d1313"
+      roughness={0.42}
+      side={DoubleSide}
+    />
+  )
+}
+
+
 function SideWindows({
   side,
   glazed,
 }: {
   side: number
+
   glazed: boolean
 }) {
-  const color =
-    glazed
-      ? '#14282e'
-      : '#3a403d'
-
-  const roughness =
-    glazed
-      ? 0.09
-      : 0.82
-
   return (
     <>
       {[
@@ -390,52 +473,150 @@ function SideWindows({
         rearSideWindow,
         quarterWindow,
       ].map(
-        (shape, index) => (
-          <mesh
-            key={index}
-            position={[
-              0,
-              0,
-              side,
-            ]}
-          >
-            <shapeGeometry
-              args={[shape]}
-            />
+        (
+          shape,
+          index,
+        ) => (
+          <group key={index}>
+            {/* black border */}
 
-            <meshStandardMaterial
-              color={color}
-              metalness={
-                glazed
-                  ? 0.06
-                  : 0
-              }
-              roughness={
-                roughness
-              }
-              side={DoubleSide}
-            />
-          </mesh>
+            <mesh
+              position={[
+                0,
+                0,
+                side,
+              ]}
+              scale={[
+                1.035,
+                1.035,
+                1,
+              ]}
+            >
+              <shapeGeometry
+                args={[
+                  shape,
+                ]}
+              />
+
+              <WindowBorderMaterial />
+            </mesh>
+
+
+            {/* glass surface */}
+
+            <mesh
+              position={[
+                0,
+                0,
+                side *
+                1.012,
+              ]}
+              scale={[
+                0.96,
+                0.95,
+                1,
+              ]}
+            >
+              <shapeGeometry
+                args={[
+                  shape,
+                ]}
+              />
+
+              {glazed ? (
+                <GlassMaterial />
+              ) : (
+                <meshStandardMaterial
+                  color="#454c48"
+                  roughness={0.84}
+                  side={DoubleSide}
+                />
+              )}
+            </mesh>
+          </group>
         ),
+      )}
+
+
+      {/* strongly readable B pillar */}
+
+      <mesh
+        position={[
+          -0.04,
+          1.38,
+          side *
+          1.022,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.085,
+            0.55,
+            0.028,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#111716"
+          roughness={0.48}
+        />
+      </mesh>
+
+
+      {/* glass highlight visible from above */}
+
+      {glazed && (
+        <mesh
+          position={[
+            -0.15,
+            1.59,
+            side *
+            1.027,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              1.4,
+              0.025,
+              0.018,
+            ]}
+          />
+
+          <meshBasicMaterial
+            color="#b4d2d5"
+            transparent
+            opacity={0.58}
+            toneMapped={false}
+          />
+        </mesh>
       )}
     </>
   )
 }
 
 
+/* ===========================================================
+   LIGHTING
+   =========================================================== */
+
 function FrontLighting({
   lights,
 }: {
-  lights: VehicleLightingState
+  lights:
+  VehicleLightingState
 }) {
   const headlights =
     Boolean(
       lights.headlights,
     )
 
+
   return (
     <>
-      {[-0.55, 0.55].map(
+      {[
+        -0.55,
+        0.55,
+      ].map(
         (z) => (
           <group
             key={z}
@@ -460,6 +641,7 @@ function FrontLighting({
                 roughness={0.2}
               />
             </RoundedBox>
+
 
             <mesh
               position={[
@@ -495,49 +677,137 @@ function FrontLighting({
         ),
       )}
 
-      {[-0.72, 0.72].map(
+
+      {/* actual nearby headlamp illumination */}
+
+      {headlights && (
+        <>
+          <pointLight
+            position={[
+              2.28,
+              0.9,
+              -0.52,
+            ]}
+            color="#fff0bd"
+            intensity={0.82}
+            distance={4.8}
+            decay={2}
+          />
+
+          <pointLight
+            position={[
+              2.28,
+              0.9,
+              0.52,
+            ]}
+            color="#fff0bd"
+            intensity={0.82}
+            distance={4.8}
+            decay={2}
+          />
+
+
+          <mesh
+            position={[
+              3,
+              0.035,
+              0,
+            ]}
+            rotation-x={
+              -Math.PI / 2
+            }
+            scale={[
+              1.7,
+              0.75,
+              1,
+            ]}
+          >
+            <circleGeometry
+              args={[
+                1.15,
+                32,
+              ]}
+            />
+
+            <meshBasicMaterial
+              color="#fff1c7"
+              transparent
+              opacity={0.085}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+        </>
+      )}
+
+
+      {/* front indicators */}
+
+      {[
+        -0.72,
+        0.72,
+      ].map(
         (z) => {
           const active =
             z < 0
               ? Boolean(
-                  lights.leftIndicator,
-                )
+                lights
+                  .leftIndicator,
+              )
               : Boolean(
-                  lights.rightIndicator,
-                )
+                lights
+                  .rightIndicator,
+              )
+
 
           return (
-            <mesh
-              key={z}
-              position={[
-                2.07,
-                0.83,
-                z,
-              ]}
-            >
-              <boxGeometry
-                args={[
-                  0.03,
-                  0.11,
-                  0.17,
+            <group key={z}>
+              <mesh
+                position={[
+                  2.07,
+                  0.83,
+                  z,
                 ]}
-              />
+              >
+                <boxGeometry
+                  args={[
+                    0.03,
+                    0.11,
+                    0.17,
+                  ]}
+                />
 
-              <meshStandardMaterial
-                color={
-                  active
-                    ? '#f2aa26'
-                    : '#aa7226'
-                }
-                emissive="#ee9b18"
-                emissiveIntensity={
-                  active
-                    ? 2
-                    : 0
-                }
-                roughness={0.34}
-              />
-            </mesh>
+                <meshStandardMaterial
+                  color={
+                    active
+                      ? '#f2aa26'
+                      : '#aa7226'
+                  }
+                  emissive="#ee9b18"
+                  emissiveIntensity={
+                    active
+                      ? 2
+                      : 0
+                  }
+                  roughness={0.34}
+                />
+              </mesh>
+
+
+              {active && (
+                <pointLight
+                  position={[
+                    2.12,
+                    0.83,
+                    z,
+                  ]}
+                  color="#f0a020"
+                  intensity={0.24}
+                  distance={1.8}
+                  decay={2}
+                />
+              )}
+            </group>
           )
         },
       )}
@@ -549,7 +819,8 @@ function FrontLighting({
 function RearLighting({
   lights,
 }: {
-  lights: VehicleLightingState
+  lights:
+  VehicleLightingState
 }) {
   const braking =
     Boolean(
@@ -561,9 +832,13 @@ function RearLighting({
       lights.reverseLights,
     )
 
+
   return (
     <>
-      {[-0.59, 0.59].map(
+      {[
+        -0.59,
+        0.59,
+      ].map(
         (z) => (
           <group
             key={z}
@@ -598,6 +873,7 @@ function RearLighting({
               />
             </RoundedBox>
 
+
             <mesh
               position={[
                 -0.045,
@@ -631,16 +907,84 @@ function RearLighting({
         ),
       )}
 
-      {[-0.73, 0.73].map(
+
+      {braking && (
+        <>
+          <pointLight
+            position={[
+              -2.22,
+              0.92,
+              -0.56,
+            ]}
+            color="#d83b32"
+            intensity={0.38}
+            distance={2.7}
+            decay={2}
+          />
+
+          <pointLight
+            position={[
+              -2.22,
+              0.92,
+              0.56,
+            ]}
+            color="#d83b32"
+            intensity={0.38}
+            distance={2.7}
+            decay={2}
+          />
+
+
+          <mesh
+            position={[
+              -2.7,
+              0.035,
+              0,
+            ]}
+            rotation-x={
+              -Math.PI / 2
+            }
+            scale={[
+              1.25,
+              0.7,
+              1,
+            ]}
+          >
+            <circleGeometry
+              args={[
+                0.8,
+                28,
+              ]}
+            />
+
+            <meshBasicMaterial
+              color="#b8322c"
+              transparent
+              opacity={0.07}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+        </>
+      )}
+
+
+      {[
+        -0.73,
+        0.73,
+      ].map(
         (z) => {
           const active =
             z < 0
               ? Boolean(
-                  lights.leftIndicator,
-                )
+                lights
+                  .leftIndicator,
+              )
               : Boolean(
-                  lights.rightIndicator,
-                )
+                lights
+                  .rightIndicator,
+              )
+
 
           return (
             <mesh
@@ -681,72 +1025,146 @@ function RearLighting({
 }
 
 
+/* ===========================================================
+   MAIN VEHICLE
+   =========================================================== */
+
 export function VehicleBody({
-  position = [0, 0, 0],
+  position = [
+    0,
+    0,
+    0,
+  ],
+
   rotation = 0,
+
   stage = 'finished',
+
   color,
-  lights = VEHICLE_LIGHTS_OFF,
+
+  lights =
+  VEHICLE_LIGHTS_OFF,
+
+  wheelInstallProgress,
 }: VehicleBodyProps) {
   const resolvedColor =
     color ??
     STAGE_BODY_COLORS[
-      stage
+    stage
     ]
+
 
   const hasGlass =
     stage !== 'shell'
+
 
   const hasTrim =
     stage === 'assembly' ||
     stage === 'documented' ||
     stage === 'finished'
 
-  const hasWheels =
-    stage === 'documented' ||
-    stage === 'finished'
+
+  /*
+   * Non-production finished cars already have wheels.
+   *
+   * Production cars receive the explicit progress
+   * supplied by OverheadAssemblyLine.
+   */
+  const resolvedWheelProgress =
+    wheelInstallProgress ??
+    (
+      stage ===
+        'documented' ||
+        stage ===
+        'finished'
+        ? 1
+        : 0
+    )
+
 
   const hasDocument =
     stage === 'documented'
+
+
+  const wheelPositions:
+    Array<[
+      number,
+      number,
+    ]> = [
+      [
+        -1.28,
+        -0.81,
+      ],
+
+      [
+        -1.28,
+        0.81,
+      ],
+
+      [
+        1.28,
+        -0.81,
+      ],
+
+      [
+        1.28,
+        0.81,
+      ],
+    ]
+
 
   return (
     <group
       position={position}
       rotation-y={rotation}
     >
-      {/* Main hatchback shell */}
+      {/* body */}
+
       <mesh
         position={[
           0,
           0,
-          -BODY_WIDTH / 2,
+          -BODY_WIDTH /
+          2,
         ]}
         castShadow
       >
         <extrudeGeometry
           args={[
             bodyProfile,
+
             {
               depth:
                 BODY_WIDTH,
-              bevelEnabled: true,
+
+              bevelEnabled:
+                true,
+
               bevelThickness:
                 0.045,
-              bevelSize: 0.045,
+
+              bevelSize:
+                0.045,
+
               bevelSegments: 2,
+
               curveSegments: 10,
             },
           ]}
         />
 
         <meshStandardMaterial
-          color={resolvedColor}
+          color={
+            resolvedColor
+          }
           metalness={0.23}
           roughness={0.28}
         />
       </mesh>
 
-      {/* Side glazing / open apertures */}
+
+      {/* side glazing */}
+
       <SideWindows
         side={
           SIDE_SURFACE
@@ -761,43 +1179,96 @@ export function VehicleBody({
         glazed={hasGlass}
       />
 
-      {/* Front windshield */}
+
+      {/* =====================================================
+          WINDSHIELD
+          ===================================================== */}
+
       <mesh
         position={[
-          1.03,
-          1.41,
+          1.035,
+          1.415,
+          0,
+        ]}
+        rotation-z={-0.56}
+        scale={[
+          1.08,
+          1.08,
+          1.04,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.075,
+            0.64,
+            1.42,
+          ]}
+        />
+
+        <WindowBorderMaterial />
+      </mesh>
+
+
+      <mesh
+        position={[
+          1.045,
+          1.415,
           0,
         ]}
         rotation-z={-0.56}
       >
         <boxGeometry
           args={[
-            0.06,
-            0.61,
-            1.4,
+            0.078,
+            0.58,
+            1.31,
           ]}
         />
 
-        <meshStandardMaterial
-          color={
-            hasGlass
-              ? '#14282e'
-              : '#3a403d'
-          }
-          metalness={
-            hasGlass
-              ? 0.05
-              : 0
-          }
-          roughness={
-            hasGlass
-              ? 0.08
-              : 0.82
-          }
-        />
+        {hasGlass ? (
+          <GlassMaterial />
+        ) : (
+          <meshStandardMaterial
+            color="#454c48"
+            roughness={0.84}
+          />
+        )}
       </mesh>
 
-      {/* Rear glass */}
+
+      {/* upper windshield highlight */}
+
+      {hasGlass && (
+        <mesh
+          position={[
+            0.89,
+            1.67,
+            0,
+          ]}
+          rotation-z={-0.56}
+        >
+          <boxGeometry
+            args={[
+              0.018,
+              0.06,
+              1.18,
+            ]}
+          />
+
+          <meshBasicMaterial
+            color="#9ac2c6"
+            transparent
+            opacity={0.48}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
+
+
+      {/* =====================================================
+          REAR WINDOW
+          ===================================================== */}
+
       <mesh
         position={[
           -1.52,
@@ -805,119 +1276,155 @@ export function VehicleBody({
           0,
         ]}
         rotation-z={0.25}
+        scale={[
+          1.08,
+          1.08,
+          1.04,
+        ]}
       >
         <boxGeometry
           args={[
-            0.06,
-            0.53,
-            1.36,
+            0.075,
+            0.55,
+            1.38,
           ]}
         />
 
-        <meshStandardMaterial
-          color={
-            hasGlass
-              ? '#14282e'
-              : '#3a403d'
-          }
-          metalness={
-            hasGlass
-              ? 0.05
-              : 0
-          }
-          roughness={
-            hasGlass
-              ? 0.08
-              : 0.82
-          }
-        />
+        <WindowBorderMaterial />
       </mesh>
+
+
+      <mesh
+        position={[
+          -1.53,
+          1.37,
+          0,
+        ]}
+        rotation-z={0.25}
+      >
+        <boxGeometry
+          args={[
+            0.078,
+            0.49,
+            1.27,
+          ]}
+        />
+
+        {hasGlass ? (
+          <GlassMaterial />
+        ) : (
+          <meshStandardMaterial
+            color="#454c48"
+            roughness={0.84}
+          />
+        )}
+      </mesh>
+
+
+      {/* glass roof reflection strip */}
+
+      {hasGlass && (
+        <RoundedBox
+          args={[
+            1.48,
+            0.018,
+            0.78,
+          ]}
+          radius={0.08}
+          smoothness={2}
+          position={[
+            -0.15,
+            1.755,
+            0,
+          ]}
+        >
+          <meshStandardMaterial
+            color="#365b63"
+            roughness={0.18}
+            metalness={0.08}
+            transparent
+            opacity={0.46}
+          />
+        </RoundedBox>
+      )}
+
 
       {hasTrim && (
         <>
-          {/* Lower side trim */}
+          {/* rocker trim */}
+
           {[
             -SIDE_SURFACE,
             SIDE_SURFACE,
-          ].map((z) => (
-            <group key={z}>
-              <mesh
-                position={[
-                  0,
-                  0.5,
-                  z,
-                ]}
-              >
-                <boxGeometry
-                  args={[
-                    3.42,
-                    0.12,
-                    0.045,
-                  ]}
-                />
-
-                <meshStandardMaterial
-                  color="#252a27"
-                  roughness={0.64}
-                />
-              </mesh>
-
-              {/* B-pillar */}
-              <mesh
-                position={[
-                  -0.06,
-                  1.37,
-                  z * 1.008,
-                ]}
-              >
-                <boxGeometry
-                  args={[
-                    0.07,
-                    0.5,
-                    0.025,
-                  ]}
-                />
-
-                <meshStandardMaterial
-                  color="#202522"
-                  roughness={0.5}
-                />
-              </mesh>
-
-              {/* Door handles */}
-              {[
-                -0.72,
-                0.25,
-              ].map((x) => (
-                <RoundedBox
-                  key={x}
-                  args={[
-                    0.2,
-                    0.045,
-                    0.04,
-                  ]}
-                  radius={0.015}
-                  smoothness={2}
+          ].map(
+            (z) => (
+              <group key={z}>
+                <mesh
                   position={[
-                    x,
-                    1.04,
-                    z * 1.01,
+                    0,
+                    0.5,
+                    z,
                   ]}
                 >
-                  <meshStandardMaterial
-                    color={
-                      resolvedColor
-                    }
-                    metalness={0.2}
-                    roughness={0.32}
+                  <boxGeometry
+                    args={[
+                      3.42,
+                      0.12,
+                      0.045,
+                    ]}
                   />
-                </RoundedBox>
-              ))}
-            </group>
-          ))}
 
-          {/* Mirrors */}
-          {[-0.79, 0.79].map(
+                  <meshStandardMaterial
+                    color="#252a27"
+                    roughness={0.64}
+                  />
+                </mesh>
+
+
+                {/* door handles */}
+
+                {[
+                  -0.72,
+                  0.25,
+                ].map(
+                  (x) => (
+                    <RoundedBox
+                      key={x}
+                      args={[
+                        0.2,
+                        0.045,
+                        0.04,
+                      ]}
+                      radius={0.015}
+                      smoothness={2}
+                      position={[
+                        x,
+                        1.04,
+                        z *
+                        1.01,
+                      ]}
+                    >
+                      <meshStandardMaterial
+                        color={
+                          resolvedColor
+                        }
+                        metalness={0.2}
+                        roughness={0.32}
+                      />
+                    </RoundedBox>
+                  ),
+                )}
+              </group>
+            ),
+          )}
+
+
+          {/* mirrors */}
+
+          {[
+            -0.79,
+            0.79,
+          ].map(
             (z) => (
               <RoundedBox
                 key={z}
@@ -942,7 +1449,9 @@ export function VehicleBody({
             ),
           )}
 
-          {/* Front bumper */}
+
+          {/* front bumper */}
+
           <RoundedBox
             args={[
               0.13,
@@ -963,7 +1472,9 @@ export function VehicleBody({
             />
           </RoundedBox>
 
-          {/* Upper grille */}
+
+          {/* grille */}
+
           <RoundedBox
             args={[
               0.06,
@@ -985,37 +1496,9 @@ export function VehicleBody({
             />
           </RoundedBox>
 
-          {/* Grille bars */}
-          {[
-            -0.34,
-            0,
-            0.34,
-          ].map((z) => (
-            <mesh
-              key={z}
-              position={[
-                2.142,
-                0.73,
-                z,
-              ]}
-            >
-              <boxGeometry
-                args={[
-                  0.012,
-                  0.035,
-                  0.24,
-                ]}
-              />
 
-              <meshStandardMaterial
-                color="#8e9490"
-                metalness={0.68}
-                roughness={0.27}
-              />
-            </mesh>
-          ))}
+          {/* lower intake */}
 
-          {/* Lower air intake */}
           <RoundedBox
             args={[
               0.045,
@@ -1036,7 +1519,9 @@ export function VehicleBody({
             />
           </RoundedBox>
 
-          {/* Compact central badge */}
+
+          {/* front badge */}
+
           <mesh
             position={[
               2.15,
@@ -1044,7 +1529,8 @@ export function VehicleBody({
               0,
             ]}
             rotation-x={
-              Math.PI / 4
+              Math.PI /
+              4
             }
           >
             <boxGeometry
@@ -1062,7 +1548,9 @@ export function VehicleBody({
             />
           </mesh>
 
-          {/* Rear bumper */}
+
+          {/* rear bumper */}
+
           <RoundedBox
             args={[
               0.12,
@@ -1083,6 +1571,7 @@ export function VehicleBody({
             />
           </RoundedBox>
 
+
           <FrontLighting
             lights={lights}
           />
@@ -1091,7 +1580,9 @@ export function VehicleBody({
             lights={lights}
           />
 
-          {/* Front plate */}
+
+          {/* plates */}
+
           <mesh
             position={[
               2.108,
@@ -1113,7 +1604,7 @@ export function VehicleBody({
             />
           </mesh>
 
-          {/* Rear plate */}
+
           <mesh
             position={[
               -2.108,
@@ -1135,7 +1626,9 @@ export function VehicleBody({
             />
           </mesh>
 
-          {/* Rear antenna */}
+
+          {/* antenna */}
+
           <mesh
             position={[
               -0.78,
@@ -1162,45 +1655,95 @@ export function VehicleBody({
         </>
       )}
 
-      {/* Roof rails on finished vehicle */}
-      {stage === 'finished' && (
-        <>
-          {[-0.55, 0.55].map(
-            (z) => (
-              <RoundedBox
-                key={z}
-                args={[
-                  1.65,
-                  0.06,
-                  0.06,
-                ]}
-                radius={0.02}
-                smoothness={2}
+
+      {/* roof rails */}
+
+      {stage ===
+        'finished' && (
+          <>
+            {[
+              -0.55,
+              0.55,
+            ].map(
+              (z) => (
+                <RoundedBox
+                  key={z}
+                  args={[
+                    1.65,
+                    0.06,
+                    0.06,
+                  ]}
+                  radius={0.02}
+                  smoothness={2}
+                  position={[
+                    -0.15,
+                    1.82,
+                    z,
+                  ]}
+                >
+                  <meshStandardMaterial
+                    color="#252a27"
+                    roughness={0.5}
+                  />
+                </RoundedBox>
+              ),
+            )}
+          </>
+        )}
+
+
+      {/* =====================================================
+          REAL WHEEL INSTALLATION
+          ===================================================== */}
+
+      {wheelPositions.map(
+        (
+          [
+            x,
+            z,
+          ],
+          index,
+        ) => {
+          /*
+           * Install wheels progressively in pairs.
+           */
+          const start =
+            index <
+              2
+              ? 0.18
+              : 0.5
+
+
+          const localProgress =
+            clamp(
+              (
+                resolvedWheelProgress -
+                start
+              ) /
+              0.28,
+              0,
+              1,
+            )
+
+
+          if (
+            localProgress <=
+            0
+          ) {
+            return (
+              <WheelHub
+                key={index}
                 position={[
-                  -0.15,
-                  1.82,
+                  x,
+                  0.38,
                   z,
                 ]}
-              >
-                <meshStandardMaterial
-                  color="#252a27"
-                  roughness={0.5}
-                />
-              </RoundedBox>
-            ),
-          )}
-        </>
-      )}
+              />
+            )
+          }
 
-      {/* Wheel state */}
-      {[
-        [-1.28, -0.81],
-        [-1.28, 0.81],
-        [1.28, -0.81],
-        [1.28, 0.81],
-      ].map(
-        ([x, z], index) =>
-          hasWheels ? (
+
+          return (
             <Wheel
               key={index}
               position={[
@@ -1208,18 +1751,18 @@ export function VehicleBody({
                 0.38,
                 z,
               ]}
+              scale={
+                0.25 +
+                localProgress *
+                0.75
+              }
             />
-          ) : (
-            <WheelHub
-              key={index}
-              position={[
-                x,
-                0.38,
-                z,
-              ]}
-            />
-          ),
+          )
+        },
       )}
+
+
+      {/* production document */}
 
       {hasDocument && (
         <mesh

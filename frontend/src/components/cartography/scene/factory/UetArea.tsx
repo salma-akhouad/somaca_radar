@@ -13,7 +13,7 @@ export function UetArea({
   depth = 6,
   label,
 }: UetAreaProps) {
-  const borderColor = '#9e8436'
+const borderColor = '#af8d2f'
 
   return (
     <group position={position}>

@@ -1,6 +1,11 @@
 import {
   useRef,
+  useState,
 } from 'react'
+
+import {
+  Text,
+} from '@react-three/drei'
 
 import {
   useFrame,
@@ -10,37 +15,20 @@ import type {
   Group,
 } from 'three'
 
+import {
+  LogisticsRoute,
+} from '../markings/LogisticsRoute'
 
-const START_X = -9
-const END_X = 9
-const ROUTE_Z = 5
+import {
+  getLogisticsState,
+  LOGISTICS_DELIVERY_POSITION,
+  LOGISTICS_PICKUP_POSITION,
+  LOGISTICS_ROUTE,
+} from './data/logisticsCycle'
 
-const TRAVEL_DURATION = 34
-const PAUSE_DURATION = 6
-
-const HALF_CYCLE =
-  TRAVEL_DURATION +
-  PAUSE_DURATION
-
-const FULL_CYCLE =
-  HALF_CYCLE * 2
-
-
-function smoothStep(
-  value: number,
-) {
-  const clamped =
-    Math.max(
-      0,
-      Math.min(1, value),
-    )
-
-  return (
-    clamped *
-    clamped *
-    (3 - 2 * clamped)
-  )
-}
+import type {
+  LogisticsPhase,
+} from './data/logisticsCycle'
 
 
 function PayloadWheel({
@@ -55,40 +43,43 @@ function PayloadWheel({
   return (
     <group position={position}>
       <mesh
-        rotation-x={Math.PI / 2}
-        castShadow
+        rotation-x={
+          Math.PI / 2
+        }
       >
         <cylinderGeometry
           args={[
-            0.29,
-            0.29,
+            0.3,
+            0.3,
             0.18,
-            20,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#1e2220"
-          roughness={0.78}
-        />
-      </mesh>
-
-      <mesh
-        rotation-x={Math.PI / 2}
-      >
-        <cylinderGeometry
-          args={[
-            0.15,
-            0.15,
-            0.195,
             16,
           ]}
         />
 
         <meshStandardMaterial
-          color="#7d827e"
-          metalness={0.62}
-          roughness={0.3}
+          color="#171b19"
+          roughness={0.8}
+        />
+      </mesh>
+
+      <mesh
+        rotation-x={
+          Math.PI / 2
+        }
+      >
+        <cylinderGeometry
+          args={[
+            0.17,
+            0.17,
+            0.195,
+            12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#999f9b"
+          metalness={0.68}
+          roughness={0.28}
         />
       </mesh>
     </group>
@@ -100,130 +91,239 @@ export function AutomatedCarrier() {
   const carrier =
     useRef<Group>(null)
 
-  useFrame((state) => {
-    if (!carrier.current) {
-      return
-    }
+  const [
+    visibleWheelCount,
+    setVisibleWheelCount,
+  ] =
+    useState<
+      0 | 1 | 2 | 3 | 4
+    >(0)
 
-    const cycleTime =
-      state.clock.elapsedTime %
-      FULL_CYCLE
+  const [
+    phase,
+    setPhase,
+  ] =
+    useState<LogisticsPhase>(
+      'pickup',
+    )
 
-    let progress = 0
-    let rotation = 0
+  const wheelCountRef =
+    useRef<
+      0 | 1 | 2 | 3 | 4
+    >(0)
 
-    if (
-      cycleTime <
-      TRAVEL_DURATION
-    ) {
-      progress =
-        smoothStep(
-          cycleTime /
-          TRAVEL_DURATION,
+  const phaseRef =
+    useRef<LogisticsPhase>(
+      'pickup',
+    )
+
+
+  useFrame(
+    (state) => {
+      if (
+        !carrier.current
+      ) {
+        return
+      }
+
+
+      const logistics =
+        getLogisticsState(
+          state.clock.elapsedTime,
         )
 
-      rotation = 0
-    } else if (
-      cycleTime <
-      HALF_CYCLE
-    ) {
-      progress = 1
-      rotation = 0
-    } else if (
-      cycleTime <
-      HALF_CYCLE +
-      TRAVEL_DURATION
-    ) {
-      const returnTime =
-        cycleTime -
-        HALF_CYCLE
 
-      progress =
-        1 -
-        smoothStep(
-          returnTime /
-          TRAVEL_DURATION,
+      carrier.current.position.set(
+        logistics.x,
+        0,
+        logistics.z,
+      )
+
+      carrier.current.rotation.y =
+        logistics.rotation
+
+
+      if (
+        logistics.wheelCount !==
+        wheelCountRef.current
+      ) {
+        wheelCountRef.current =
+          logistics.wheelCount
+
+        setVisibleWheelCount(
+          logistics.wheelCount,
         )
+      }
 
-      rotation = Math.PI
-    } else {
-      progress = 0
-      rotation = Math.PI
-    }
 
-    carrier.current.position.x =
-      START_X +
+      if (
+        logistics.phase !==
+        phaseRef.current
+      ) {
+        phaseRef.current =
+          logistics.phase
+
+        setPhase(
+          logistics.phase,
+        )
+      }
+    },
+  )
+
+
+  const moving =
+    phase ===
+      'outbound' ||
+    phase ===
+      'return'
+
+
+  const routePoints =
+    LOGISTICS_ROUTE.map(
       (
-        END_X -
-        START_X
-      ) *
-      progress
+        [
+          x,
+          z,
+        ],
+      ) => ({
+        x,
+        z,
+      }),
+    )
 
-    carrier.current.rotation.y =
-      rotation
-  })
+
+  const payloadPositions:
+    Array<[
+      number,
+      number,
+      number,
+    ]> = [
+      [-0.55, 1.03, 0],
+      [0.55, 1.03, 0],
+      [-0.55, 1.61, 0],
+      [0.55, 1.61, 0],
+    ]
+
 
   return (
     <group>
-      {/* Dedicated internal logistics lane */}
-      {[
-        ROUTE_Z - 0.95,
-        ROUTE_Z + 0.95,
-      ].map((z) => (
-        <mesh
-          key={z}
-          position={[
-            0,
-            0.027,
-            z,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              20,
-              0.01,
-              0.045,
-            ]}
-          />
+      <LogisticsRoute
+        points={
+          routePoints
+        }
+      />
 
-          <meshStandardMaterial
-            color="#a98932"
-            roughness={0.84}
-          />
-        </mesh>
-      ))}
+
+      <Text
+        position={[
+          LOGISTICS_PICKUP_POSITION[0],
+          0.07,
+          LOGISTICS_PICKUP_POSITION[1] -
+          1.7,
+        ]}
+        rotation={[
+          -Math.PI / 2,
+          0,
+          0,
+        ]}
+        fontSize={0.32}
+        color="#353a37"
+        anchorX="center"
+        anchorY="middle"
+      >
+        CHARGEMENT ROUES
+      </Text>
+
+
+      <Text
+        position={[
+          LOGISTICS_DELIVERY_POSITION[0],
+          0.07,
+          LOGISTICS_DELIVERY_POSITION[1] -
+          1.55,
+        ]}
+        rotation={[
+          -Math.PI / 2,
+          0,
+          0,
+        ]}
+        fontSize={0.32}
+        color="#353a37"
+        anchorX="center"
+        anchorY="middle"
+      >
+        LIVRAISON ROUES
+      </Text>
+
 
       <group
         ref={carrier}
         position={[
-          START_X,
+          LOGISTICS_PICKUP_POSITION[0],
           0,
-          ROUTE_Z,
+          LOGISTICS_PICKUP_POSITION[1],
         ]}
       >
-        {/* AGV base */}
         <mesh
+          position={[
+            0,
+            0.3,
+            0,
+          ]}
           castShadow
-          position={[0, 0.29, 0]}
         >
           <boxGeometry
             args={[
-              2.65,
-              0.42,
-              1.5,
+              2.6,
+              0.44,
+              1.48,
             ]}
           />
 
           <meshStandardMaterial
-            color="#3d433f"
+            color="#353a37"
             metalness={0.3}
             roughness={0.58}
           />
         </mesh>
 
+
+        {[
+          -1.18,
+          1.18,
+        ].map(
+          (x) => (
+            <mesh
+              key={x}
+              position={[
+                x,
+                0.34,
+                0,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.16,
+                  0.36,
+                  1.42,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color="#c99e29"
+                roughness={0.7}
+              />
+            </mesh>
+          ),
+        )}
+
+
         <mesh
-          castShadow
-          position={[0, 0.56, 0]}
+          position={[
+            0,
+            0.57,
+            0,
+          ]}
         >
           <boxGeometry
             args={[
@@ -234,124 +334,94 @@ export function AutomatedCarrier() {
           />
 
           <meshStandardMaterial
-            color="#676d68"
-            metalness={0.26}
-            roughness={0.6}
+            color="#555b57"
+            metalness={0.24}
+            roughness={0.52}
           />
         </mesh>
 
-        {/* Safety markings */}
-        {[-0.92, 0.92].map((x) => (
-          <mesh
-            key={x}
-            position={[
-              x,
-              0.52,
-              -0.765,
-            ]}
-          >
-            <boxGeometry
-              args={[
-                0.34,
-                0.11,
-                0.035,
+
+        {[
+          -0.83,
+          0.83,
+        ].map(
+          (x) => (
+            <mesh
+              key={x}
+              position={[
+                x,
+                1.2,
+                0,
               ]}
-            />
+            >
+              <boxGeometry
+                args={[
+                  0.075,
+                  1.4,
+                  1.02,
+                ]}
+              />
 
-            <meshStandardMaterial
-              color="#c69b22"
-              roughness={0.72}
-            />
-          </mesh>
-        ))}
+              <meshStandardMaterial
+                color="#434945"
+                metalness={0.44}
+                roughness={0.42}
+              />
+            </mesh>
+          ),
+        )}
 
-        {/* Payload rack */}
-        {[-0.82, 0.82].map((x) => (
-          <mesh
-            key={`rack-${x}`}
-            position={[
-              x,
-              1.18,
-              0,
-            ]}
-            castShadow
-          >
-            <boxGeometry
-              args={[
-                0.08,
-                1.35,
-                1.05,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color="#4c524e"
-              metalness={0.42}
-              roughness={0.46}
-            />
-          </mesh>
-        ))}
 
         <mesh
-          position={[0, 1.82, 0]}
-          castShadow
+          position={[
+            0,
+            1.88,
+            0,
+          ]}
         >
           <boxGeometry
             args={[
-              1.72,
+              1.75,
               0.08,
-              1.05,
+              1.02,
             ]}
           />
 
           <meshStandardMaterial
-            color="#4c524e"
-            metalness={0.42}
-            roughness={0.46}
+            color="#434945"
+            metalness={0.44}
+            roughness={0.42}
           />
         </mesh>
 
-        {/* Wheel assemblies */}
-        <PayloadWheel
-          position={[
-            -0.55,
-            1.02,
-            -0.02,
-          ]}
-        />
 
-        <PayloadWheel
-          position={[
-            0.55,
-            1.02,
-            -0.02,
-          ]}
-        />
+        {payloadPositions.map(
+          (
+            position,
+            index,
+          ) =>
+            index <
+            visibleWheelCount ? (
+              <PayloadWheel
+                key={index}
+                position={position}
+              />
+            ) : null,
+        )}
 
-        <PayloadWheel
-          position={[
-            -0.55,
-            1.6,
-            -0.02,
-          ]}
-        />
 
-        <PayloadWheel
-          position={[
-            0.55,
-            1.6,
-            -0.02,
-          ]}
-        />
-
-        {/* AGV wheels */}
-        {[-0.95, 0.95].flatMap(
+        {[
+          -0.94,
+          0.94,
+        ].flatMap(
           (x) =>
-            [-0.54, 0.54].map(
+            [
+              -0.54,
+              0.54,
+            ].map(
               (z) => (
                 <mesh
                   key={`${x}-${z}`}
-                  castShadow
                   position={[
                     x,
                     0.12,
@@ -366,18 +436,91 @@ export function AutomatedCarrier() {
                       0.17,
                       0.17,
                       0.12,
-                      12,
+                      10,
                     ]}
                   />
 
                   <meshStandardMaterial
-                    color="#282c29"
-                    roughness={0.74}
+                    color="#242826"
+                    roughness={0.76}
                   />
                 </mesh>
               ),
             ),
         )}
+
+
+        <mesh
+          position={[
+            -0.84,
+            0.85,
+            0,
+          ]}
+        >
+          <cylinderGeometry
+            args={[
+              0.09,
+              0.11,
+              0.14,
+              10,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color={
+              moving
+                ? '#f0aa25'
+                : '#8e6b2e'
+            }
+            emissive="#e49b1c"
+            emissiveIntensity={
+              moving
+                ? 1.2
+                : 0.06
+            }
+          />
+        </mesh>
+
+
+        <mesh
+          position={[
+            0,
+            0.66,
+            0,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              0.86,
+              0.025,
+              0.4,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#292e2b"
+          />
+        </mesh>
+
+
+        <Text
+          position={[
+            0,
+            0.685,
+            0,
+          ]}
+          rotation={[
+            -Math.PI / 2,
+            0,
+            0,
+          ]}
+          fontSize={0.25}
+          color="#ffffff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          AGV
+        </Text>
       </group>
     </group>
   )

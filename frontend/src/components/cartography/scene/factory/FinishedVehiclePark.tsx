@@ -6,10 +6,6 @@ import {
   VehicleBody,
 } from './VehicleBody'
 
-import {
-  VEHICLE_JOURNEY,
-} from './data/vehicleJourney'
-
 
 interface ParkedVehicle {
   x: number
@@ -23,50 +19,42 @@ const parkedVehicles:
     {
       x: -5,
       z: -2.25,
-      color: '#e8e9e5',
+      color: '#777d7a',
     },
+
     {
       x: -1.7,
       z: -2.25,
-      color: '#242826',
+      color: '#282c2a',
     },
+
     {
       x: 1.7,
       z: -2.25,
-      color: '#314f64',
+      color: '#4d6575',
     },
+
     {
       x: 5,
       z: -2.25,
-      color: '#53614d',
+      color: '#a07e43',
     },
-
-    // x = -5, z = 2.25
-    // Reserved arrival bay.
 
     {
       x: -1.7,
       z: 2.25,
-      color: '#a17d32',
+      color: '#71463d',
     },
+
     {
       x: 1.7,
       z: 2.25,
-      color: '#633d32',
-    },
-    {
-      x: 5,
-      z: 2.25,
-      color: '#8a8c87',
+      color: '#626866',
     },
   ]
 
 
 export function FinishedVehiclePark() {
-  const parkingBay =
-    VEHICLE_JOURNEY
-      .parkingBay
-
   return (
     <group
       position={[
@@ -92,127 +80,132 @@ export function FinishedVehiclePark() {
         />
 
         <meshStandardMaterial
-          color="#555a57"
+          color="#414643"
           roughness={0.97}
-          metalness={0}
         />
       </mesh>
 
-      {/* Parking bay dividers */}
+
+      {/* Central vehicle aisle */}
+
+      <mesh
+        position={[
+          0,
+          0.027,
+          0,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            16.4,
+            0.012,
+            2.6,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#474c49"
+          roughness={0.96}
+        />
+      </mesh>
+
+
+      {/* Bay separators */}
+
       {[
         -6.7,
         -3.35,
         0,
         3.35,
         6.7,
-      ].map((x) => (
-        <mesh
-          key={x}
-          position={[
-            x,
-            0.036,
-            0,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              0.055,
-              0.012,
-              10,
-            ]}
-          />
+      ].map(
+        (x) => (
+          <group key={x}>
+            <mesh
+              position={[
+                x,
+                0.038,
+                -3.45,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.055,
+                  0.012,
+                  3.1,
+                ]}
+              />
 
-          <meshStandardMaterial
-            color="#dbdbd4"
-            roughness={0.82}
-          />
-        </mesh>
-      ))}
+              <meshStandardMaterial
+                color="#dadbd5"
+                roughness={0.82}
+              />
+            </mesh>
 
-      <mesh
-        position={[
-          0,
-          0.036,
-          0,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            13.4,
-            0.012,
-            0.055,
-          ]}
-        />
+            <mesh
+              position={[
+                x,
+                0.038,
+                3.45,
+              ]}
+            >
+              <boxGeometry
+                args={[
+                  0.055,
+                  0.012,
+                  3.1,
+                ]}
+              />
 
-        <meshStandardMaterial
-          color="#dbdbd4"
-          roughness={0.82}
-        />
-      </mesh>
+              <meshStandardMaterial
+                color="#dadbd5"
+                roughness={0.82}
+              />
+            </mesh>
+          </group>
+        ),
+      )}
 
-      {/* Parking entrance */}
-      <mesh
-        position={[
-          -7.7,
-          0.037,
-          0,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            0.08,
-            0.012,
-            4.4,
-          ]}
-        />
 
-        <meshStandardMaterial
-          color="#c89d18"
-          roughness={0.74}
-        />
-      </mesh>
+      {/* Parking access edges */}
 
       {[
-        [-6.2, 0],
-        [-5.2, 0.7],
-        [-4.2, 1.4],
+        -1.3,
+        1.3,
       ].map(
-        ([x, z]) => (
+        (z) => (
           <mesh
-            key={`${x}-${z}`}
+            key={z}
             position={[
-              x,
-              0.04,
+              -7.85,
+              0.039,
               z,
             ]}
-            rotation-y={-0.18}
           >
             <boxGeometry
               args={[
-                1.1,
+                1.2,
                 0.012,
-                0.055,
+                0.065,
               ]}
             />
 
             <meshStandardMaterial
-              color="#b89229"
+              color="#c49a25"
               roughness={0.76}
             />
           </mesh>
         ),
       )}
 
-      {/* Existing finished vehicles */}
+
       {parkedVehicles.map(
         (
           vehicle,
           index,
         ) => (
           <VehicleBody
-            key={
-              `${vehicle.x}-${vehicle.z}-${index}`
-            }
+            key={`${vehicle.x}-${vehicle.z}-${index}`}
             position={[
               vehicle.x,
               0.02,
@@ -229,91 +222,41 @@ export function FinishedVehiclePark() {
         ),
       )}
 
-      {/* Reserved first accessible bay */}
-      <group
+
+      <mesh
         position={[
-          parkingBay.position[0] -
-            49,
-          0,
-          parkingBay.position[2] +
-            19,
+          3.2,
+          0.046,
+          -5.2,
         ]}
       >
-        <mesh
-          position={[
-            0,
-            0.038,
-            0,
+        <boxGeometry
+          args={[
+            6.1,
+            0.02,
+            0.72,
           ]}
-        >
-          <boxGeometry
-            args={[
-              2.7,
-              0.012,
-              0.07,
-            ]}
-          />
+        />
 
-          <meshStandardMaterial
-            color="#73866f"
-            roughness={0.82}
-          />
-        </mesh>
-
-        <mesh
-          position={[
-            0,
-            0.039,
-            -1.05,
-          ]}
-        >
-          <boxGeometry
-            args={[
-              2.7,
-              0.012,
-              0.055,
-            ]}
-          />
-
-          <meshStandardMaterial
-            color="#73866f"
-            roughness={0.82}
-          />
-        </mesh>
-
-        <Text
-          position={[
-            0,
-            0.05,
-            0.58,
-          ]}
-          rotation={[
-            -Math.PI / 2,
-            0,
-            0,
-          ]}
-          fontSize={0.28}
-          color="#e2e4df"
-          anchorX="center"
-          anchorY="middle"
-        >
-          ARRIVÉE
-        </Text>
-      </group>
+        <meshStandardMaterial
+          color="#292e2b"
+          roughness={0.82}
+        />
+      </mesh>
 
       <Text
         position={[
-          0,
-          0.052,
-          -6.35,
+          3.2,
+          0.076,
+          -5.2,
         ]}
         rotation={[
           -Math.PI / 2,
           0,
           0,
         ]}
-        fontSize={0.46}
-        color="#2f3431"
+        fontSize={0.42}
+        color="#f0f0e9"
         anchorX="center"
         anchorY="middle"
       >
