@@ -1,5 +1,6 @@
 import {
   ASSEMBLY_VEHICLE_INTERVAL,
+  ASSEMBLY_VISIBLE_DURATION,
 } from './assemblyLineCycle'
 
 import {
@@ -12,11 +13,34 @@ import type {
 } from './vehicleJourney'
 
 
-export const LOWERING_TOP_WAIT = 2
+/*
+ * The lowering operation starts only when
+ * an actual production vehicle completes
+ * the U-shaped assembly line.
+ */
+export const FIRST_FINISHED_VEHICLE_TIME =
+  (
+    (
+      ASSEMBLY_VISIBLE_DURATION %
+      ASSEMBLY_VEHICLE_INTERVAL
+    ) +
+    ASSEMBLY_VEHICLE_INTERVAL
+  ) %
+  ASSEMBLY_VEHICLE_INTERVAL
 
-export const LOWERING_DURATION = 5
 
-export const LOWERING_HANDOFF_HOLD = 1
+export const FINISHED_VEHICLE_CYCLE_DURATION =
+  ASSEMBLY_VEHICLE_INTERVAL
+
+
+export const LOWERING_TOP_WAIT =
+  0.8
+
+export const LOWERING_DURATION =
+  4
+
+export const LOWERING_HANDOFF_HOLD =
+  0.5
 
 
 export const GROUND_VEHICLE_RELEASE_TIME =
@@ -25,36 +49,47 @@ export const GROUND_VEHICLE_RELEASE_TIME =
   LOWERING_HANDOFF_HOLD
 
 
-export const LIFT_RETURN_DELAY = 1
+export const LIFT_RETURN_DELAY =
+  0.6
 
-export const LIFT_RETURN_DURATION = 4
-
-
-export const GROUND_VEHICLE_SPEED =
-  2.45
+export const LIFT_RETURN_DURATION =
+  3.2
 
 
-export const GROUND_PAUSE_BY_DESTINATION:
+const GROUND_VEHICLE_SPEED =
+  3.15
+
+
+const PARKING_REVERSE_SPEED =
+  1.55
+
+
+const PAUSE_BY_DESTINATION:
   Partial<
     Record<
       VehicleJourneyKey,
       number
     >
   > = {
-    finalControl: 6.2,
+    /*
+     * Enough time for the complete
+     * light-test sequence.
+     */
+    finalControl: 5.1,
 
-    validation: 3.6,
+    validation: 2.6,
 
-    releaseGate: 1.2,
+    releaseGate: 0.7,
 
-    parkingAisle: 0.7,
+    parkingAisle: 0.35,
+
+    parkingAlign: 0.55,
 
     /*
-     * The finished car remains in
-     * its bay long enough to read
-     * as genuinely parked.
+     * Briefly remain parked before
+     * disappearing invisibly.
      */
-    parkingBay: 7,
+    parkingBay: 2.8,
   }
 
 
@@ -230,6 +265,26 @@ function distanceBetween(
 }
 
 
+function movementSpeed(
+  destinationKey:
+    VehicleJourneyKey,
+) {
+  if (
+    destinationKey ===
+    'parkingBay'
+  ) {
+    return (
+      PARKING_REVERSE_SPEED
+    )
+  }
+
+
+  return (
+    GROUND_VEHICLE_SPEED
+  )
+}
+
+
 function buildTimeline() {
   const timeline:
     TimelineSegment[] = []
@@ -263,7 +318,9 @@ function buildTimeline() {
         startKey,
         destinationKey,
       ) /
-      GROUND_VEHICLE_SPEED
+      movementSpeed(
+        destinationKey,
+      )
 
 
     const movementStart =
@@ -276,7 +333,7 @@ function buildTimeline() {
 
 
     const pauseDuration =
-      GROUND_PAUSE_BY_DESTINATION[
+      PAUSE_BY_DESTINATION[
         destinationKey
       ] ?? 0
 
@@ -309,7 +366,8 @@ function buildTimeline() {
   return {
     timeline,
 
-    endTime: cursor,
+    endTime:
+      cursor,
   }
 }
 
@@ -326,43 +384,21 @@ export const GROUND_JOURNEY_END_TIME =
   builtTimeline.endTime
 
 
-/*
- * The next finished-car cycle is aligned
- * to an integer number of production
- * vehicle intervals.
- *
- * This prevents a second finished vehicle
- * from appearing while the previous one
- * is still travelling or parked.
- */
-const REQUIRED_CYCLE_TIME =
-  GROUND_JOURNEY_END_TIME +
-  4
-
-
-const REQUIRED_ASSEMBLY_INTERVALS =
-  Math.max(
-    1,
-
-    Math.ceil(
-      REQUIRED_CYCLE_TIME /
-      ASSEMBLY_VEHICLE_INTERVAL,
-    ),
-  )
-
-
-export const FINISHED_VEHICLE_CYCLE_DURATION =
-  ASSEMBLY_VEHICLE_INTERVAL *
-  REQUIRED_ASSEMBLY_INTERVALS
-
-
 export function getFinishedVehicleCycleIndex(
   elapsedTime: number,
 ) {
+  if (
+    elapsedTime <
+    FIRST_FINISHED_VEHICLE_TIME
+  ) {
+    return -1
+  }
+
+
   return Math.floor(
-    Math.max(
-      0,
-      elapsedTime,
+    (
+      elapsedTime -
+      FIRST_FINISHED_VEHICLE_TIME
     ) /
     FINISHED_VEHICLE_CYCLE_DURATION,
   )
@@ -372,15 +408,19 @@ export function getFinishedVehicleCycleIndex(
 export function getFinishedVehicleCycleTime(
   elapsedTime: number,
 ) {
-  const safeTime =
-    Math.max(
-      0,
-      elapsedTime,
-    )
+  if (
+    elapsedTime <
+    FIRST_FINISHED_VEHICLE_TIME
+  ) {
+    return -1
+  }
 
 
   return (
-    safeTime %
+    (
+      elapsedTime -
+      FIRST_FINISHED_VEHICLE_TIME
+    ) %
     FINISHED_VEHICLE_CYCLE_DURATION
   )
 }
@@ -427,7 +467,8 @@ export function sampleFinishedVehicleJourney(
       rotation:
         start.rotation,
 
-      destinationKey: null,
+      destinationKey:
+        null,
 
       pauseElapsed: 0,
     }
@@ -473,12 +514,6 @@ export function sampleFinishedVehicleJourney(
           )
 
 
-      const easedRotation =
-        smoothStep(
-          progress,
-        )
-
-
       return {
         visible: true,
 
@@ -512,7 +547,9 @@ export function sampleFinishedVehicleJourney(
           lerpAngle(
             startPoint.rotation,
             destination.rotation,
-            easedRotation,
+            smoothStep(
+              progress,
+            ),
           ),
 
         destinationKey:
@@ -576,7 +613,8 @@ export function sampleFinishedVehicleJourney(
     rotation:
       start.rotation,
 
-    destinationKey: null,
+    destinationKey:
+      null,
 
     pauseElapsed: 0,
   }

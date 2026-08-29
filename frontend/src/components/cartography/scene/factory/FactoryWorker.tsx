@@ -29,11 +29,16 @@ import {
 } from './data/seatLogisticsCycle'
 
 import {
+  isFinishedVehicleStoppedAt,
+} from './data/vehicleContinuity'
+
+import {
   sampleManagerTimeline,
 } from './data/managerInspection'
 
 import {
-  getWorkerBreakState,
+  getWorkerBreakRequest,
+  sampleWorkerBreak,
 } from './data/workerBreakCycle'
 
 import type {
@@ -60,36 +65,11 @@ interface FactoryWorkerProps {
   ]
 
   rotation?: number
-
   gender?: 'man' | 'woman'
-
   role?: FactoryWorkerRole
-
   phaseOffset?: number
-
   workerId?: WorkerBreakId
 }
-
-
-interface WorldPoint {
-  x: number
-  z: number
-}
-
-
-const BREAK_SEATS: [
-  WorldPoint,
-  WorldPoint,
-] = [
-  {
-    x: 51.5,
-    z: 30.2,
-  },
-  {
-    x: 54.5,
-    z: 30.2,
-  },
-]
 
 
 function clamp(
@@ -131,7 +111,8 @@ function smoothStep(
 function normalizeAngle(
   value: number,
 ) {
-  let angle = value
+  let angle =
+    value
 
   while (
     angle >
@@ -150,264 +131,6 @@ function normalizeAngle(
   }
 
   return angle
-}
-
-
-function distanceBetween(
-  a: WorldPoint,
-  b: WorldPoint,
-) {
-  const dx =
-    b.x -
-    a.x
-
-  const dz =
-    b.z -
-    a.z
-
-  return Math.sqrt(
-    dx * dx +
-    dz * dz,
-  )
-}
-
-
-function buildBreakRoute(
-  start: WorldPoint,
-  seat: WorldPoint,
-) {
-  const points:
-    WorldPoint[] = [
-      start,
-    ]
-
-
-  if (
-    start.x <
-    -17
-  ) {
-    points.push({
-      x: -20,
-      z: start.z,
-    })
-
-    points.push({
-      x: -20,
-      z: 19,
-    })
-
-    points.push({
-      x: 20,
-      z: 19,
-    })
-  } else if (
-    start.x <
-    40
-  ) {
-    points.push({
-      x: 20,
-      z: start.z,
-    })
-
-    points.push({
-      x: 20,
-      z: 19,
-    })
-  } else {
-    points.push({
-      x: 50,
-      z: start.z,
-    })
-  }
-
-
-  if (
-    points[
-      points.length -
-      1
-    ].x !== 50 ||
-    points[
-      points.length -
-      1
-    ].z !== 19
-  ) {
-    points.push({
-      x: 50,
-      z: 19,
-    })
-  }
-
-
-  points.push({
-    x: 50,
-    z: 31,
-  })
-
-
-  points.push({
-    x: seat.x,
-    z: 31,
-  })
-
-
-  points.push(
-    seat,
-  )
-
-
-  return points
-}
-
-
-function samplePolyline(
-  points: WorldPoint[],
-  rawProgress: number,
-) {
-  const progress =
-    clamp(
-      rawProgress,
-      0,
-      1,
-    )
-
-
-  if (
-    points.length <
-    2
-  ) {
-    return {
-      ...points[0],
-
-      yaw: 0,
-    }
-  }
-
-
-  const lengths =
-    points
-      .slice(
-        0,
-        -1,
-      )
-      .map(
-        (
-          point,
-          index,
-        ) =>
-          distanceBetween(
-            point,
-            points[
-              index + 1
-            ],
-          ),
-      )
-
-
-  const totalLength =
-    lengths.reduce(
-      (
-        total,
-        value,
-      ) =>
-        total +
-        value,
-      0,
-    )
-
-
-  let remaining =
-    totalLength *
-    progress
-
-
-  for (
-    let index = 0;
-    index <
-    lengths.length;
-    index += 1
-  ) {
-    const segmentLength =
-      lengths[
-        index
-      ]
-
-    const start =
-      points[
-        index
-      ]
-
-    const end =
-      points[
-        index + 1
-      ]
-
-
-    if (
-      remaining >
-      segmentLength
-    ) {
-      remaining -=
-        segmentLength
-
-      continue
-    }
-
-
-    const localProgress =
-      segmentLength === 0
-        ? 0
-        : remaining /
-        segmentLength
-
-
-    const x =
-      start.x +
-      (
-        end.x -
-        start.x
-      ) *
-      localProgress
-
-
-    const z =
-      start.z +
-      (
-        end.z -
-        start.z
-      ) *
-      localProgress
-
-
-    const yaw =
-      Math.atan2(
-        end.x -
-        start.x,
-
-        end.z -
-        start.z,
-      )
-
-
-    return {
-      x,
-      z,
-      yaw,
-    }
-  }
-
-
-  const end =
-    points[
-      points.length -
-      1
-    ]
-
-  return {
-    x: end.x,
-    z: end.z,
-
-    yaw: 0,
-  }
 }
 
 
@@ -784,6 +507,15 @@ export function FactoryWorker({
   const drinkingGlass =
     useRef<Group>(null)
 
+  const breakStartedAt =
+    useRef<number | null>(
+      null,
+    )
+
+  const lastBreakRequest =
+    useRef<string | null>(
+      null,
+    )
 
   useFrame(
     (state) => {
@@ -883,7 +615,7 @@ export function FactoryWorker({
       ) {
         const targetX =
           position[0] >
-          0
+            0
             ? 17
             : -17
 
@@ -1034,8 +766,21 @@ export function FactoryWorker({
             logistics.progress <
             0.35
           ) {
+            const agvWorldYaw =
+              Math.atan2(
+                logistics.x -
+                position[0],
+
+                logistics.z -
+                position[2],
+              )
+
+
             root.current.rotation.y =
-              -0.42
+              normalizeAngle(
+                agvWorldYaw -
+                rotation,
+              )
 
 
             leftArm.current.rotation.x =
@@ -1144,8 +889,21 @@ export function FactoryWorker({
             logistics.loadProgress
 
 
+          const agvWorldYaw =
+            Math.atan2(
+              logistics.x -
+              position[0],
+
+              logistics.z -
+              position[2],
+            )
+
+
           root.current.rotation.y =
-            -0.35
+            normalizeAngle(
+              agvWorldYaw -
+              rotation,
+            )
 
 
           torso.current.rotation.x =
@@ -1229,8 +987,21 @@ export function FactoryWorker({
             progress <
             0.3
           ) {
+            const agvWorldYaw =
+              Math.atan2(
+                logistics.x -
+                position[0],
+
+                logistics.z -
+                position[2],
+              )
+
+
             root.current.rotation.y =
-              0.52
+              normalizeAngle(
+                agvWorldYaw -
+                rotation,
+              )
 
 
             leftArm.current.rotation.x =
@@ -1387,47 +1158,68 @@ export function FactoryWorker({
         role ===
         'validation-inspection'
       ) {
-        const scan =
-          (
+        const active =
+          isFinishedVehicleStoppedAt(
+            elapsed,
+            'validation',
+          )
+
+
+        roleBusy =
+          active
+
+
+        if (
+          active
+        ) {
+          const scan =
+            (
+              Math.sin(
+                time * 1.5,
+              ) +
+              1
+            ) /
+            2
+
+
+          torso.current.rotation.x =
+            -0.14 -
+            scan *
+            0.08
+
+
+          head.current.rotation.x =
+            -0.18
+
+
+          head.current.rotation.y =
             Math.sin(
-              time * 1.5,
-            ) +
-            1
-          ) /
-          2
+              time * 0.8,
+            ) *
+            0.22
 
 
-        torso.current.rotation.x =
-          -0.14 -
-          scan *
-          0.08
+          leftArm.current.rotation.x =
+            -0.3
 
 
-        head.current.rotation.x =
-          -0.18
+          rightArm.current.rotation.x =
+            -0.45 -
+            scan *
+            0.26
 
 
-        head.current.rotation.y =
-          Math.sin(
-            time * 0.8,
-          ) *
-          0.22
-
-
-        leftArm.current.rotation.x =
-          -0.3
-
-
-        rightArm.current.rotation.x =
-          -0.45 -
-          scan *
-          0.26
-
-
-        rightForearm.current.rotation.x =
-          -0.5 -
-          scan *
-          0.18
+          rightForearm.current.rotation.x =
+            -0.5 -
+            scan *
+            0.18
+        } else {
+          head.current.rotation.y =
+            Math.sin(
+              time * 0.22,
+            ) *
+            0.1
+        }
       }
 
 
@@ -1435,35 +1227,56 @@ export function FactoryWorker({
         role ===
         'validation-console'
       ) {
-        torso.current.rotation.x =
-          -0.1
+        const active =
+          isFinishedVehicleStoppedAt(
+            elapsed,
+            'validation',
+          )
 
 
-        head.current.rotation.x =
-          -0.16
+        roleBusy =
+          active
 
 
-        leftArm.current.rotation.x =
-          -0.78
-
-        rightArm.current.rotation.x =
-          -0.78
-
-
-        leftForearm.current.rotation.x =
-          -0.86 +
-          Math.sin(
-            time * 4,
-          ) *
-          0.1
+        if (
+          active
+        ) {
+          torso.current.rotation.x =
+            -0.1
 
 
-        rightForearm.current.rotation.x =
-          -0.86 -
-          Math.sin(
-            time * 4,
-          ) *
-          0.1
+          head.current.rotation.x =
+            -0.16
+
+
+          leftArm.current.rotation.x =
+            -0.78
+
+          rightArm.current.rotation.x =
+            -0.78
+
+
+          leftForearm.current.rotation.x =
+            -0.86 +
+            Math.sin(
+              time * 4,
+            ) *
+            0.1
+
+
+          rightForearm.current.rotation.x =
+            -0.86 -
+            Math.sin(
+              time * 4,
+            ) *
+            0.1
+        } else {
+          head.current.rotation.y =
+            Math.sin(
+              time * 0.2,
+            ) *
+            0.08
+        }
       }
 
 
@@ -1545,219 +1358,194 @@ export function FactoryWorker({
           0.08
       }
 
-
       if (
         workerId
       ) {
-        const breakState =
-          getWorkerBreakState(
+        const request =
+          getWorkerBreakRequest(
             elapsed,
             workerId,
           )
 
 
-        const canTakeBreak =
-          breakState.active &&
+        if (
+          breakStartedAt.current ===
+          null &&
+          request.open &&
+          request.key !==
+          lastBreakRequest.current &&
           !roleBusy &&
           !talkingRight &&
           !talkingLeft
+        ) {
+          breakStartedAt.current =
+            elapsed
+
+          lastBreakRequest.current =
+            request.key
+        }
 
 
         if (
-          canTakeBreak
+          breakStartedAt.current !==
+          null
         ) {
-          const seat =
-            BREAK_SEATS[
-              breakState.seatIndex
-            ]
+          const breakElapsed =
+            elapsed -
+            breakStartedAt.current
 
 
-          const route =
-            buildBreakRoute(
-              {
-                x:
-                  position[0],
-
-                z:
-                  position[2],
-              },
-
-              seat,
-            )
-
-
-          let sample:
-            {
-              x: number
-              z: number
-              yaw: number
-            }
-
-
-          if (
-            breakState.stage ===
-            'walk-out'
-          ) {
-            sample =
-              samplePolyline(
-                route,
-                smoothStep(
-                  breakState.progress,
-                ),
-              )
-          } else if (
-            breakState.stage ===
-            'walk-back'
-          ) {
-            sample =
-              samplePolyline(
-                route,
-                1 -
-                smoothStep(
-                  breakState.progress,
-                ),
-              )
-          } else {
-            sample = {
-              x: seat.x,
-              z: seat.z,
-
-              yaw:
-                breakState.seatIndex ===
-                0
-                  ? Math.PI / 2
-                  : -Math.PI / 2,
-            }
-          }
-
-
-          const delta =
-            worldDeltaToLocal(
-              sample.x -
-              position[0],
-
-              sample.z -
-              position[2],
-
-              rotation,
-            )
-
-
-          root.current.position.x =
-            delta.x
-
-
-          root.current.position.z =
-            delta.z
-
-
-          root.current.rotation.y =
-            normalizeAngle(
-              sample.yaw -
-              rotation,
+          const breakState =
+            sampleWorkerBreak(
+              workerId,
+              breakElapsed,
             )
 
 
           if (
-            breakState.stage ===
-              'walk-out' ||
-            breakState.stage ===
-              'walk-back'
+            breakState.complete
           ) {
-            const walk =
-              Math.sin(
-                elapsed * 8,
+            breakStartedAt.current =
+              null
+          } else {
+            const delta =
+              worldDeltaToLocal(
+                breakState.x -
+                position[0],
+
+                breakState.z -
+                position[2],
+
+                rotation,
               )
 
 
-            leftArm.current.rotation.x =
-              walk *
-              0.42
+            root.current.position.x =
+              delta.x
+
+            root.current.position.z =
+              delta.z
 
 
-            rightArm.current.rotation.x =
-              -walk *
-              0.42
-
-
-            leftForearm.current.rotation.x =
-              -0.08
-
-
-            rightForearm.current.rotation.x =
-              -0.08
-
-
-            torso.current.rotation.x =
-              0.02
-
-
-            head.current.rotation.y =
-              Math.sin(
-                elapsed * 0.8,
-              ) *
-              0.04
-          } else {
-            helmet.current.visible =
-              false
-
-
-            root.current.position.y =
-              -0.36
-
-
-            torso.current.rotation.x =
-              0.08
-
-
-            head.current.rotation.x =
-              -0.03
-
-
-            leftArm.current.rotation.x =
-              -0.38
-
-
-            rightArm.current.rotation.x =
-              -0.42
-
-
-            leftForearm.current.rotation.x =
-              -0.58
-
-
-            rightForearm.current.rotation.x =
-              -0.58
+            root.current.rotation.y =
+              normalizeAngle(
+                breakState.yaw -
+                rotation,
+              )
 
 
             if (
-              breakState.stage ===
-              'drink'
+              breakState.walking
             ) {
-              rightArm.current.rotation.x =
-                -0.92
+              const gait =
+                Math.sin(
+                  breakElapsed *
+                  7.2,
+                )
 
+
+              const bounce =
+                Math.abs(
+                  Math.sin(
+                    breakElapsed *
+                    7.2,
+                  ),
+                ) *
+                0.035
+
+
+              root.current.position.y =
+                bounce
+
+
+              leftArm.current.rotation.x =
+                gait *
+                0.46
+
+              rightArm.current.rotation.x =
+                -gait *
+                0.46
+
+
+              leftForearm.current.rotation.x =
+                -0.08
 
               rightForearm.current.rotation.x =
-                -1.12
+                -0.08
 
+
+              torso.current.rotation.x =
+                0.025
+
+              torso.current.rotation.z =
+                gait *
+                0.025
+
+
+              head.current.rotation.y =
+                Math.sin(
+                  breakElapsed *
+                  0.8,
+                ) *
+                0.035
+            } else {
+              helmet.current.visible =
+                false
+
+
+              root.current.position.y =
+                -0.36
+
+
+              torso.current.rotation.x =
+                0.08
 
               head.current.rotation.x =
-                -0.12
+                -0.03
+
+
+              leftArm.current.rotation.x =
+                -0.38
+
+              rightArm.current.rotation.x =
+                -0.42
+
+
+              leftForearm.current.rotation.x =
+                -0.58
+
+              rightForearm.current.rotation.x =
+                -0.58
 
 
               if (
-                drinkingGlass.current
+                breakState.stage ===
+                'drink'
               ) {
-                drinkingGlass.current.visible =
-                  true
+                rightArm.current.rotation.x =
+                  -0.92
+
+                rightForearm.current.rotation.x =
+                  -1.12
+
+                head.current.rotation.x =
+                  -0.12
+
+
+                if (
+                  drinkingGlass.current
+                ) {
+                  drinkingGlass.current.visible =
+                    true
+                }
+              } else {
+                head.current.rotation.y =
+                  Math.sin(
+                    breakElapsed *
+                    0.28,
+                  ) *
+                  0.11
               }
-            } else {
-              head.current.rotation.y =
-                Math.sin(
-                  elapsed * 0.25,
-                ) *
-                0.12
             }
           }
         }
@@ -1768,35 +1556,35 @@ export function FactoryWorker({
 
   const skin =
     gender ===
-    'woman'
+      'woman'
       ? '#cb9579'
       : '#c68f73'
 
 
   const hair =
     gender ===
-    'woman'
+      'woman'
       ? '#43322b'
       : '#362b26'
 
 
   const shoulderWidth =
     gender ===
-    'woman'
+      'woman'
       ? 0.5
       : 0.57
 
 
   const waistWidth =
     gender ===
-    'woman'
+      'woman'
       ? 0.38
       : 0.43
 
 
   const hipWidth =
     gender ===
-    'woman'
+      'woman'
       ? 0.47
       : 0.42
 
@@ -2074,58 +1862,58 @@ export function FactoryWorker({
 
             {role ===
               'production' && (
-              <group
-                position={[
-                  0,
-                  -0.48,
-                  0.08,
-                ]}
-              >
-                <HandTool />
-              </group>
-            )}
+                <group
+                  position={[
+                    0,
+                    -0.48,
+                    0.08,
+                  ]}
+                >
+                  <HandTool />
+                </group>
+              )}
 
 
             {role ===
               'material' && (
-              <group
-                ref={
-                  carriedWheel
-                }
-                position={[
-                  0,
-                  -0.54,
-                  0.1,
-                ]}
-                visible={
-                  false
-                }
-              >
-                <HandWheel />
-              </group>
-            )}
+                <group
+                  ref={
+                    carriedWheel
+                  }
+                  position={[
+                    0,
+                    -0.54,
+                    0.1,
+                  ]}
+                  visible={
+                    false
+                  }
+                >
+                  <HandWheel />
+                </group>
+              )}
 
 
             {(role ===
               'seat-stock' ||
               role ===
               'seat-install') && (
-              <group
-                ref={
-                  carriedSeat
-                }
-                position={[
-                  0,
-                  -0.51,
-                  0.14,
-                ]}
-                visible={
-                  false
-                }
-              >
-                <HandSeat />
-              </group>
-            )}
+                <group
+                  ref={
+                    carriedSeat
+                  }
+                  position={[
+                    0,
+                    -0.51,
+                    0.14,
+                  ]}
+                  visible={
+                    false
+                  }
+                >
+                  <HandSeat />
+                </group>
+              )}
 
 
             <group
@@ -2228,53 +2016,53 @@ export function FactoryWorker({
 
           {gender ===
             'woman' && (
-            <>
-              <mesh
-                position={[
-                  0,
-                  0,
-                  -0.2,
-                ]}
-              >
-                <sphereGeometry
-                  args={[
-                    0.085,
-                    10,
-                    8,
+              <>
+                <mesh
+                  position={[
+                    0,
+                    0,
+                    -0.2,
                   ]}
-                />
+                >
+                  <sphereGeometry
+                    args={[
+                      0.085,
+                      10,
+                      8,
+                    ]}
+                  />
 
-                <meshStandardMaterial
-                  color={
-                    hair
-                  }
-                />
-              </mesh>
+                  <meshStandardMaterial
+                    color={
+                      hair
+                    }
+                  />
+                </mesh>
 
-              <mesh
-                position={[
-                  0,
-                  -0.1,
-                  -0.225,
-                ]}
-              >
-                <cylinderGeometry
-                  args={[
-                    0.045,
-                    0.065,
-                    0.23,
-                    8,
+                <mesh
+                  position={[
+                    0,
+                    -0.1,
+                    -0.225,
                   ]}
-                />
+                >
+                  <cylinderGeometry
+                    args={[
+                      0.045,
+                      0.065,
+                      0.23,
+                      8,
+                    ]}
+                  />
 
-                <meshStandardMaterial
-                  color={
-                    hair
-                  }
-                />
-              </mesh>
-            </>
-          )}
+                  <meshStandardMaterial
+                    color={
+                      hair
+                    }
+                  />
+                </mesh>
+              </>
+            )}
 
 
           <group ref={helmet}>

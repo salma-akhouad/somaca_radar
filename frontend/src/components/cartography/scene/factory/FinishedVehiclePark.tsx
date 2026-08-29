@@ -9,46 +9,55 @@ import {
 
 interface ParkedVehicle {
   x: number
+
   z: number
+
   color: string
 }
 
 
 const parkedVehicles:
   ParkedVehicle[] = [
+    /*
+     * Column x = -5 stays empty on BOTH rows.
+     * It gives the dynamic car a real
+     * manoeuvring corridor and reserved bay.
+     */
+
     {
-      x: -5,
-      z: -2.25,
+      x: -1.7,
+      z: -4.2,
       color: '#777d7a',
     },
 
     {
-      x: -1.7,
-      z: -2.25,
+      x: 1.7,
+      z: -4.2,
       color: '#282c2a',
     },
 
     {
-      x: 1.7,
-      z: -2.25,
+      x: 5,
+      z: -4.2,
       color: '#4d6575',
     },
 
+
     {
-      x: 5,
-      z: -2.25,
+      x: -1.7,
+      z: 4.2,
       color: '#a07e43',
     },
 
     {
-      x: -1.7,
-      z: 2.25,
+      x: 1.7,
+      z: 4.2,
       color: '#71463d',
     },
 
     {
-      x: 1.7,
-      z: 2.25,
+      x: 5,
+      z: 4.2,
       color: '#626866',
     },
   ]
@@ -75,7 +84,7 @@ export function FinishedVehiclePark() {
           args={[
             17,
             0.02,
-            12,
+            16.4,
           ]}
         />
 
@@ -86,7 +95,7 @@ export function FinishedVehiclePark() {
       </mesh>
 
 
-      {/* Central vehicle aisle */}
+      {/* Proper central driving aisle */}
 
       <mesh
         position={[
@@ -99,15 +108,49 @@ export function FinishedVehiclePark() {
           args={[
             16.4,
             0.012,
-            2.6,
+            4.1,
           ]}
         />
 
         <meshStandardMaterial
-          color="#474c49"
+          color="#4b504d"
           roughness={0.96}
         />
       </mesh>
+
+
+      {/* Centre guide */}
+
+      {[
+        -5.7,
+        -2.2,
+        1.3,
+        4.8,
+      ].map(
+        (x) => (
+          <mesh
+            key={x}
+            position={[
+              x,
+              0.04,
+              0,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                1.8,
+                0.012,
+                0.07,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#d6d7d1"
+              roughness={0.82}
+            />
+          </mesh>
+        ),
+      )}
 
 
       {/* Bay separators */}
@@ -125,14 +168,14 @@ export function FinishedVehiclePark() {
               position={[
                 x,
                 0.038,
-                -3.45,
+                -5.1,
               ]}
             >
               <boxGeometry
                 args={[
                   0.055,
                   0.012,
-                  3.1,
+                  4.1,
                 ]}
               />
 
@@ -142,18 +185,19 @@ export function FinishedVehiclePark() {
               />
             </mesh>
 
+
             <mesh
               position={[
                 x,
                 0.038,
-                3.45,
+                5.1,
               ]}
             >
               <boxGeometry
                 args={[
                   0.055,
                   0.012,
-                  3.1,
+                  4.1,
                 ]}
               />
 
@@ -167,11 +211,11 @@ export function FinishedVehiclePark() {
       )}
 
 
-      {/* Parking access edges */}
+      {/* Access edges */}
 
       {[
-        -1.3,
-        1.3,
+        -2.05,
+        2.05,
       ].map(
         (z) => (
           <mesh
@@ -223,11 +267,35 @@ export function FinishedVehiclePark() {
       )}
 
 
+      {/* Reserved dynamic bay */}
+
+      <mesh
+        position={[
+          -5,
+          0.041,
+          6.95,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            3.1,
+            0.012,
+            0.075,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#c49a25"
+          roughness={0.76}
+        />
+      </mesh>
+
+
       <mesh
         position={[
           3.2,
           0.046,
-          -5.2,
+          -7.25,
         ]}
       >
         <boxGeometry
@@ -244,11 +312,12 @@ export function FinishedVehiclePark() {
         />
       </mesh>
 
+
       <Text
         position={[
           3.2,
           0.076,
-          -5.2,
+          -7.25,
         ]}
         rotation={[
           -Math.PI / 2,

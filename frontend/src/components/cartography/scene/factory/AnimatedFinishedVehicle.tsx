@@ -56,7 +56,15 @@ const PARKING_TURN_LIGHTS:
   VehicleLightingState = {
   ...DRIVING_LIGHTS,
 
-  leftIndicator: true,
+  rightIndicator: true,
+}
+
+
+const REVERSING_LIGHTS:
+  VehicleLightingState = {
+  ...VEHICLE_LIGHTS_OFF,
+
+  reverseLights: true,
 }
 
 
@@ -99,7 +107,7 @@ function getFinalControlPhase(
 }
 
 
-function isParkingTurnDestination(
+function isParkingTurn(
   destination:
     string | null,
 ) {
@@ -108,8 +116,6 @@ function isParkingTurnDestination(
       'parkingTurnA' ||
     destination ===
       'parkingTurnB' ||
-    destination ===
-      'parkingTurnC' ||
     destination ===
       'parkingAlign'
   )
@@ -171,8 +177,7 @@ export function AnimatedFinishedVehicle() {
 
       const sample =
         sampleFinishedVehicleJourney(
-          state.clock
-            .elapsedTime,
+          state.clock.elapsedTime,
         )
 
 
@@ -185,7 +190,6 @@ export function AnimatedFinishedVehicle() {
       ) {
         applyLights(
           'off',
-
           VEHICLE_LIGHTS_OFF,
         )
 
@@ -204,11 +208,10 @@ export function AnimatedFinishedVehicle() {
 
       if (
         sample.phase ===
-          'parked'
+        'parked'
       ) {
         applyLights(
           'parked',
-
           VEHICLE_LIGHTS_OFF,
         )
 
@@ -248,7 +251,6 @@ export function AnimatedFinishedVehicle() {
       ) {
         applyLights(
           'validation-brake',
-
           BRAKING_LIGHTS,
         )
 
@@ -264,7 +266,6 @@ export function AnimatedFinishedVehicle() {
       ) {
         applyLights(
           'release-brake',
-
           BRAKING_LIGHTS,
         )
 
@@ -274,16 +275,26 @@ export function AnimatedFinishedVehicle() {
 
       if (
         sample.destinationKey ===
-          'parkingAisle' ||
-        isParkingTurnDestination(
-          sample.destinationKey,
-        ) ||
-        sample.destinationKey ===
-          'parkingBay'
+        'parkingBay'
       ) {
         applyLights(
-          'parking-indicator',
+          'reverse',
+          REVERSING_LIGHTS,
+        )
 
+        return
+      }
+
+
+      if (
+        sample.destinationKey ===
+          'parkingAisle' ||
+        isParkingTurn(
+          sample.destinationKey,
+        )
+      ) {
+        applyLights(
+          'parking-turn',
           PARKING_TURN_LIGHTS,
         )
 
@@ -293,7 +304,6 @@ export function AnimatedFinishedVehicle() {
 
       applyLights(
         'driving',
-
         DRIVING_LIGHTS,
       )
     },

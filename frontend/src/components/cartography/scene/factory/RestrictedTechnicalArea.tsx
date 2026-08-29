@@ -191,7 +191,7 @@ export function RestrictedTechnicalArea() {
         <mesh>
           <boxGeometry
             args={[
-              4.4,
+              5.8,
               1.05,
               0.09,
             ]}
@@ -212,7 +212,7 @@ export function RestrictedTechnicalArea() {
         >
           <boxGeometry
             args={[
-              4.15,
+              5.5,
               0.09,
               0.02,
             ]}
@@ -251,7 +251,8 @@ export function RestrictedTechnicalArea() {
             0,
             0.058,
           ]}
-          fontSize={0.39}
+          fontSize={0.34}
+          maxWidth={5.2}
           color="#702821"
           anchorX="center"
           anchorY="middle"

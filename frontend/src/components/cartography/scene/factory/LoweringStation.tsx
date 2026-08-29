@@ -44,7 +44,6 @@ function smoothStep(
       ),
     )
 
-
   return (
     t *
     t *
@@ -81,9 +80,25 @@ export function LoweringStation() {
 
       const time =
         getFinishedVehicleCycleTime(
-          state.clock
-            .elapsedTime,
+          state.clock.elapsedTime,
         )
+
+
+      /*
+       * No completed production car yet.
+       */
+      if (
+        time <
+        0
+      ) {
+        cradle.current.position.y =
+          1.72
+
+        loweringVehicle.current.visible =
+          false
+
+        return
+      }
 
 
       let cradleY =
@@ -122,7 +137,8 @@ export function LoweringStation() {
         GROUND_VEHICLE_RELEASE_TIME +
         LIFT_RETURN_DELAY
       ) {
-        cradleY = 0
+        cradleY =
+          0
       } else if (
         time <
         GROUND_VEHICLE_RELEASE_TIME +
@@ -157,6 +173,13 @@ export function LoweringStation() {
         cradleY
 
 
+      /*
+       * Exact handoff:
+       *
+       * lowering copy disappears at the same
+       * threshold at which the ground journey
+       * copy becomes visible.
+       */
       loweringVehicle.current.visible =
         time <
         GROUND_VEHICLE_RELEASE_TIME
@@ -172,8 +195,6 @@ export function LoweringStation() {
         lowered.position[2],
       ]}
     >
-      {/* Fixed industrial frame */}
-
       <RoundedBox
         args={[
           4.25,
@@ -227,8 +248,6 @@ export function LoweringStation() {
             </mesh>
 
 
-            {/* Yellow safety edge */}
-
             <mesh
               position={[
                 x +
@@ -258,8 +277,6 @@ export function LoweringStation() {
         ),
       )}
 
-
-      {/* Four lift cables kept outside the car envelope */}
 
       {[
         [-1.48, -0.92],
@@ -300,8 +317,6 @@ export function LoweringStation() {
       )}
 
 
-      {/* Moving cradle */}
-
       <group
         ref={cradle}
         position={[
@@ -310,8 +325,6 @@ export function LoweringStation() {
           0,
         ]}
       >
-        {/* Side rails instead of a large black slab */}
-
         {[
           -1.18,
           1.18,
@@ -341,8 +354,6 @@ export function LoweringStation() {
           ),
         )}
 
-
-        {/* Yellow cradle safety edges */}
 
         {[
           -1.32,
@@ -375,9 +386,8 @@ export function LoweringStation() {
 
 
         <group
-          ref={
-            loweringVehicle
-          }
+          ref={loweringVehicle}
+          visible={false}
           position={[
             0,
             -0.02,
@@ -394,8 +404,6 @@ export function LoweringStation() {
         </group>
       </group>
 
-
-      {/* Ground wheel guides */}
 
       {[
         -0.82,

@@ -58,25 +58,24 @@ const DEFAULT_TARGET =
 
 const DEFAULT_ZOOM = 100
 
-const MIN_ZOOM = 72
+const MIN_ZOOM = 68
 
-const MAX_ZOOM = 190
+const MAX_ZOOM = 195
 
 const ZOOM_STEP = 12
 
 
 /*
- * These bounds still cover the complete
- * useful factory while keeping the target
- * away from large empty exterior areas.
+ * Keep the useful factory in reach without
+ * letting the target escape into dead space.
  */
-const TARGET_MIN_X = -36
+const TARGET_MIN_X = -40
 
-const TARGET_MAX_X = 60
+const TARGET_MAX_X = 64
 
-const TARGET_MIN_Z = -27
+const TARGET_MIN_Z = -31
 
-const TARGET_MAX_Z = 30
+const TARGET_MAX_Z = 32
 
 
 const DEFAULT_DISTANCE =
@@ -197,13 +196,11 @@ function constrainView(
 
 
   /*
-   * Move target and camera together.
-   * The viewing direction therefore stays
-   * stable instead of snapping.
+   * Correct camera and target together.
+   * This preserves the current viewing angle.
    */
   cameraPosition.x +=
     correctionX
-
 
   cameraPosition.z +=
     correctionZ
@@ -284,7 +281,7 @@ export function SceneCameraControls({
     if (
       !controls.current ||
       command.type ===
-      'none'
+        'none'
     ) {
       return
     }
@@ -302,14 +299,11 @@ export function SceneCameraControls({
         DEFAULT_POSITION,
       )
 
-
       target.copy(
         DEFAULT_TARGET,
       )
 
-
       controls.current.update()
-
 
       onZoomChange(
         DEFAULT_ZOOM,
@@ -339,7 +333,7 @@ export function SceneCameraControls({
         currentZoom +
         (
           command.type ===
-          'zoom-in'
+            'zoom-in'
             ? ZOOM_STEP
             : -ZOOM_STEP
         ),
@@ -375,7 +369,6 @@ export function SceneCameraControls({
 
     controls.current.update()
 
-
     onZoomChange(
       nextZoom,
     )
@@ -391,24 +384,45 @@ export function SceneCameraControls({
       makeDefault
 
       enableDamping
-
       dampingFactor={0.08}
 
       enableZoom
-
       enablePan
-
       enableRotate
 
-      screenSpacePanning={
-        false
-      }
+      /*
+       * Laptop/touchpad-friendly controls:
+       *
+       * left drag  = rotate / change elevation
+       * right drag = move the map
+       * wheel      = zoom
+       */
+      mouseButtons={{
+        LEFT:
+          MOUSE.ROTATE,
 
-      panSpeed={0.74}
+        MIDDLE:
+          MOUSE.DOLLY,
 
-      rotateSpeed={0.46}
+        RIGHT:
+          MOUSE.PAN,
+      }}
 
-      zoomSpeed={0.8}
+      touches={{
+        ONE:
+          TOUCH.ROTATE,
+
+        TWO:
+          TOUCH.DOLLY_PAN,
+      }}
+
+      screenSpacePanning
+
+      panSpeed={0.82}
+
+      rotateSpeed={0.56}
+
+      zoomSpeed={0.82}
 
       minDistance={
         MIN_DISTANCE
@@ -418,30 +432,14 @@ export function SceneCameraControls({
         MAX_DISTANCE
       }
 
-      minPolarAngle={0.42}
+      /*
+       * Enough vertical freedom to inspect
+       * the factory without reaching a
+       * ground-level or upside-down view.
+       */
+      minPolarAngle={0.26}
 
-      maxPolarAngle={
-        Math.PI / 2.58
-      }
-
-      mouseButtons={{
-        LEFT:
-          MOUSE.PAN,
-
-        MIDDLE:
-          MOUSE.DOLLY,
-
-        RIGHT:
-          MOUSE.ROTATE,
-      }}
-
-      touches={{
-        ONE:
-          TOUCH.PAN,
-
-        TWO:
-          TOUCH.DOLLY_PAN,
-      }}
+      maxPolarAngle={1.24}
 
       target={[
         DEFAULT_TARGET.x,

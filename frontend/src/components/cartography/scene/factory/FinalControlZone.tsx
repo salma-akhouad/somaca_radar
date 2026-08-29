@@ -382,14 +382,14 @@ export function FinalControlZone() {
         position={[
           0,
           0.052,
-          -3.45,
+          3.15,
         ]}
       >
         <boxGeometry
           args={[
-            4.8,
+            5.8,
             0.022,
-            0.78,
+            0.92,
           ]}
         />
 
@@ -403,14 +403,14 @@ export function FinalControlZone() {
         position={[
           0,
           0.082,
-          -3.45,
+          3.15,
         ]}
         rotation={[
           -Math.PI / 2,
           0,
           0,
         ]}
-        fontSize={0.55}
+        fontSize={0.5}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"

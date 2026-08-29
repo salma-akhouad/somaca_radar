@@ -14,209 +14,278 @@ export type ManagerConversation =
 
 export interface ManagerTimelineSample {
   x: number
+
   z: number
+
   rotation: number
+
   walking: boolean
+
+  resting: boolean
+
   focus: ManagerFocus
-  talkingTo?: ManagerConversation
+
+  talkingTo?:
+    ManagerConversation
 }
 
 
 type RoutePoint = {
   x: number
+
   z: number
+
   pause?: number
+
+  resting?: boolean
+
   focus?: ManagerFocus
-  talkingTo?: ManagerConversation
+
+  talkingTo?:
+    ManagerConversation
 }
 
 
 const WALK_SPEED = 1.55
 
 
-const ROUTE: RoutePoint[] = [
-  /*
-   * Safe standing/work position beside the workstation.
-   */
-  {
-    x: 31,
-    z: 9.4,
-    pause: 10,
-    focus: 'none',
-  },
+/*
+ * The office is centred at [30, 8].
+ * [29.7, 9.33] aligns with the right-hand
+ * chair of the existing office workstation.
+ */
+const OFFICE_CHAIR = {
+  x: 29.7,
+  z: 9.33,
+}
 
 
-  {
-    x: 31.8,
-    z: 8.2,
-  },
+const ROUTE:
+  RoutePoint[] = [
+    /*
+     * He starts seated in his office.
+     */
+    {
+      ...OFFICE_CHAIR,
 
-  {
-    x: 33.4,
-    z: 8,
-  },
+      pause: 16,
 
-  {
-    x: 34,
-    z: 11,
-  },
+      resting: true,
 
-  {
-    x: 27,
-    z: 11,
-  },
-
-  {
-    x: 20,
-    z: 11,
-  },
+      focus: 'none',
+    },
 
 
-  {
-    x: 20,
-    z: -1,
-    pause: 6,
-    focus: 'right-car',
-  },
+    /*
+     * Stand and leave the office through
+     * the existing door route.
+     */
+    {
+      x: 31,
+      z: 9.4,
+    },
+
+    {
+      x: 31.8,
+      z: 8.2,
+    },
+
+    {
+      x: 33.4,
+      z: 8,
+    },
+
+    {
+      x: 34,
+      z: 11,
+    },
+
+    {
+      x: 27,
+      z: 11,
+    },
+
+    {
+      x: 20,
+      z: 11,
+    },
 
 
-  {
-    x: 20,
-    z: -7.4,
-    pause: 5,
-    focus: 'right-worker',
-    talkingTo:
-      'right-production',
-  },
+    {
+      x: 20,
+      z: -1,
+
+      pause: 6,
+
+      focus:
+        'right-car',
+    },
 
 
-  {
-    x: 20,
-    z: 10,
-  },
+    {
+      x: 20,
+      z: -7.4,
 
-  {
-    x: 20,
-    z: 16,
-  },
+      pause: 5,
 
-  {
-    x: 17,
-    z: 19,
-  },
+      focus:
+        'right-worker',
+
+      talkingTo:
+        'right-production',
+    },
 
 
-  {
-    x: 0,
-    z: 19,
-    pause: 8,
-    focus: 'upper-line',
-  },
+    {
+      x: 20,
+      z: 10,
+    },
+
+    {
+      x: 20,
+      z: 16,
+    },
+
+    {
+      x: 17,
+      z: 19,
+    },
 
 
-  {
-    x: -17,
-    z: 19,
-  },
+    {
+      x: 0,
+      z: 19,
 
-  {
-    x: -20,
-    z: 16,
-  },
+      pause: 8,
 
-
-  {
-    x: -20,
-    z: 7.1,
-    pause: 5,
-    focus: 'left-worker',
-    talkingTo:
-      'left-production',
-  },
+      focus:
+        'upper-line',
+    },
 
 
-  {
-    x: -20,
-    z: 1,
-    pause: 6,
-    focus: 'left-car',
-  },
+    {
+      x: -17,
+      z: 19,
+    },
+
+    {
+      x: -20,
+      z: 16,
+    },
 
 
-  {
-    x: -20,
-    z: 16,
-  },
+    {
+      x: -20,
+      z: 7.1,
 
-  {
-    x: -17,
-    z: 19,
-  },
+      pause: 5,
 
-  {
-    x: 0,
-    z: 19,
-  },
+      focus:
+        'left-worker',
 
-  {
-    x: 17,
-    z: 19,
-  },
-
-  {
-    x: 20,
-    z: 16,
-  },
-
-  {
-    x: 20,
-    z: 11,
-  },
-
-  {
-    x: 27,
-    z: 11,
-  },
-
-  {
-    x: 34,
-    z: 11,
-  },
-
-  {
-    x: 33.4,
-    z: 8,
-  },
-
-  {
-    x: 31.8,
-    z: 8.2,
-  },
+      talkingTo:
+        'left-production',
+    },
 
 
-  /*
-   * Return beside workstation,
-   * NOT through the furniture.
-   */
-  {
-    x: 31,
-    z: 9.4,
-    pause: 12,
-    focus: 'none',
-  },
-]
+    {
+      x: -20,
+      z: 1,
+
+      pause: 6,
+
+      focus:
+        'left-car',
+    },
+
+
+    {
+      x: -20,
+      z: 16,
+    },
+
+    {
+      x: -17,
+      z: 19,
+    },
+
+    {
+      x: 0,
+      z: 19,
+    },
+
+    {
+      x: 17,
+      z: 19,
+    },
+
+    {
+      x: 20,
+      z: 16,
+    },
+
+    {
+      x: 20,
+      z: 11,
+    },
+
+    {
+      x: 27,
+      z: 11,
+    },
+
+    {
+      x: 34,
+      z: 11,
+    },
+
+    {
+      x: 33.4,
+      z: 8,
+    },
+
+    {
+      x: 31.8,
+      z: 8.2,
+    },
+
+    {
+      x: 31,
+      z: 9.4,
+    },
+
+
+    /*
+     * Back to the office chair.
+     */
+    {
+      ...OFFICE_CHAIR,
+
+      pause: 18,
+
+      resting: true,
+
+      focus: 'none',
+    },
+  ]
 
 
 type TimelineSegment =
   | {
       kind: 'walk'
+
       from: RoutePoint
+
       to: RoutePoint
+
       duration: number
     }
+
   | {
       kind: 'pause'
+
       at: RoutePoint
+
       duration: number
     }
 
@@ -229,9 +298,11 @@ function distance(
     second.x -
     first.x
 
+
   const dz =
     second.z -
     first.z
+
 
   return Math.sqrt(
     dx * dx +
@@ -254,7 +325,9 @@ ROUTE.forEach(
     ) {
       TIMELINE.push({
         kind: 'pause',
+
         at: point,
+
         duration:
           point.pause,
       })
@@ -263,13 +336,13 @@ ROUTE.forEach(
 
     if (
       index <
-      ROUTE.length -
-        1
+      ROUTE.length - 1
     ) {
       const next =
         ROUTE[
           index + 1
         ]
+
 
       TIMELINE.push({
         kind: 'walk',
@@ -298,6 +371,7 @@ const TOTAL_DURATION =
     ) =>
       total +
       segment.duration,
+
     0,
   )
 
@@ -305,6 +379,16 @@ const TOTAL_DURATION =
 function pauseRotation(
   point: RoutePoint,
 ) {
+  if (
+    point.resting
+  ) {
+    /*
+     * Face the workstation while seated.
+     */
+    return Math.PI
+  }
+
+
   switch (
     point.focus
   ) {
@@ -368,8 +452,13 @@ export function sampleManagerTimeline(
             segment.at,
           ),
 
-        walking:
-          false,
+        walking: false,
+
+        resting:
+          Boolean(
+            segment.at
+              .resting,
+          ),
 
         focus:
           segment.at.focus ??
@@ -411,6 +500,7 @@ export function sampleManagerTimeline(
       segment.to.x -
       segment.from.x
 
+
     const dz =
       segment.to.z -
       segment.from.z
@@ -418,6 +508,7 @@ export function sampleManagerTimeline(
 
     return {
       x,
+
       z,
 
       rotation:
@@ -428,16 +519,27 @@ export function sampleManagerTimeline(
 
       walking: true,
 
+      resting: false,
+
       focus: 'none',
     }
   }
 
 
   return {
-    x: ROUTE[0].x,
-    z: ROUTE[0].z,
-    rotation: Math.PI,
+    x:
+      ROUTE[0].x,
+
+    z:
+      ROUTE[0].z,
+
+    rotation:
+      Math.PI,
+
     walking: false,
+
+    resting: true,
+
     focus: 'none',
   }
 }
@@ -498,9 +600,21 @@ export function managerNeedsDoorOpen(
     )
 
 
+  /*
+   * Resting inside the office means
+   * the door can stay closed.
+   */
+  if (
+    manager.resting
+  ) {
+    return false
+  }
+
+
   const dx =
     manager.x -
     32.8
+
 
   const dz =
     manager.z -

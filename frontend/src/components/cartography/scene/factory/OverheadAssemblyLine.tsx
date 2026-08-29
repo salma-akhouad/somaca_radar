@@ -36,9 +36,9 @@ function Support({
   ]
 
   direction:
-    | 'left'
-    | 'right'
-    | 'top'
+  | 'left'
+  | 'right'
+  | 'top'
 }) {
   return (
     <group position={position}>
@@ -222,7 +222,7 @@ function SuspendedVehiclePayload({
         position={[
           0,
           bodyHeight -
-            0.18,
+          0.18,
           0,
         ]}
         castShadow
@@ -253,7 +253,7 @@ function SuspendedVehiclePayload({
             position={[
               x,
               bodyHeight +
-                0.12,
+              0.12,
               0,
             ]}
             rotation-z={
@@ -285,7 +285,7 @@ function SuspendedVehiclePayload({
         position={[
           0,
           bodyHeight -
-            0.62,
+          0.62,
           0,
         ]}
         stage={stage}
@@ -398,7 +398,7 @@ function AnimatedSuspendedVehicle({
       Math.round(
         vehicle
           .wheelInstallProgress *
-          20,
+        20,
       ) / 20
 
 
@@ -429,6 +429,41 @@ function AnimatedSuspendedVehicle({
         initial.visible
       }
     >
+      {/*
+   * Soft floor shadow for the suspended
+   * moving vehicle. Cheap and readable
+   * from the cartographic camera.
+   */}
+      <mesh
+        position={[
+          0,
+          0.035,
+          0,
+        ]}
+        rotation-x={
+          -Math.PI / 2
+        }
+        scale={[
+          2.15,
+          0.92,
+          1,
+        ]}
+      >
+        <circleGeometry
+          args={[
+            1,
+            28,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color="#343936"
+          transparent
+          opacity={0.1}
+          depthWrite={false}
+        />
+      </mesh>
+
       <SuspendedVehiclePayload
         stage={stage}
         wheelInstallProgress={

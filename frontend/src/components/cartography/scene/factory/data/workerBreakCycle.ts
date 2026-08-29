@@ -4,106 +4,546 @@ export type WorkerBreakId =
   | 'quality'
   | 'wheel-material'
   | 'terminal'
-  | 'seat-stock'
   | 'seat-install'
 
 
 export type WorkerBreakStage =
-  | 'work'
   | 'walk-out'
   | 'sit'
   | 'drink'
   | 'walk-back'
+  | 'complete'
 
 
-export interface WorkerBreakState {
-  active: boolean
+export interface WorkerBreakRequest {
+  open: boolean
 
+  key: string
+}
+
+
+export interface WorkerBreakSample {
   stage: WorkerBreakStage
 
-  progress: number
+  complete: boolean
 
-  seatIndex: 0 | 1
+  x: number
+
+  z: number
+
+  yaw: number
+
+  seatIndex:
+    0 | 1
+
+  walking: boolean
 }
 
 
-const BREAK_CYCLE_DURATION = 240
+type Point = {
+  x: number
 
-const WALK_OUT_DURATION = 8
-
-const FIRST_SEATED_DURATION = 15
-
-const DRINK_DURATION = 5
-
-const SECOND_SEATED_DURATION = 7
-
-const WALK_BACK_DURATION = 8
-
-
-const TOTAL_BREAK_DURATION =
-  WALK_OUT_DURATION +
-  FIRST_SEATED_DURATION +
-  DRINK_DURATION +
-  SECOND_SEATED_DURATION +
-  WALK_BACK_DURATION
-
-
-const BREAK_STARTS: Record<
-  WorkerBreakId,
-  number
-> = {
-  'right-production': 20,
-  terminal: 23,
-
-  'left-production': 80,
-  quality: 83,
-
-  'wheel-material': 140,
-  'seat-stock': 143,
-
-  'seat-install': 200,
+  z: number
 }
 
 
-const BREAK_SEATS: Record<
-  WorkerBreakId,
-  0 | 1
-> = {
-  'right-production': 0,
-  terminal: 1,
+interface WorkerRoute {
+  points:
+    Point[]
 
-  'left-production': 0,
-  quality: 1,
-
-  'wheel-material': 0,
-  'seat-stock': 1,
-
-  'seat-install': 0,
+  seatIndex:
+    0 | 1
 }
 
 
-function normalizeCycleTime(
-  elapsedTime: number,
+const WALK_SPEED =
+  1.45
+
+
+const FIRST_SEATED_DURATION =
+  15
+
+
+const DRINK_DURATION =
+  5
+
+
+const SECOND_SEATED_DURATION =
+  8
+
+
+/*
+ * A worker has a short window in which
+ * they may start their break.
+ *
+ * If their workstation is busy for that
+ * entire window, they simply skip this
+ * cycle instead of teleporting halfway
+ * through a walk later.
+ */
+const REQUEST_WINDOW =
+  12
+
+
+/*
+ * Groups are separated by enough time
+ * for even the longest round trip.
+ *
+ * Maximum simultaneous break workers = 2.
+ */
+const BREAK_CYCLE_DURATION =
+  430
+
+
+const BREAK_STARTS:
+  Record<
+    WorkerBreakId,
+    number
+  > = {
+    'right-production': 20,
+
+    terminal: 20,
+
+    'left-production': 155,
+
+    quality: 155,
+
+    'wheel-material': 290,
+
+    'seat-install': 290,
+  }
+
+
+/*
+ * These points deliberately follow the
+ * visible white pedestrian network.
+ *
+ * Shared destination:
+ * horizontal path z = 19
+ * vertical employee path x = 8
+ */
+const ROUTES:
+  Record<
+    WorkerBreakId,
+    WorkerRoute
+  > = {
+    'right-production': {
+      seatIndex: 0,
+
+      points: [
+        {
+          x: 21.1,
+          z: -7.2,
+        },
+
+        {
+          x: 20,
+          z: -7.2,
+        },
+
+        {
+          x: 20,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 4.25,
+          z: 30.4,
+        },
+      ],
+    },
+
+
+    'left-production': {
+      seatIndex: 0,
+
+      points: [
+        {
+          x: -21.1,
+          z: 7.2,
+        },
+
+        {
+          x: -20,
+          z: 7.2,
+        },
+
+        {
+          x: -20,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 4.25,
+          z: 30.4,
+        },
+      ],
+    },
+
+
+    quality: {
+      seatIndex: 1,
+
+      points: [
+        {
+          x: 20.8,
+          z: -16.2,
+        },
+
+        {
+          x: 20,
+          z: -16.2,
+        },
+
+        {
+          x: 20,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 10.75,
+          z: 30.4,
+        },
+      ],
+    },
+
+
+    'wheel-material': {
+      seatIndex: 0,
+
+      points: [
+        {
+          x: -21.4,
+          z: 0,
+        },
+
+        /*
+         * Move away from the wheel AGV
+         * before joining the pedestrian path.
+         */
+        {
+          x: -20,
+          z: 0,
+        },
+
+        {
+          x: -20,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 4.25,
+          z: 30.4,
+        },
+      ],
+    },
+
+
+    terminal: {
+      seatIndex: 1,
+
+      points: [
+        {
+          x: -8.2,
+          z: 20.7,
+        },
+
+        {
+          x: -8.2,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 10.75,
+          z: 30.4,
+        },
+      ],
+    },
+
+
+    'seat-install': {
+      seatIndex: 1,
+
+      points: [
+        {
+          x: 22.1,
+          z: 4.2,
+        },
+
+        /*
+         * First move away from the seat AGV
+         * delivery point at [23, 4].
+         */
+        {
+          x: 20,
+          z: 4.2,
+        },
+
+        {
+          x: 20,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 19,
+        },
+
+        {
+          x: 8,
+          z: 30.4,
+        },
+
+        {
+          x: 10.75,
+          z: 30.4,
+        },
+      ],
+    },
+  }
+
+
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number,
 ) {
-  return (
-    (
-      elapsedTime %
-      BREAK_CYCLE_DURATION
-    ) +
-    BREAK_CYCLE_DURATION
-  ) %
-  BREAK_CYCLE_DURATION
+  return Math.max(
+    minimum,
+    Math.min(
+      maximum,
+      value,
+    ),
+  )
 }
 
 
-function localBreakTime(
+function distance(
+  first: Point,
+  second: Point,
+) {
+  const dx =
+    second.x -
+    first.x
+
+
+  const dz =
+    second.z -
+    first.z
+
+
+  return Math.sqrt(
+    dx * dx +
+    dz * dz,
+  )
+}
+
+
+function routeLength(
+  points: Point[],
+) {
+  let total =
+    0
+
+
+  for (
+    let index = 0;
+    index <
+    points.length - 1;
+    index += 1
+  ) {
+    total +=
+      distance(
+        points[index],
+        points[
+          index + 1
+        ],
+      )
+  }
+
+
+  return total
+}
+
+
+function sampleRoute(
+  points: Point[],
+  rawDistance: number,
+) {
+  const total =
+    routeLength(
+      points,
+    )
+
+
+  let remaining =
+    clamp(
+      rawDistance,
+      0,
+      total,
+    )
+
+
+  for (
+    let index = 0;
+    index <
+    points.length - 1;
+    index += 1
+  ) {
+    const start =
+      points[index]
+
+
+    const end =
+      points[
+        index + 1
+      ]
+
+
+    const segmentLength =
+      distance(
+        start,
+        end,
+      )
+
+
+    if (
+      remaining >
+      segmentLength
+    ) {
+      remaining -=
+        segmentLength
+
+      continue
+    }
+
+
+    const progress =
+      segmentLength === 0
+        ? 1
+        : remaining /
+          segmentLength
+
+
+    return {
+      x:
+        start.x +
+        (
+          end.x -
+          start.x
+        ) *
+        progress,
+
+      z:
+        start.z +
+        (
+          end.z -
+          start.z
+        ) *
+        progress,
+
+      yaw:
+        Math.atan2(
+          end.x -
+          start.x,
+
+          end.z -
+          start.z,
+        ),
+    }
+  }
+
+
+  const last =
+    points[
+      points.length - 1
+    ]
+
+
+  return {
+    x: last.x,
+
+    z: last.z,
+
+    yaw: Math.PI,
+  }
+}
+
+
+export function getWorkerBreakRequest(
   elapsedTime: number,
   workerId: WorkerBreakId,
-) {
-  const cycleTime =
-    normalizeCycleTime(
-      elapsedTime,
+): WorkerBreakRequest {
+  const cycleIndex =
+    Math.floor(
+      Math.max(
+        0,
+        elapsedTime,
+      ) /
+      BREAK_CYCLE_DURATION,
     )
+
+
+  const cycleTime =
+    (
+      (
+        elapsedTime %
+        BREAK_CYCLE_DURATION
+      ) +
+      BREAK_CYCLE_DURATION
+    ) %
+    BREAK_CYCLE_DURATION
+
 
   const start =
     BREAK_STARTS[
@@ -111,80 +551,79 @@ function localBreakTime(
     ]
 
 
-  if (
-    cycleTime >=
-    start
-  ) {
-    return (
-      cycleTime -
-      start
-    )
+  return {
+    open:
+      cycleTime >=
+        start &&
+      cycleTime <
+        start +
+        REQUEST_WINDOW,
+
+    key:
+      `${cycleIndex}-${start}`,
   }
-
-
-  return (
-    cycleTime +
-    BREAK_CYCLE_DURATION -
-    start
-  )
 }
 
 
-export function getWorkerBreakState(
-  elapsedTime: number,
+export function sampleWorkerBreak(
   workerId: WorkerBreakId,
-): WorkerBreakState {
-  const local =
-    localBreakTime(
-      elapsedTime,
-      workerId,
-    )
-
-
-  const seatIndex =
-    BREAK_SEATS[
+  breakElapsed: number,
+): WorkerBreakSample {
+  const route =
+    ROUTES[
       workerId
     ]
 
 
-  if (
-    local >=
-    TOTAL_BREAK_DURATION
-  ) {
-    return {
-      active: false,
+  const length =
+    routeLength(
+      route.points,
+    )
 
-      stage: 'work',
 
-      progress: 0,
-
-      seatIndex,
-    }
-  }
+  const walkDuration =
+    length /
+    WALK_SPEED
 
 
   if (
-    local <
-    WALK_OUT_DURATION
+    breakElapsed <
+    walkDuration
   ) {
+    const sample =
+      sampleRoute(
+        route.points,
+
+        breakElapsed *
+        WALK_SPEED,
+      )
+
+
     return {
-      active: true,
+      ...sample,
 
       stage:
         'walk-out',
 
-      progress:
-        local /
-        WALK_OUT_DURATION,
+      complete: false,
 
-      seatIndex,
+      seatIndex:
+        route.seatIndex,
+
+      walking: true,
     }
   }
 
 
   const afterWalk =
-    local -
-    WALK_OUT_DURATION
+    breakElapsed -
+    walkDuration
+
+
+  const destination =
+    route.points[
+      route.points.length - 1
+    ]
 
 
   if (
@@ -192,15 +631,25 @@ export function getWorkerBreakState(
     FIRST_SEATED_DURATION
   ) {
     return {
-      active: true,
+      x:
+        destination.x,
+
+      z:
+        destination.z,
+
+      yaw:
+        route.seatIndex === 0
+          ? Math.PI / 2
+          : -Math.PI / 2,
 
       stage: 'sit',
 
-      progress:
-        afterWalk /
-        FIRST_SEATED_DURATION,
+      complete: false,
 
-      seatIndex,
+      seatIndex:
+        route.seatIndex,
+
+      walking: false,
     }
   }
 
@@ -215,15 +664,25 @@ export function getWorkerBreakState(
     DRINK_DURATION
   ) {
     return {
-      active: true,
+      x:
+        destination.x,
+
+      z:
+        destination.z,
+
+      yaw:
+        route.seatIndex === 0
+          ? Math.PI / 2
+          : -Math.PI / 2,
 
       stage: 'drink',
 
-      progress:
-        afterFirstSit /
-        DRINK_DURATION,
+      complete: false,
 
-      seatIndex,
+      seatIndex:
+        route.seatIndex,
+
+      walking: false,
     }
   }
 
@@ -238,34 +697,92 @@ export function getWorkerBreakState(
     SECOND_SEATED_DURATION
   ) {
     return {
-      active: true,
+      x:
+        destination.x,
+
+      z:
+        destination.z,
+
+      yaw:
+        route.seatIndex === 0
+          ? Math.PI / 2
+          : -Math.PI / 2,
 
       stage: 'sit',
 
-      progress:
-        afterDrink /
-        SECOND_SEATED_DURATION,
+      complete: false,
 
-      seatIndex,
+      seatIndex:
+        route.seatIndex,
+
+      walking: false,
     }
   }
 
 
-  const returnTime =
+  const returnElapsed =
     afterDrink -
     SECOND_SEATED_DURATION
 
 
+  if (
+    returnElapsed <
+    walkDuration
+  ) {
+    const sample =
+      sampleRoute(
+        route.points,
+
+        length -
+        returnElapsed *
+        WALK_SPEED,
+      )
+
+
+    /*
+     * Reverse direction while returning.
+     */
+    return {
+      ...sample,
+
+      yaw:
+        sample.yaw +
+        Math.PI,
+
+      stage:
+        'walk-back',
+
+      complete: false,
+
+      seatIndex:
+        route.seatIndex,
+
+      walking: true,
+    }
+  }
+
+
+  const home =
+    route.points[0]
+
+
   return {
-    active: true,
+    x:
+      home.x,
+
+    z:
+      home.z,
+
+    yaw: 0,
 
     stage:
-      'walk-back',
+      'complete',
 
-    progress:
-      returnTime /
-      WALK_BACK_DURATION,
+    complete: true,
 
-    seatIndex,
+    seatIndex:
+      route.seatIndex,
+
+    walking: false,
   }
 }

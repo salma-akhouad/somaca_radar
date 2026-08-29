@@ -115,16 +115,19 @@ import {
   SeatAutomatedCarrier,
 } from './factory/SeatAutomatedCarrier'
 
+import {
+  FireSafetyStations,
+} from './factory/FireSafetyStations'
 
 interface MontageLayoutProps {
   selectedPoleId?:
-    string | null
+  string | null
 
   onPoleSelect?:
-    (
-      pole:
-        PoleConfig,
-    ) => void
+  (
+    pole:
+      PoleConfig,
+  ) => void
 }
 
 
@@ -393,6 +396,8 @@ export function MontageLayout({
 
       <CentralSafetyCell />
 
+      <FireSafetyStations />
+
 
       {/* Existing production pedestrian network */}
 
@@ -429,22 +434,11 @@ export function MontageLayout({
         length={40}
       />
 
-
-      {/* Employee route to the break / sanitary area */}
-
-      <PedestrianPath
-        position={[
-          36.5,
-          0.027,
-          19,
-        ]}
-        length={33}
-        width={1.05}
-      />
+      {/* Employee access to WC / break area */}
 
       <PedestrianPath
         position={[
-          50,
+          8,
           0.027,
           25,
         ]}
@@ -454,17 +448,6 @@ export function MontageLayout({
           Math.PI / 2
         }
       />
-
-      <PedestrianPath
-        position={[
-          52.5,
-          0.027,
-          31,
-        ]}
-        length={5}
-        width={1.05}
-      />
-
 
       {/* Office / manager route */}
 
@@ -672,7 +655,6 @@ export function MontageLayout({
         gender="woman"
         role="seat-stock"
         phaseOffset={2.1}
-        workerId="seat-stock"
       />
 
 

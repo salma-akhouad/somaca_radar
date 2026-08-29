@@ -112,7 +112,9 @@ export function FactoryManager() {
 
       root.current.position.set(
         sample.x,
-        0,
+        sample.resting
+          ? 0.34
+          : 0,
         sample.z,
       )
 
@@ -141,6 +143,38 @@ export function FactoryManager() {
       head.current.rotation.y =
         0
 
+      if (
+        sample.resting
+      ) {
+        /*
+         * Relaxed seated pose in the office.
+         */
+        leftLeg.current.rotation.x =
+          -1.12
+
+        rightLeg.current.rotation.x =
+          -1.12
+
+
+        leftArm.current.rotation.x =
+          -0.38
+
+        rightArm.current.rotation.x =
+          -0.42
+
+
+        head.current.rotation.x =
+          -0.04
+
+        head.current.rotation.y =
+          Math.sin(
+            state.clock.elapsedTime *
+            0.32,
+          ) *
+          0.08
+
+        return
+      }
 
       if (
         sample.walking
@@ -221,11 +255,11 @@ export function FactoryManager() {
 
       if (
         sample.focus ===
-          'right-car' ||
+        'right-car' ||
         sample.focus ===
-          'left-car' ||
+        'left-car' ||
         sample.focus ===
-          'upper-line'
+        'upper-line'
       ) {
         rightArm.current.rotation.x =
           -0.18
