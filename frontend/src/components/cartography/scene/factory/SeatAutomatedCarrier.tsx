@@ -34,6 +34,10 @@ import type {
   SeatLogisticsPhase,
 } from './data/seatLogisticsCycle'
 
+import {
+  ProtectedFloorLabel,
+} from '../markings/ProtectedFloorLabel'
+
 
 export function SeatAutomatedCarrier() {
   const carrier =
@@ -126,9 +130,9 @@ export function SeatAutomatedCarrier() {
 
   const moving =
     phase ===
-      'outbound' ||
+    'outbound' ||
     phase ===
-      'return'
+    'return'
 
 
   const routePoints =
@@ -155,46 +159,28 @@ export function SeatAutomatedCarrier() {
       />
 
 
-      <Text
+      <ProtectedFloorLabel
         position={[
           SEAT_PICKUP_POSITION[0],
-          0.07,
+          0,
           SEAT_PICKUP_POSITION[1] -
           1.8,
         ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.32}
-        color="#353a37"
-        anchorX="center"
-        anchorY="middle"
-      >
-        CHARGEMENT SIÈGES
-      </Text>
+        text="CHARGEMENT SIÈGES"
+        width={5}
+      />
 
 
-      <Text
+      <ProtectedFloorLabel
         position={[
           SEAT_DELIVERY_POSITION[0],
-          0.07,
+          0,
           SEAT_DELIVERY_POSITION[1] +
           1.55,
         ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.32}
-        color="#353a37"
-        anchorX="center"
-        anchorY="middle"
-      >
-        LIVRAISON SIÈGES
-      </Text>
+        text="LIVRAISON SIÈGES"
+        width={4.8}
+      />
 
 
       <group
@@ -338,28 +324,28 @@ export function SeatAutomatedCarrier() {
 
         {visibleSeatCount >=
           1 && (
-          <CarSeat
-            position={[
-              -0.55,
-              0.53,
-              0,
-            ]}
-            rotation={0}
-          />
-        )}
+            <CarSeat
+              position={[
+                -0.55,
+                0.53,
+                0,
+              ]}
+              rotation={0}
+            />
+          )}
 
 
         {visibleSeatCount >=
           2 && (
-          <CarSeat
-            position={[
-              0.55,
-              0.53,
-              0,
-            ]}
-            rotation={0}
-          />
-        )}
+            <CarSeat
+              position={[
+                0.55,
+                0.53,
+                0,
+              ]}
+              rotation={0}
+            />
+          )}
 
 
         {[

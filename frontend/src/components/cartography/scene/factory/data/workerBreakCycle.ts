@@ -1,3 +1,10 @@
+import {
+  AMENITIES_ENTRY,
+  BREAK_CHAIRS,
+  BREAK_CHAIR_APPROACH_DISTANCE,
+} from './amenitiesLayout'
+
+
 export type WorkerBreakId =
   | 'right-production'
   | 'left-production'
@@ -9,8 +16,10 @@ export type WorkerBreakId =
 
 export type WorkerBreakStage =
   | 'walk-out'
+  | 'sit-down'
   | 'sit'
   | 'drink'
+  | 'stand-up'
   | 'walk-back'
   | 'complete'
 
@@ -29,20 +38,18 @@ export interface WorkerBreakSample {
   complete:
     boolean
 
-  x:
-    number
+  x: number
 
-  z:
-    number
+  z: number
 
-  yaw:
-    number
+  yaw: number
 
   seatIndex:
     0 | 1
 
-  walking:
-    boolean
+  walking: boolean
+
+  seatProgress: number
 }
 
 
@@ -63,27 +70,29 @@ interface WorkerRoute {
 
 
 const WALK_SPEED =
-  1.45
+  1.38
 
+
+const SIT_DOWN_DURATION =
+  1.35
 
 const FIRST_SEATED_DURATION =
-  15
-
+  13
 
 const DRINK_DURATION =
   5
 
-
 const SECOND_SEATED_DURATION =
-  8
+  7
 
+const STAND_UP_DURATION =
+  1.2
 
 const REQUEST_WINDOW =
   12
 
-
 const BREAK_CYCLE_DURATION =
-  430
+  440
 
 
 const BREAK_STARTS:
@@ -93,45 +102,150 @@ const BREAK_STARTS:
   > = {
     'right-production': 20,
 
-    terminal: 20,
+    terminal: 28,
 
-    'left-production': 155,
+    'left-production': 160,
 
-    quality: 155,
+    quality: 168,
 
-    'wheel-material': 290,
+    'wheel-material': 300,
 
-    'seat-install': 290,
+    'seat-install': 308,
   }
 
 
-const SEAT_A:
-  Point = {
-    x: -40.5,
-    z: -30.35,
+function clamp(
+  value: number,
+  minimum: number,
+  maximum: number,
+) {
+  return Math.max(
+    minimum,
+    Math.min(
+      maximum,
+      value,
+    ),
+  )
+}
+
+
+function smoothStep(
+  value: number,
+) {
+  const t =
+    clamp(
+      value,
+      0,
+      1,
+    )
+
+  return (
+    t *
+    t *
+    (
+      3 -
+      2 * t
+    )
+  )
+}
+
+
+function chairPoint(
+  index:
+    0 | 1,
+): Point {
+  return {
+    x:
+      BREAK_CHAIRS[index].x,
+
+    z:
+      BREAK_CHAIRS[index].z,
   }
+}
 
 
-const SEAT_B:
-  Point = {
-    x: -36.5,
-    z: -30.35,
+function chairApproach(
+  index:
+    0 | 1,
+): Point {
+  const chair =
+    BREAK_CHAIRS[index]
+
+
+  /*
+   * A chair with yaw=0 faces +Z.
+   * Its open/front side is therefore +Z.
+   * The worker reaches that front point first,
+   * turns to face +Z, then moves backwards
+   * into the chair during the sit-down stage.
+   */
+  return {
+    x:
+      chair.x +
+      Math.sin(
+        chair.yaw,
+      ) *
+      BREAK_CHAIR_APPROACH_DISTANCE,
+
+    z:
+      chair.z +
+      Math.cos(
+        chair.yaw,
+      ) *
+      BREAK_CHAIR_APPROACH_DISTANCE,
   }
+}
 
 
-/*
- * Shared safe route:
- *
- * existing people network
- *      ↓
- * x = -20
- *      ↓
- * z = -28
- *      ↓
- * ENTRÉE amenities
- *
- * It stays clear of both AGV routes.
- */
+const ENTRY =
+  AMENITIES_ENTRY
+
+
+function insideAmenities(
+  seatIndex:
+    0 | 1,
+): Point[] {
+  const approach =
+    chairApproach(
+      seatIndex,
+    )
+
+
+  /*
+   * The painted pedestrian path ends at ENTRY.
+   * From there the worker uses a clear aisle
+   * around the furniture and reaches the front
+   * of their assigned chair without crossing
+   * a table or another chair.
+   */
+  return [
+    ENTRY,
+
+    {
+      x: -31,
+      z: -31.35,
+    },
+
+    {
+      x:
+        approach.x +
+        1.05,
+      z: -31.35,
+    },
+
+    {
+      x:
+        approach.x +
+        1.05,
+      z:
+        approach.z,
+    },
+
+    approach,
+  ]
+}
+
+
 const ROUTES:
   Record<
     WorkerBreakId,
@@ -163,20 +277,17 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -40.5,
-          z: -28,
-        },
-
-        SEAT_A,
+        ...insideAmenities(
+          0,
+        ),
       ],
     },
 
@@ -197,20 +308,17 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -40.5,
-          z: -28,
-        },
-
-        SEAT_A,
+        ...insideAmenities(
+          0,
+        ),
       ],
     },
 
@@ -225,8 +333,13 @@ const ROUTES:
         },
 
         {
+          x: 20.8,
+          z: -16,
+        },
+
+        {
           x: 20,
-          z: -16.2,
+          z: -16,
         },
 
         {
@@ -241,20 +354,17 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -36.5,
-          z: -28,
-        },
-
-        SEAT_B,
+        ...insideAmenities(
+          1,
+        ),
       ],
     },
 
@@ -268,10 +378,6 @@ const ROUTES:
           z: 0,
         },
 
-        /*
-         * First step away from
-         * the wheel AGV delivery.
-         */
         {
           x: -20,
           z: 0,
@@ -279,20 +385,17 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -40.5,
-          z: -28,
-        },
-
-        SEAT_A,
+        ...insideAmenities(
+          0,
+        ),
       ],
     },
 
@@ -318,20 +421,17 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -36.5,
-          z: -28,
-        },
-
-        SEAT_B,
+        ...insideAmenities(
+          1,
+        ),
       ],
     },
 
@@ -341,14 +441,10 @@ const ROUTES:
 
       points: [
         {
-          x: 22.1,
+          x: 20.6,
           z: 4.2,
         },
 
-        /*
-         * First move away from
-         * the seat AGV at [23, 4].
-         */
         {
           x: 20,
           z: 4.2,
@@ -366,38 +462,20 @@ const ROUTES:
 
         {
           x: -20,
-          z: -28,
+          z: -16,
         },
 
         {
-          x: -39,
-          z: -28,
+          x: -20,
+          z: -27,
         },
 
-        {
-          x: -36.5,
-          z: -28,
-        },
-
-        SEAT_B,
+        ...insideAmenities(
+          1,
+        ),
       ],
     },
   }
-
-
-function clamp(
-  value: number,
-  minimum: number,
-  maximum: number,
-) {
-  return Math.max(
-    minimum,
-    Math.min(
-      maximum,
-      value,
-    ),
-  )
-}
 
 
 function distance(
@@ -408,11 +486,9 @@ function distance(
     second.x -
     first.x
 
-
   const dz =
     second.z -
     first.z
-
 
   return Math.sqrt(
     dx * dx +
@@ -475,12 +551,10 @@ function sampleRoute(
     const start =
       points[index]
 
-
     const end =
       points[
         index + 1
       ]
-
 
     const segmentLength =
       distance(
@@ -544,11 +618,81 @@ function sampleRoute(
 
 
   return {
-    x: last.x,
+    x:
+      last.x,
 
-    z: last.z,
+    z:
+      last.z,
 
     yaw: 0,
+  }
+}
+
+
+function seatedSample(
+  seatIndex:
+    0 | 1,
+
+  stage:
+    WorkerBreakStage,
+
+  seatProgress:
+    number,
+): WorkerBreakSample {
+  const chair =
+    chairPoint(
+      seatIndex,
+    )
+
+  const approach =
+    chairApproach(
+      seatIndex,
+    )
+
+
+  const progress =
+    smoothStep(
+      seatProgress,
+    )
+
+
+  return {
+    stage,
+
+    complete: false,
+
+    /*
+     * Approach point is in FRONT of the chair.
+     * As progress grows the worker moves backward
+     * from that point onto the exact chair centre.
+     */
+    x:
+      approach.x +
+      (
+        chair.x -
+        approach.x
+      ) *
+      progress,
+
+    z:
+      approach.z +
+      (
+        chair.z -
+        approach.z
+      ) *
+      progress,
+
+    yaw:
+      BREAK_CHAIRS[
+        seatIndex
+      ].yaw,
+
+    seatIndex,
+
+    walking: false,
+
+    seatProgress:
+      progress,
   }
 }
 
@@ -614,7 +758,7 @@ export function sampleWorkerBreak(
 
   const returnPoints =
     [
-      ...route.points,
+      ...outwardPoints,
     ].reverse()
 
 
@@ -654,137 +798,119 @@ export function sampleWorkerBreak(
         route.seatIndex,
 
       walking: true,
+
+      seatProgress: 0,
     }
   }
 
 
-  const afterWalk =
+  let remaining =
     breakElapsed -
     walkDuration
 
 
-  const destination =
-    outwardPoints[
-      outwardPoints.length - 1
-    ]
-
-
   if (
-    afterWalk <
-    FIRST_SEATED_DURATION
+    remaining <
+    SIT_DOWN_DURATION
   ) {
-    return {
-      x:
-        destination.x,
+    return seatedSample(
+      route.seatIndex,
 
-      z:
-        destination.z,
+      'sit-down',
 
-      /*
-       * Chairs face north toward
-       * their corresponding tables.
-       */
-      yaw: 0,
-
-      stage:
-        'sit',
-
-      complete: false,
-
-      seatIndex:
-        route.seatIndex,
-
-      walking: false,
-    }
+      remaining /
+      SIT_DOWN_DURATION,
+    )
   }
 
 
-  const afterFirstSit =
-    afterWalk -
+  remaining -=
+    SIT_DOWN_DURATION
+
+
+  if (
+    remaining <
+    FIRST_SEATED_DURATION
+  ) {
+    return seatedSample(
+      route.seatIndex,
+
+      'sit',
+
+      1,
+    )
+  }
+
+
+  remaining -=
     FIRST_SEATED_DURATION
 
 
   if (
-    afterFirstSit <
+    remaining <
     DRINK_DURATION
   ) {
-    return {
-      x:
-        destination.x,
+    return seatedSample(
+      route.seatIndex,
 
-      z:
-        destination.z,
+      'drink',
 
-      yaw: 0,
-
-      stage:
-        'drink',
-
-      complete: false,
-
-      seatIndex:
-        route.seatIndex,
-
-      walking: false,
-    }
+      1,
+    )
   }
 
 
-  const afterDrink =
-    afterFirstSit -
+  remaining -=
     DRINK_DURATION
 
 
   if (
-    afterDrink <
+    remaining <
     SECOND_SEATED_DURATION
   ) {
-    return {
-      x:
-        destination.x,
+    return seatedSample(
+      route.seatIndex,
 
-      z:
-        destination.z,
+      'sit',
 
-      yaw: 0,
-
-      stage:
-        'sit',
-
-      complete: false,
-
-      seatIndex:
-        route.seatIndex,
-
-      walking: false,
-    }
+      1,
+    )
   }
 
 
-  const returnElapsed =
-    afterDrink -
+  remaining -=
     SECOND_SEATED_DURATION
 
 
   if (
-    returnElapsed <
+    remaining <
+    STAND_UP_DURATION
+  ) {
+    return seatedSample(
+      route.seatIndex,
+
+      'stand-up',
+
+      1 -
+      remaining /
+      STAND_UP_DURATION,
+    )
+  }
+
+
+  remaining -=
+    STAND_UP_DURATION
+
+
+  if (
+    remaining <
     walkDuration
   ) {
-    /*
-     * Important:
-     *
-     * sample the REVERSED route directly.
-     * We no longer calculate a forward yaw
-     * and then blindly add PI.
-     *
-     * This fixes workers visually walking
-     * backwards on some return segments.
-     */
     const sample =
       sampleRoute(
         returnPoints,
 
-        returnElapsed *
+        remaining *
         WALK_SPEED,
       )
 
@@ -801,6 +927,8 @@ export function sampleWorkerBreak(
         route.seatIndex,
 
       walking: true,
+
+      seatProgress: 0,
     }
   }
 
@@ -827,5 +955,7 @@ export function sampleWorkerBreak(
       route.seatIndex,
 
     walking: false,
+
+    seatProgress: 0,
   }
 }

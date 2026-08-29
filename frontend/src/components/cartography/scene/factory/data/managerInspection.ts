@@ -3,7 +3,6 @@ export type ManagerFocus =
   | 'right-car'
   | 'right-worker'
   | 'upper-line'
-  | 'meeting-room'
   | 'left-car'
   | 'left-worker'
 
@@ -71,7 +70,6 @@ const ROUTE:
       focus: 'none',
     },
 
-
     {
       x: 31,
       z: 9.4,
@@ -102,7 +100,6 @@ const ROUTE:
       z: 11,
     },
 
-
     {
       x: 20,
       z: -1,
@@ -112,7 +109,6 @@ const ROUTE:
       focus:
         'right-car',
     },
-
 
     {
       x: 20,
@@ -126,7 +122,6 @@ const ROUTE:
       talkingTo:
         'right-production',
     },
-
 
     {
       x: 20,
@@ -143,7 +138,6 @@ const ROUTE:
       z: 19,
     },
 
-
     {
       x: 0,
       z: 19,
@@ -154,52 +148,12 @@ const ROUTE:
         'upper-line',
     },
 
-
     /*
-     * Uses the single central pedestrian
-     * spur to visit the UET meeting room.
+     * The centre of the production U is
+     * intentionally left empty.
+     * The manager stays on the existing
+     * pedestrian network.
      */
-
-    {
-      x: 0,
-      z: 16,
-    },
-
-    {
-      x: 0,
-      z: 3,
-    },
-
-    {
-      x: 0,
-      z: 2.2,
-    },
-
-    {
-      x: 1.75,
-      z: 1.35,
-
-      pause: 7,
-
-      focus:
-        'meeting-room',
-    },
-
-    {
-      x: 0,
-      z: 2.2,
-    },
-
-    {
-      x: 0,
-      z: 16,
-    },
-
-    {
-      x: 0,
-      z: 19,
-    },
-
 
     {
       x: -17,
@@ -210,7 +164,6 @@ const ROUTE:
       x: -20,
       z: 16,
     },
-
 
     {
       x: -20,
@@ -225,7 +178,6 @@ const ROUTE:
         'left-production',
     },
 
-
     {
       x: -20,
       z: 1,
@@ -235,7 +187,6 @@ const ROUTE:
       focus:
         'left-car',
     },
-
 
     {
       x: -20,
@@ -291,7 +242,6 @@ const ROUTE:
       x: 31,
       z: 9.4,
     },
-
 
     {
       ...OFFICE_CHAIR,
@@ -331,8 +281,11 @@ type TimelineSegment =
 
 
 function distance(
-  first: RoutePoint,
-  second: RoutePoint,
+  first:
+    RoutePoint,
+
+  second:
+    RoutePoint,
 ) {
   const dx =
     second.x -
@@ -442,9 +395,6 @@ function pauseRotation(
       return Math.PI / 2
 
     case 'upper-line':
-      return Math.PI
-
-    case 'meeting-room':
       return Math.PI
 
     case 'left-worker':
@@ -616,12 +566,6 @@ export function getManagerFocusTarget(
       return [
         0,
         16,
-      ]
-
-    case 'meeting-room':
-      return [
-        0,
-        -2,
       ]
 
     case 'left-worker':

@@ -3,31 +3,10 @@ import {
   Text,
 } from '@react-three/drei'
 
-
-export const AMENITIES_POSITION = [
-  -39,
-  0,
-  -29,
-] as const
-
-
-/*
- * These are the exact centres of the
- * two chairs actually used during breaks.
- */
-export const BREAK_SEATS = [
-  {
-    x: -40.5,
-    z: -30.35,
-    yaw: 0,
-  },
-
-  {
-    x: -36.5,
-    z: -30.35,
-    yaw: 0,
-  },
-] as const
+import {
+  AMENITIES_POSITION,
+  BREAK_CHAIRS,
+} from './data/amenitiesLayout'
 
 
 function Chair({
@@ -47,13 +26,15 @@ function Chair({
       position={position}
       rotation-y={rotation}
     >
+      {/* Fabric seat — broad enough to read clearly from above */}
+
       <RoundedBox
         args={[
-          0.68,
-          0.12,
-          0.68,
+          0.72,
+          0.14,
+          0.72,
         ]}
-        radius={0.055}
+        radius={0.07}
         smoothness={2}
         position={[
           0,
@@ -62,38 +43,43 @@ function Chair({
         ]}
       >
         <meshStandardMaterial
-          color="#4b504d"
-          roughness={0.78}
+          color="#77736b"
+          roughness={0.86}
         />
       </RoundedBox>
 
+
+      {/* Backrest */}
 
       <RoundedBox
         args={[
-          0.68,
-          0.82,
-          0.1,
+          0.72,
+          0.72,
+          0.14,
         ]}
-        radius={0.04}
+        radius={0.06}
         smoothness={2}
         position={[
           0,
-          0.91,
-          -0.3,
+          0.86,
+          -0.34,
         ]}
+        rotation-x={-0.08}
       >
         <meshStandardMaterial
-          color="#434844"
-          roughness={0.78}
+          color="#6a6760"
+          roughness={0.86}
         />
       </RoundedBox>
 
 
+      {/* Graphite frame */}
+
       {[
-        [-0.24, -0.24],
-        [-0.24, 0.24],
-        [0.24, -0.24],
-        [0.24, 0.24],
+        [-0.25, -0.25],
+        [-0.25, 0.25],
+        [0.25, -0.25],
+        [0.25, 0.25],
       ].map(
         (
           [
@@ -112,16 +98,16 @@ function Chair({
           >
             <boxGeometry
               args={[
-                0.05,
+                0.055,
                 0.46,
-                0.05,
+                0.055,
               ]}
             />
 
             <meshStandardMaterial
-              color="#353a37"
-              metalness={0.34}
-              roughness={0.48}
+              color="#3d423f"
+              metalness={0.28}
+              roughness={0.5}
             />
           </mesh>
         ),
@@ -141,14 +127,12 @@ function BreakTable({
   ]
 }) {
   return (
-    <group
-      position={position}
-    >
+    <group position={position}>
       <RoundedBox
         args={[
-          2.35,
+          2.3,
           0.14,
-          1.2,
+          1.15,
         ]}
         radius={0.07}
         smoothness={2}
@@ -159,17 +143,17 @@ function BreakTable({
         ]}
       >
         <meshStandardMaterial
-          color="#795b3e"
+          color="#8b6a4d"
           roughness={0.72}
         />
       </RoundedBox>
 
 
       {[
-        [-0.92, -0.42],
-        [-0.92, 0.42],
-        [0.92, -0.42],
-        [0.92, 0.42],
+        [-0.9, -0.39],
+        [-0.9, 0.39],
+        [0.9, -0.39],
+        [0.9, 0.39],
       ].map(
         (
           [
@@ -188,15 +172,15 @@ function BreakTable({
           >
             <boxGeometry
               args={[
-                0.07,
+                0.065,
                 0.78,
-                0.07,
+                0.065,
               ]}
             />
 
             <meshStandardMaterial
-              color="#3e433f"
-              metalness={0.3}
+              color="#454944"
+              metalness={0.28}
               roughness={0.52}
             />
           </mesh>
@@ -207,14 +191,102 @@ function BreakTable({
 }
 
 
-function Tray() {
+function CoffeeCup({
+  x,
+}: {
+  x: number
+}) {
+  return (
+    <group
+      position={[
+        x,
+        0.99,
+        0,
+      ]}
+    >
+      <mesh>
+        <cylinderGeometry
+          args={[
+            0.075,
+            0.064,
+            0.17,
+            12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#eee8dc"
+          roughness={0.5}
+        />
+      </mesh>
+
+
+      {/* Dark coffee surface */}
+
+      <mesh
+        position={[
+          0,
+          0.087,
+          0,
+        ]}
+        rotation-x={
+          -Math.PI / 2
+        }
+      >
+        <circleGeometry
+          args={[
+            0.058,
+            12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#4d3022"
+          roughness={0.74}
+        />
+      </mesh>
+
+
+      {/* Handle */}
+
+      <mesh
+        position={[
+          0.078,
+          0,
+          0,
+        ]}
+        rotation-y={
+          Math.PI / 2
+        }
+      >
+        <torusGeometry
+          args={[
+            0.052,
+            0.013,
+            6,
+            12,
+            Math.PI,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#eee8dc"
+          roughness={0.5}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+
+function CoffeeTray() {
   return (
     <group>
       <RoundedBox
         args={[
-          1,
+          0.9,
           0.045,
-          0.6,
+          0.55,
         ]}
         radius={0.05}
         smoothness={2}
@@ -225,65 +297,235 @@ function Tray() {
         ]}
       >
         <meshStandardMaterial
-          color="#414642"
-          roughness={0.62}
+          color="#494b47"
+          roughness={0.66}
+        />
+      </RoundedBox>
+
+
+      {/* Compact coffee thermos */}
+
+      <mesh
+        position={[
+          -0.25,
+          1.08,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.09,
+            0.105,
+            0.38,
+            12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#d8d4ca"
+          metalness={0.12}
+          roughness={0.4}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          -0.25,
+          1.29,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.055,
+            0.07,
+            0.08,
+            10,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#343936"
+          roughness={0.52}
+        />
+      </mesh>
+
+
+      {/* Exactly two cups */}
+
+      <CoffeeCup x={0.08} />
+
+      <CoffeeCup x={0.33} />
+    </group>
+  )
+}
+
+
+function WaterDispenser() {
+  return (
+    <group>
+      <RoundedBox
+        args={[
+          0.78,
+          1.5,
+          0.66,
+        ]}
+        radius={0.08}
+        smoothness={2}
+        position={[
+          0,
+          0.75,
+          0,
+        ]}
+      >
+        <meshStandardMaterial
+          color="#e0e1dc"
+          roughness={0.7}
         />
       </RoundedBox>
 
 
       <mesh
         position={[
-          -0.27,
-          1.09,
+          0,
+          1.72,
           0,
         ]}
       >
         <cylinderGeometry
           args={[
-            0.065,
-            0.075,
-            0.38,
-            10,
+            0.25,
+            0.21,
+            0.64,
+            14,
           ]}
         />
 
         <meshStandardMaterial
-          color="#aac3c8"
+          color="#9ebcc4"
           transparent
-          opacity={0.75}
-          roughness={0.18}
+          opacity={0.72}
+          roughness={0.2}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          0,
+          1.04,
+          0.35,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.4,
+            0.26,
+            0.04,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#353a37"
+          roughness={0.52}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+
+function Plant() {
+  return (
+    <group>
+      <mesh
+        position={[
+          0,
+          0.31,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.36,
+            0.28,
+            0.62,
+            12,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#7c6049"
+          roughness={0.86}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          0,
+          1.05,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.045,
+            0.055,
+            1.1,
+            8,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#49613f"
+          roughness={0.82}
         />
       </mesh>
 
 
       {[
-        0.04,
-        0.25,
-        0.43,
+        [-0.3, 1.3],
+        [0.26, 1.42],
+        [-0.25, 1.62],
+        [0.22, 1.82],
       ].map(
-        (x) => (
+        (
+          [
+            x,
+            y,
+          ],
+          index,
+        ) => (
           <mesh
-            key={x}
+            key={index}
             position={[
               x,
-              0.99,
+              y,
               0,
             ]}
+            scale={[
+              1,
+              0.65,
+              0.75,
+            ]}
           >
-            <cylinderGeometry
+            <sphereGeometry
               args={[
-                0.06,
-                0.052,
-                0.17,
-                10,
+                0.3,
+                9,
+                7,
               ]}
             />
 
             <meshStandardMaterial
-              color="#d7dcda"
-              transparent
-              opacity={0.72}
-              roughness={0.16}
+              color={
+                index % 2 === 0
+                  ? '#59704c'
+                  : '#49623f'
+              }
+              roughness={0.82}
             />
           </mesh>
         ),
@@ -293,22 +535,22 @@ function Tray() {
 }
 
 
-function PersonIcon({
+function PersonPictogram({
   gender,
 }: {
   gender:
-    | 'man'
     | 'woman'
+    | 'man'
 }) {
   return (
     <group
-      scale={0.75}
+      scale={0.68}
     >
       <mesh
         position={[
           0,
-          0.34,
-          0.02,
+          0.35,
+          0,
         ]}
       >
         <sphereGeometry
@@ -327,69 +569,65 @@ function PersonIcon({
 
       {gender ===
       'woman' ? (
-        <>
-          <mesh
-            position={[
-              0,
-              -0.03,
-              0.02,
+        <mesh
+          position={[
+            0,
+            -0.04,
+            0,
+          ]}
+        >
+          <coneGeometry
+            args={[
+              0.27,
+              0.58,
+              4,
             ]}
-          >
-            <coneGeometry
-              args={[
-                0.25,
-                0.55,
-                4,
-              ]}
-            />
+          />
 
-            <meshBasicMaterial
-              color="#171918"
-            />
-          </mesh>
-
-
-          {[
-            -0.11,
-            0.11,
-          ].map(
-            (x) => (
-              <mesh
-                key={x}
-                position={[
-                  x,
-                  -0.42,
-                  0.02,
-                ]}
-              >
-                <boxGeometry
-                  args={[
-                    0.07,
-                    0.34,
-                    0.07,
-                  ]}
-                />
-
-                <meshBasicMaterial
-                  color="#171918"
-                />
-              </mesh>
-            ),
-          )}
-        </>
+          <meshBasicMaterial
+            color="#171918"
+          />
+        </mesh>
       ) : (
-        <>
+        <mesh
+          position={[
+            0,
+            -0.04,
+            0,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              0.3,
+              0.56,
+              0.07,
+            ]}
+          />
+
+          <meshBasicMaterial
+            color="#171918"
+          />
+        </mesh>
+      )}
+
+
+      {[
+        -0.11,
+        0.11,
+      ].map(
+        (x) => (
           <mesh
+            key={`leg-${x}`}
             position={[
+              x,
+              -0.47,
               0,
-              -0.04,
-              0.02,
             ]}
           >
             <boxGeometry
               args={[
-                0.32,
-                0.55,
+                0.07,
+                0.42,
                 0.07,
               ]}
             />
@@ -398,36 +636,7 @@ function PersonIcon({
               color="#171918"
             />
           </mesh>
-
-
-          {[
-            -0.1,
-            0.1,
-          ].map(
-            (x) => (
-              <mesh
-                key={x}
-                position={[
-                  x,
-                  -0.47,
-                  0.02,
-                ]}
-              >
-                <boxGeometry
-                  args={[
-                    0.075,
-                    0.4,
-                    0.075,
-                  ]}
-                />
-
-                <meshBasicMaterial
-                  color="#171918"
-                />
-              </mesh>
-            ),
-          )}
-        </>
+        ),
       )}
 
 
@@ -437,18 +646,18 @@ function PersonIcon({
       ].map(
         (x) => (
           <mesh
-            key={x}
+            key={`arm-${x}`}
             position={[
               x,
-              -0.04,
-              0.02,
+              -0.05,
+              0,
             ]}
           >
             <boxGeometry
               args={[
-                0.07,
-                0.55,
-                0.07,
+                0.06,
+                0.5,
+                0.06,
               ]}
             />
 
@@ -471,8 +680,8 @@ function RestroomDoor({
   x: number
 
   gender:
-    | 'man'
     | 'woman'
+    | 'man'
 
   label: string
 }) {
@@ -486,65 +695,42 @@ function RestroomDoor({
     >
       <RoundedBox
         args={[
-          1.55,
-          2.3,
+          1.8,
+          2.55,
           0.12,
         ]}
-        radius={0.05}
+        radius={0.055}
         smoothness={2}
         position={[
           0,
-          1.15,
+          1.275,
           0,
         ]}
       >
         <meshStandardMaterial
           color="#315f87"
-          roughness={0.64}
+          roughness={0.62}
         />
       </RoundedBox>
 
 
-      <mesh
-        position={[
-          0.54,
-          1.05,
-          0.08,
-        ]}
-      >
-        <sphereGeometry
-          args={[
-            0.055,
-            10,
-            10,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#d8dbd7"
-          metalness={0.65}
-          roughness={0.28}
-        />
-      </mesh>
-
-
       <RoundedBox
         args={[
-          0.78,
-          0.86,
+          0.92,
+          1,
           0.055,
         ]}
-        radius={0.05}
+        radius={0.055}
         smoothness={2}
         position={[
           0,
-          1.56,
+          1.72,
           0.095,
         ]}
       >
         <meshStandardMaterial
-          color="#f4f4ef"
-          roughness={0.82}
+          color="#f6f6f1"
+          roughness={0.84}
         />
       </RoundedBox>
 
@@ -552,11 +738,11 @@ function RestroomDoor({
       <group
         position={[
           0,
-          1.56,
+          1.72,
           0.135,
         ]}
       >
-        <PersonIcon
+        <PersonPictogram
           gender={gender}
         />
       </group>
@@ -565,16 +751,39 @@ function RestroomDoor({
       <Text
         position={[
           0,
-          0.42,
+          0.52,
           0.08,
         ]}
-        fontSize={0.18}
-        color="#f7f7f2"
+        fontSize={0.19}
+        color="#ffffff"
         anchorX="center"
         anchorY="middle"
       >
         {label}
       </Text>
+
+
+      <mesh
+        position={[
+          0.63,
+          1.1,
+          0.08,
+        ]}
+      >
+        <sphereGeometry
+          args={[
+            0.06,
+            10,
+            10,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#dbddd8"
+          metalness={0.62}
+          roughness={0.28}
+        />
+      </mesh>
     </group>
   )
 }
@@ -585,34 +794,34 @@ function RestroomCabinet() {
     <group>
       <RoundedBox
         args={[
-          4.15,
-          2.75,
-          0.28,
+          4.95,
+          3,
+          0.3,
         ]}
-        radius={0.07}
+        radius={0.075}
         smoothness={2}
         position={[
           0,
-          1.37,
-          -0.09,
+          1.5,
+          -0.1,
         ]}
       >
         <meshStandardMaterial
-          color="#d8dad5"
-          roughness={0.82}
+          color="#dadcd7"
+          roughness={0.84}
         />
       </RoundedBox>
 
 
       <RestroomDoor
-        x={-0.92}
+        x={-1.08}
         gender="woman"
         label="FEMMES"
       />
 
 
       <RestroomDoor
-        x={0.92}
+        x={1.08}
         gender="man"
         label="HOMMES"
       />
@@ -620,20 +829,20 @@ function RestroomCabinet() {
 
       <RoundedBox
         args={[
-          2.25,
-          0.58,
-          0.07,
+          3.15,
+          0.68,
+          0.075,
         ]}
         radius={0.06}
         smoothness={2}
         position={[
           0,
-          3.05,
+          3.34,
           0,
         ]}
       >
         <meshStandardMaterial
-          color="#f3f3ee"
+          color="#f5f5f0"
           roughness={0.82}
         />
       </RoundedBox>
@@ -642,10 +851,10 @@ function RestroomCabinet() {
       <Text
         position={[
           0,
-          3.05,
+          3.34,
           0.045,
         ]}
-        fontSize={0.38}
+        fontSize={0.46}
         color="#191b1a"
         anchorX="center"
         anchorY="middle"
@@ -657,266 +866,90 @@ function RestroomCabinet() {
 }
 
 
-function WaterDispenser() {
+function PausePlaque() {
   return (
-    <group>
+    <group
+      position={[
+        -9.62,
+        2.55,
+        3.05,
+      ]}
+      rotation-y={
+        Math.PI / 2
+      }
+    >
+      {/* Quiet blue-grey frame ties the plaque to the WC doors */}
+
       <RoundedBox
         args={[
-          0.72,
-          1.45,
-          0.62,
+          4.45,
+          0.9,
+          0.12,
         ]}
-        radius={0.08}
+        radius={0.1}
         smoothness={2}
         position={[
           0,
-          0.72,
           0,
+          -0.035,
         ]}
       >
         <meshStandardMaterial
-          color="#d6d8d4"
+          color="#516775"
           roughness={0.72}
         />
       </RoundedBox>
 
 
-      <mesh
-        position={[
-          0,
-          1.65,
-          0,
-        ]}
-      >
-        <cylinderGeometry
-          args={[
-            0.24,
-            0.2,
-            0.62,
-            14,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#9ebcc4"
-          transparent
-          opacity={0.72}
-          roughness={0.2}
-        />
-      </mesh>
-    </group>
-  )
-}
-
-
-function Plant() {
-  return (
-    <group>
-      <mesh
-        position={[
-          0,
-          0.3,
-          0,
-        ]}
-      >
-        <cylinderGeometry
-          args={[
-            0.34,
-            0.26,
-            0.6,
-            12,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#755b47"
-          roughness={0.86}
-        />
-      </mesh>
-
-
-      <mesh
-        position={[
-          0,
-          0.95,
-          0,
-        ]}
-      >
-        <cylinderGeometry
-          args={[
-            0.045,
-            0.055,
-            0.95,
-            8,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#455e40"
-          roughness={0.8}
-        />
-      </mesh>
-
-
-      {[
-        [-0.24, 1.2],
-        [0.22, 1.38],
-        [-0.2, 1.55],
-        [0.18, 1.72],
-      ].map(
-        (
-          [
-            x,
-            y,
-          ],
-          index,
-        ) => (
-          <mesh
-            key={index}
-            position={[
-              x,
-              y,
-              0,
-            ]}
-            scale={[
-              1,
-              0.65,
-              0.7,
-            ]}
-          >
-            <sphereGeometry
-              args={[
-                0.28,
-                9,
-                7,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color={
-                index % 2 ===
-                0
-                  ? '#58714c'
-                  : '#49643f'
-              }
-              roughness={0.82}
-            />
-          </mesh>
-        ),
-      )}
-    </group>
-  )
-}
-
-
-function BreakAreaSign() {
-  return (
-    <group
-      position={[
-        2.7,
-        0,
-        3.55,
-      ]}
-    >
-      {/* Supports */}
-
-      {[
-        -2.45,
-        2.45,
-      ].map(
-        (x) => (
-          <mesh
-            key={x}
-            position={[
-              x,
-              1.65,
-              0,
-            ]}
-          >
-            <boxGeometry
-              args={[
-                0.07,
-                3.3,
-                0.07,
-              ]}
-            />
-
-            <meshStandardMaterial
-              color="#383e3a"
-              metalness={0.3}
-              roughness={0.5}
-            />
-          </mesh>
-        ),
-      )}
-
-
-      {/* White industrial sign */}
+      {/* Warm off-white face */}
 
       <RoundedBox
         args={[
-          5.4,
-          0.92,
-          0.12,
+          4.18,
+          0.7,
+          0.075,
         ]}
-        radius={0.1}
-        smoothness={3}
+        radius={0.08}
+        smoothness={2}
+      >
+        <meshStandardMaterial
+          color="#eee9dd"
+          roughness={0.82}
+        />
+      </RoundedBox>
+
+
+      {/* Small SOMACA-yellow identity accent */}
+
+      <RoundedBox
+        args={[
+          0.09,
+          0.48,
+          0.08,
+        ]}
+        radius={0.025}
+        smoothness={2}
         position={[
+          -1.82,
           0,
-          2.7,
-          0,
+          0.045,
         ]}
       >
         <meshStandardMaterial
-          color="#f3f4ef"
-          emissive="#f3f4ef"
-          emissiveIntensity={0.12}
+          color="#c99d25"
           roughness={0.7}
         />
       </RoundedBox>
 
 
-      {/* Restrained green LED accents */}
-
-      {[
-        -2.53,
-        2.53,
-      ].map(
-        (x) => (
-          <RoundedBox
-            key={x}
-            args={[
-              0.08,
-              0.78,
-              0.15,
-            ]}
-            radius={0.03}
-            smoothness={2}
-            position={[
-              x,
-              2.7,
-              0.07,
-            ]}
-          >
-            <meshStandardMaterial
-              color="#4b8b65"
-              emissive="#4b8b65"
-              emissiveIntensity={0.75}
-              toneMapped={false}
-            />
-          </RoundedBox>
-        ),
-      )}
-
-
       <Text
         position={[
+          0.12,
           0,
-          2.7,
-          0.075,
+          0.048,
         ]}
-        fontSize={0.43}
-        color="#202321"
+        fontSize={0.38}
+        color="#303532"
         anchorX="center"
         anchorY="middle"
       >
@@ -927,6 +960,26 @@ function BreakAreaSign() {
 }
 
 
+function localPosition(
+  x: number,
+  z: number,
+): [
+  number,
+  number,
+  number,
+] {
+  return [
+    x -
+      AMENITIES_POSITION[0],
+
+    0,
+
+    z -
+      AMENITIES_POSITION[2],
+  ]
+}
+
+
 export function WorkerAmenities() {
   return (
     <group
@@ -934,40 +987,37 @@ export function WorkerAmenities() {
         AMENITIES_POSITION
       }
     >
-      {/* Neutral local floor */}
+      {/* Warm neutral floor, visually distinct but quiet */}
 
       <mesh
         position={[
-          0,
+          0.5,
           0.024,
           0,
         ]}
       >
         <boxGeometry
           args={[
-            17,
+            15.5,
             0.018,
-            9,
+            8.4,
           ]}
         />
 
         <meshStandardMaterial
-          color="#aaada8"
-          roughness={0.94}
+          color="#b8b4aa"
+          roughness={0.95}
         />
       </mesh>
 
 
-      {/*
-       * WC sits close to the exterior left wall.
-       * Rotating it makes the blue doors face
-       * inward toward the factory.
-       */}
+      {/* WC tight to the perimeter wall, doors facing inward */}
+
       <group
         position={[
-          -7,
+          -8.72,
           0,
-          1.6,
+          0.35,
         ]}
         rotation-y={
           Math.PI / 2
@@ -977,65 +1027,78 @@ export function WorkerAmenities() {
       </group>
 
 
-      {/* Rest area — intentionally separated from WC */}
+      {/* Subtle wall identification — no standing sign, no LEDs */}
+
+      <PausePlaque />
+
+
+      {/* Table A */}
 
       <BreakTable
-        position={[
-          -1.5,
-          0,
-          0,
-        ]}
+        position={
+          localPosition(
+            -40.5,
+            -28.45,
+          )
+        }
       />
 
 
       <group
-        position={[
-          -1.5,
-          0,
-          0,
-        ]}
+        position={
+          localPosition(
+            -40.5,
+            -28.45,
+          )
+        }
       >
-        <Tray />
+        <CoffeeTray />
       </group>
 
 
+      {/* Table B */}
+
       <BreakTable
-        position={[
-          2.5,
-          0,
-          0,
-        ]}
+        position={
+          localPosition(
+            -35.5,
+            -28.45,
+          )
+        }
       />
 
 
-      {/* Active break chairs */}
+      {/* Active chairs — exact shared coordinates */}
 
       <Chair
-        position={[
-          -1.5,
-          0,
-          -1.35,
-        ]}
+        position={
+          localPosition(
+            BREAK_CHAIRS[0].x,
+            BREAK_CHAIRS[0].z,
+          )
+        }
       />
 
 
       <Chair
-        position={[
-          2.5,
-          0,
-          -1.35,
-        ]}
+        position={
+          localPosition(
+            BREAK_CHAIRS[1].x,
+            BREAK_CHAIRS[1].z,
+          )
+        }
       />
 
 
-      {/* Additional available chairs */}
+      {/* Additional chairs on the opposite side */}
 
       <Chair
-        position={[
-          -1.5,
-          0,
-          1.35,
-        ]}
+        position={
+          localPosition(
+            -40.5,
+            -26.85,
+          )
+        }
         rotation={
           Math.PI
         }
@@ -1043,11 +1106,12 @@ export function WorkerAmenities() {
 
 
       <Chair
-        position={[
-          2.5,
-          0,
-          1.35,
-        ]}
+        position={
+          localPosition(
+            -35.5,
+            -26.85,
+          )
+        }
         rotation={
           Math.PI
         }
@@ -1055,28 +1119,29 @@ export function WorkerAmenities() {
 
 
       <group
-        position={[
-          5,
-          0,
-          -2.4,
-        ]}
+        position={
+          localPosition(
+            -32.75,
+            -30.8,
+          )
+        }
       >
         <WaterDispenser />
       </group>
 
 
+      {/* Plant remains in the quiet far corner */}
+
       <group
-        position={[
-          5,
-          0,
-          2.25,
-        ]}
+        position={
+          localPosition(
+            -32.6,
+            -25.7,
+          )
+        }
       >
         <Plant />
       </group>
-
-
-      <BreakAreaSign />
     </group>
   )
 }

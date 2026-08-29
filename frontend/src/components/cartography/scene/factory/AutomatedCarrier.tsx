@@ -30,6 +30,10 @@ import type {
   LogisticsPhase,
 } from './data/logisticsCycle'
 
+import {
+  ProtectedFloorLabel,
+} from '../markings/ProtectedFloorLabel'
+
 
 function PayloadWheel({
   position,
@@ -173,9 +177,9 @@ export function AutomatedCarrier() {
 
   const moving =
     phase ===
-      'outbound' ||
+    'outbound' ||
     phase ===
-      'return'
+    'return'
 
 
   const routePoints =
@@ -214,46 +218,28 @@ export function AutomatedCarrier() {
       />
 
 
-      <Text
+      <ProtectedFloorLabel
         position={[
           LOGISTICS_PICKUP_POSITION[0],
-          0.07,
+          0,
           LOGISTICS_PICKUP_POSITION[1] -
           1.7,
         ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.32}
-        color="#353a37"
-        anchorX="center"
-        anchorY="middle"
-      >
-        CHARGEMENT ROUES
-      </Text>
+        text="CHARGEMENT ROUES"
+        width={4.8}
+      />
 
 
-      <Text
+      <ProtectedFloorLabel
         position={[
           LOGISTICS_DELIVERY_POSITION[0],
-          0.07,
+          0,
           LOGISTICS_DELIVERY_POSITION[1] -
           1.55,
         ]}
-        rotation={[
-          -Math.PI / 2,
-          0,
-          0,
-        ]}
-        fontSize={0.32}
-        color="#353a37"
-        anchorX="center"
-        anchorY="middle"
-      >
-        LIVRAISON ROUES
-      </Text>
+        text="LIVRAISON ROUES"
+        width={4.5}
+      />
 
 
       <group
@@ -401,7 +387,7 @@ export function AutomatedCarrier() {
             index,
           ) =>
             index <
-            visibleWheelCount ? (
+              visibleWheelCount ? (
               <PayloadWheel
                 key={index}
                 position={position}

@@ -23,6 +23,10 @@ import {
 } from './markings/PedestrianPath'
 
 import {
+  SecondaryPedestrianPath,
+} from './markings/SecondaryPedestrianPath'
+
+import {
   RestrictedZone,
 } from './markings/RestrictedZone'
 
@@ -107,9 +111,6 @@ import {
   WorkerAmenities,
 } from './factory/WorkerAmenities'
 
-import {
-  CentralSafetyCell,
-} from './factory/CentralSafetyCell'
 
 import {
   SeatAutomatedCarrier,
@@ -394,7 +395,6 @@ export function MontageLayout({
 
       <WorkerAmenities />
 
-      <CentralSafetyCell />
 
       <FireSafetyStations />
 
@@ -434,68 +434,32 @@ export function MontageLayout({
         length={40}
       />
 
-      {/* Employee access to WC / break area */}
+      {/* Secondary employee route to ENTRÉE amenities */}
 
-      {/* Employee route to ENTRÉE amenities */}
-
-      <PedestrianPath
+      <SecondaryPedestrianPath
         position={[
           -20,
           0.027,
-          -22,
+          -21.5,
         ]}
-        length={12}
-        width={0.82}
+        length={11}
+        width={1.05}
         rotation={
           Math.PI / 2
         }
       />
 
 
-      <PedestrianPath
+      <SecondaryPedestrianPath
         position={[
-          -29.5,
+          -25.5,
           0.027,
-          -28,
+          -27,
         ]}
-        length={19}
-        width={0.82}
+        length={11}
+        width={1.05}
       />
 
-
-      <PedestrianPath
-        position={[
-          -39,
-          0.027,
-          -29.2,
-        ]}
-        length={2.4}
-        width={0.82}
-        rotation={
-          Math.PI / 2
-        }
-      />
-
-
-      {/*
- * ONE controlled pedestrian spur to the
- * central meeting room.
- *
- * Thin white only 
- */}
-
-      <PedestrianPath
-        position={[
-          0,
-          0.028,
-          9,
-        ]}
-        length={13}
-        width={0.42}
-        rotation={
-          Math.PI / 2
-        }
-      />
 
       {/* Office / manager route */}
 
@@ -693,13 +657,11 @@ export function MontageLayout({
 
       <FactoryWorker
         position={[
-          54.7,
+          54.8,
           0,
-          23.7,
+          21.4,
         ]}
-        rotation={
-          Math.PI / 2
-        }
+        rotation={0}
         gender="woman"
         role="seat-stock"
         phaseOffset={2.1}
@@ -712,7 +674,7 @@ export function MontageLayout({
 
       <FactoryWorker
         position={[
-          22.1,
+          20.6,
           0,
           4.2,
         ]}

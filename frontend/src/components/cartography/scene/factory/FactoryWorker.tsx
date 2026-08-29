@@ -107,6 +107,20 @@ function smoothStep(
   )
 }
 
+function lerp(
+  start: number,
+  end: number,
+  progress: number,
+) {
+  return (
+    start +
+    (
+      end -
+      start
+    ) *
+    progress
+  )
+}
 
 function normalizeAngle(
   value: number,
@@ -139,14 +153,21 @@ function worldDeltaToLocal(
   dz: number,
   baseRotation: number,
 ) {
+  /*
+   * Inverse of the parent group's Y rotation.
+   *
+   * This is the critical correction that keeps
+   * workers on their world-space pedestrian route
+   * even when their workstation group is rotated.
+   */
   const cos =
     Math.cos(
-      -baseRotation,
+      baseRotation,
     )
 
   const sin =
     Math.sin(
-      -baseRotation,
+      baseRotation,
     )
 
 
@@ -361,25 +382,52 @@ function HandSeat() {
 }
 
 
-function WaterGlass() {
+function CoffeeCup() {
   return (
-    <mesh>
-      <cylinderGeometry
-        args={[
-          0.055,
-          0.045,
-          0.16,
-          10,
-        ]}
-      />
+    <group>
+      <mesh>
+        <cylinderGeometry
+          args={[
+            0.06,
+            0.052,
+            0.15,
+            10,
+          ]}
+        />
 
-      <meshStandardMaterial
-        color="#cbd3d1"
-        transparent
-        opacity={0.72}
-        roughness={0.15}
-      />
-    </mesh>
+        <meshStandardMaterial
+          color="#ece7dc"
+          roughness={0.5}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          0.07,
+          0,
+          0,
+        ]}
+        rotation-y={
+          Math.PI / 2
+        }
+      >
+        <torusGeometry
+          args={[
+            0.045,
+            0.012,
+            6,
+            10,
+            Math.PI,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#ece7dc"
+          roughness={0.5}
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -483,6 +531,12 @@ export function FactoryWorker({
   const head =
     useRef<Group>(null)
 
+  const leftLeg =
+    useRef<Group>(null)
+
+  const rightLeg =
+    useRef<Group>(null)
+
   const helmet =
     useRef<Group>(null)
 
@@ -517,12 +571,24 @@ export function FactoryWorker({
       null,
     )
 
+  const breakHoldSeconds =
+    useRef(0)
+
+
+  const yieldOffset =
+    useRef(0)
+
   useFrame(
-    (state) => {
+    (
+      state,
+      delta,
+    ) => {
       if (
         !root.current ||
         !torso.current ||
         !head.current ||
+        !leftLeg.current ||
+        !rightLeg.current ||
         !helmet.current ||
         !leftArm.current ||
         !rightArm.current ||
@@ -548,6 +614,12 @@ export function FactoryWorker({
       )
 
       root.current.rotation.y = 0
+
+      leftLeg.current.rotation.x = 0
+      rightLeg.current.rotation.x = 0
+
+      leftLeg.current.rotation.z = 0
+      rightLeg.current.rotation.z = 0
 
 
       torso.current.rotation.x = 0
@@ -876,57 +948,228 @@ export function FactoryWorker({
           )
 
 
-        roleBusy =
+        const load =
+          logistics.loadProgress
+
+
+        const active =
           logistics.phase ===
-          'pickup'
+          'pickup' &&
+          load >
+          0
+
+
+        roleBusy =
+          active
 
 
         if (
-          logistics.phase ===
-          'pickup'
+          active
         ) {
-          const load =
-            logistics.loadProgress
+          const homeX =
+            position[0]
+
+          const homeZ =
+            position[2]
 
 
-          const agvWorldYaw =
-            Math.atan2(
-              logistics.x -
+          /*
+           * Safe handling point beside,
+           * not inside, the first rack.
+           */
+          const rackX =
+            55.25
+
+          const rackZ =
+            22.85
+
+
+          /*
+           * Stop 1.4 m away from AGV centre.
+           */
+          const handoffX =
+            55.85
+
+          const handoffZ =
+            21.65
+
+
+          let workerX =
+            homeX
+
+          let workerZ =
+            homeZ
+
+          let faceX =
+            56.4
+
+          let faceZ =
+            23.9
+
+
+          if (
+            load <
+            0.25
+          ) {
+            const progress =
+              smoothStep(
+                load /
+                0.25,
+              )
+
+
+            workerX =
+              lerp(
+                homeX,
+                rackX,
+                progress,
+              )
+
+            workerZ =
+              lerp(
+                homeZ,
+                rackZ,
+                progress,
+              )
+          } else if (
+            load <
+            0.66
+          ) {
+            const progress =
+              smoothStep(
+                (
+                  load -
+                  0.25
+                ) /
+                0.41,
+              )
+
+
+            workerX =
+              lerp(
+                rackX,
+                handoffX,
+                progress,
+              )
+
+            workerZ =
+              lerp(
+                rackZ,
+                handoffZ,
+                progress,
+              )
+
+
+            faceX =
+              logistics.x
+
+            faceZ =
+              logistics.z
+          } else if (
+            load <
+            0.82
+          ) {
+            workerX =
+              handoffX
+
+            workerZ =
+              handoffZ
+
+            faceX =
+              logistics.x
+
+            faceZ =
+              logistics.z
+          } else {
+            const progress =
+              smoothStep(
+                (
+                  load -
+                  0.82
+                ) /
+                0.18,
+              )
+
+
+            workerX =
+              lerp(
+                handoffX,
+                homeX,
+                progress,
+              )
+
+            workerZ =
+              lerp(
+                handoffZ,
+                homeZ,
+                progress,
+              )
+
+
+            faceX =
+              logistics.x
+
+            faceZ =
+              logistics.z
+          }
+
+
+          const movement =
+            worldDeltaToLocal(
+              workerX -
               position[0],
 
-              logistics.z -
+              workerZ -
               position[2],
+
+              rotation,
+            )
+
+
+          root.current.position.x =
+            movement.x
+
+          root.current.position.z =
+            movement.z
+
+
+          const desiredYaw =
+            Math.atan2(
+              faceX -
+              workerX,
+
+              faceZ -
+              workerZ,
             )
 
 
           root.current.rotation.y =
             normalizeAngle(
-              agvWorldYaw -
+              desiredYaw -
               rotation,
             )
 
 
           torso.current.rotation.x =
-            -0.12
+            -0.1
 
 
           leftArm.current.rotation.x =
-            -0.58 -
+            -0.62 -
             load *
-            0.24
-
+            0.18
 
           rightArm.current.rotation.x =
-            -0.58 -
+            -0.62 -
             load *
-            0.24
+            0.18
 
 
           leftForearm.current.rotation.x =
-            -0.68
+            -0.7
 
           rightForearm.current.rotation.x =
-            -0.68
+            -0.7
 
 
           if (
@@ -934,23 +1177,17 @@ export function FactoryWorker({
           ) {
             carriedSeat.current.visible =
               load >
-              0.1 &&
+              0.14 &&
               load <
-              0.72
+              0.76
           }
-
-
-          root.current.position.x =
-            smoothStep(
-              load,
-            ) *
-            0.42
         } else {
           head.current.rotation.y =
             Math.sin(
-              time * 0.35,
+              time *
+              0.35,
             ) *
-            0.16
+            0.12
         }
       }
 
@@ -983,98 +1220,200 @@ export function FactoryWorker({
             logistics.progress
 
 
+          const homeX =
+            position[0]
+
+          const homeZ =
+            position[2]
+
+
+          const receiveX =
+            20.9
+
+          const receiveZ =
+            4.2
+
+
+          const installX =
+            19.25
+
+          const installZ =
+            4.2
+
+
+          let workerX =
+            homeX
+
+          let workerZ =
+            homeZ
+
+
+          let faceX =
+            logistics.x
+
+          let faceZ =
+            logistics.z
+
+
           if (
             progress <
-            0.3
+            0.25
           ) {
-            const agvWorldYaw =
-              Math.atan2(
-                logistics.x -
-                position[0],
-
-                logistics.z -
-                position[2],
+            const amount =
+              smoothStep(
+                progress /
+                0.25,
               )
 
 
-            root.current.rotation.y =
-              normalizeAngle(
-                agvWorldYaw -
-                rotation,
+            workerX =
+              lerp(
+                homeX,
+                receiveX,
+                amount,
               )
 
-
-            leftArm.current.rotation.x =
-              -0.7
-
-            rightArm.current.rotation.x =
-              -0.7
-
-
-            leftForearm.current.rotation.x =
-              -0.74
-
-            rightForearm.current.rotation.x =
-              -0.74
+            workerZ =
+              lerp(
+                homeZ,
+                receiveZ,
+                amount,
+              )
           } else if (
             progress <
-            0.7
+            0.72
           ) {
-            root.current.position.x =
-              -0.45
-
-            root.current.position.z =
-              -0.32
-
-
-            root.current.rotation.y =
-              0.16
-
-
-            torso.current.rotation.x =
-              -0.15
+            const amount =
+              smoothStep(
+                (
+                  progress -
+                  0.25
+                ) /
+                0.47,
+              )
 
 
-            leftArm.current.rotation.x =
-              -0.88
+            workerX =
+              lerp(
+                receiveX,
+                installX,
+                amount,
+              )
 
-            rightArm.current.rotation.x =
-              -0.88
+            workerZ =
+              lerp(
+                receiveZ,
+                installZ,
+                amount,
+              )
 
 
-            leftForearm.current.rotation.x =
-              -0.8
+            faceX = 17
+            faceZ = 4.2
+          } else if (
+            progress <
+            0.9
+          ) {
+            workerX =
+              installX
 
-            rightForearm.current.rotation.x =
-              -0.8
+            workerZ =
+              installZ
+
+            faceX = 17
+            faceZ = 4.2
           } else {
-            root.current.position.x =
-              -0.72
-
-            root.current.position.z =
-              -0.46
-
-
-            torso.current.rotation.x =
-              -0.24
-
-            head.current.rotation.x =
-              -0.24
+            const amount =
+              smoothStep(
+                (
+                  progress -
+                  0.9
+                ) /
+                0.1,
+              )
 
 
-            leftArm.current.rotation.x =
-              -1.02
+            workerX =
+              lerp(
+                installX,
+                homeX,
+                amount,
+              )
 
-            rightArm.current.rotation.x =
-              -1.02
+            workerZ =
+              lerp(
+                installZ,
+                homeZ,
+                amount,
+              )
 
 
-            leftForearm.current.rotation.x =
-              -0.88
-
-            rightForearm.current.rotation.x =
-              -0.88
+            faceX = 17
+            faceZ = 4.2
           }
+
+
+          const movement =
+            worldDeltaToLocal(
+              workerX -
+              position[0],
+
+              workerZ -
+              position[2],
+
+              rotation,
+            )
+
+
+          root.current.position.x =
+            movement.x
+
+          root.current.position.z =
+            movement.z
+
+
+          const desiredYaw =
+            Math.atan2(
+              faceX -
+              workerX,
+
+              faceZ -
+              workerZ,
+            )
+
+
+          root.current.rotation.y =
+            normalizeAngle(
+              desiredYaw -
+              rotation,
+            )
+
+
+          torso.current.rotation.x =
+            progress >
+              0.58
+              ? -0.2
+              : -0.1
+
+
+          leftArm.current.rotation.x =
+            -0.72 -
+            Math.min(
+              progress,
+              0.8,
+            ) *
+            0.28
+
+
+          rightArm.current.rotation.x =
+            leftArm.current.rotation.x
+
+
+          leftForearm.current.rotation.x =
+            -0.78
+
+          rightForearm.current.rotation.x =
+            -0.78
 
 
           if (
@@ -1084,17 +1423,17 @@ export function FactoryWorker({
               progress >
               0.12 &&
               progress <
-              0.76
+              0.8
           }
         } else {
           head.current.rotation.y =
             Math.sin(
-              time * 0.28,
+              time *
+              0.28,
             ) *
-            0.14
+            0.12
         }
       }
-
 
       if (
         role ===
@@ -1380,7 +1719,11 @@ export function FactoryWorker({
         ) {
           breakStartedAt.current =
             elapsed
+          breakHoldSeconds.current =
+            0
 
+          yieldOffset.current =
+            0
           lastBreakRequest.current =
             request.key
         }
@@ -1390,15 +1733,89 @@ export function FactoryWorker({
           breakStartedAt.current !==
           null
         ) {
-          const breakElapsed =
+          let breakElapsed =
             elapsed -
-            breakStartedAt.current
+            breakStartedAt.current -
+            breakHoldSeconds.current
 
 
-          const breakState =
+          let breakState =
             sampleWorkerBreak(
               workerId,
               breakElapsed,
+            )
+
+
+          let managerConflict =
+            false
+
+
+          if (
+            breakState.walking &&
+            manager.walking
+          ) {
+            const dx =
+              breakState.x -
+              manager.x
+
+            const dz =
+              breakState.z -
+              manager.z
+
+
+            const distance =
+              Math.sqrt(
+                dx * dx +
+                dz * dz,
+              )
+
+
+            managerConflict =
+              distance <
+              1.5
+          }
+
+
+          if (
+            managerConflict
+          ) {
+            /*
+             * Manager has right of way.
+             * Freeze worker route progress while
+             * they step slightly aside.
+             */
+            breakHoldSeconds.current +=
+              delta
+
+
+            breakElapsed =
+              elapsed -
+              breakStartedAt.current -
+              breakHoldSeconds.current
+
+
+            breakState =
+              sampleWorkerBreak(
+                workerId,
+                breakElapsed,
+              )
+          }
+
+
+          const targetYieldOffset =
+            managerConflict
+              ? 0.34
+              : 0
+
+
+          yieldOffset.current +=
+            (
+              targetYieldOffset -
+              yieldOffset.current
+            ) *
+            Math.min(
+              1,
+              delta * 7,
             )
 
 
@@ -1407,13 +1824,55 @@ export function FactoryWorker({
           ) {
             breakStartedAt.current =
               null
+
+            breakHoldSeconds.current =
+              0
+
+            yieldOffset.current =
+              0
           } else {
-            const delta =
+            const sideX =
+              Math.cos(
+                breakState.yaw,
+              ) *
+              yieldOffset.current
+
+
+            const sideZ =
+              -Math.sin(
+                breakState.yaw,
+              ) *
+              yieldOffset.current
+
+
+            /*
+             * Final safety envelope:
+             * a break-route bug must never be able
+             * to send a worker through the walls.
+             */
+            const safeWorldX =
+              clamp(
+                breakState.x +
+                sideX,
+                -47.2,
+                76,
+              )
+
+            const safeWorldZ =
+              clamp(
+                breakState.z +
+                sideZ,
+                -36.5,
+                36.5,
+              )
+
+
+            const workerDelta =
               worldDeltaToLocal(
-                breakState.x -
+                safeWorldX -
                 position[0],
 
-                breakState.z -
+                safeWorldZ -
                 position[2],
 
                 rotation,
@@ -1421,10 +1880,10 @@ export function FactoryWorker({
 
 
             root.current.position.x =
-              delta.x
+              workerDelta.x
 
             root.current.position.z =
-              delta.z
+              workerDelta.z
 
 
             root.current.rotation.y =
@@ -1467,6 +1926,15 @@ export function FactoryWorker({
                 0.46
 
 
+              leftLeg.current.rotation.x =
+                -gait *
+                0.34
+
+              rightLeg.current.rotation.x =
+                gait *
+                0.34
+
+
               leftForearm.current.rotation.x =
                 -0.08
 
@@ -1489,38 +1957,72 @@ export function FactoryWorker({
                 ) *
                 0.035
             } else {
-              helmet.current.visible =
-                false
+              const seated =
+                breakState.seatProgress
 
 
+              /*
+               * The hip is 0.79 m above the worker root
+               * and the real chair seat is 0.48 m high.
+               * -0.31 therefore places the pelvis ON
+               * the chair instead of beside it.
+               */
               root.current.position.y =
-                -0.36
+                -0.35 *
+                seated
+
+
+              leftLeg.current.rotation.x =
+                -1.08 *
+                seated
+
+              rightLeg.current.rotation.x =
+                -1.08 *
+                seated
 
 
               torso.current.rotation.x =
-                0.08
+                0.08 *
+                seated
+
 
               head.current.rotation.x =
-                -0.03
+                -0.03 *
+                seated
 
 
               leftArm.current.rotation.x =
-                -0.38
+                -0.38 *
+                seated
 
               rightArm.current.rotation.x =
-                -0.42
+                -0.42 *
+                seated
 
 
               leftForearm.current.rotation.x =
-                -0.58
+                -0.58 *
+                seated
 
               rightForearm.current.rotation.x =
-                -0.58
+                -0.58 *
+                seated
+
+
+              /*
+               * Helmet comes off only after the worker
+               * has actually reached the chair.
+               */
+              helmet.current.visible =
+                seated <
+                0.72
 
 
               if (
                 breakState.stage ===
-                'drink'
+                  'drink' &&
+                seated >
+                  0.95
               ) {
                 rightArm.current.rotation.x =
                   -0.92
@@ -1538,7 +2040,10 @@ export function FactoryWorker({
                   drinkingGlass.current.visible =
                     true
                 }
-              } else {
+              } else if (
+                seated >
+                0.8
+              ) {
                 head.current.rotation.y =
                   Math.sin(
                     breakElapsed *
@@ -1605,56 +2110,98 @@ export function FactoryWorker({
     <group
       position={position}
       rotation-y={rotation}
-      scale={1.13}
     >
       <group ref={root}>
-        {[
-          -0.115,
-          0.115,
-        ].map(
-          (x) => (
-            <group
-              key={x}
-              position={[
-                x,
-                0,
-                0,
+        {/*
+         * IMPORTANT:
+         * movement lives at world scale 1.
+         * Only the visual body is enlarged.
+         * This prevents every route displacement
+         * from being multiplied by 1.13.
+         */}
+        <group scale={1.13}>
+        <group
+          ref={leftLeg}
+          position={[
+            -0.115,
+            0.79,
+            0,
+          ]}
+        >
+          <mesh
+            position={[
+              0,
+              -0.33,
+              0,
+            ]}
+            castShadow
+          >
+            <cylinderGeometry
+              args={[
+                0.085,
+                0.105,
+                0.72,
+                12,
               ]}
-            >
-              <mesh
-                position={[
-                  0,
-                  0.46,
-                  0,
-                ]}
-                castShadow
-              >
-                <cylinderGeometry
-                  args={[
-                    0.085,
-                    0.105,
-                    0.72,
-                    12,
-                  ]}
-                />
+            />
 
-                <meshStandardMaterial
-                  color={
-                    trousers
-                  }
-                />
-              </mesh>
+            <meshStandardMaterial
+              color={
+                trousers
+              }
+            />
+          </mesh>
 
-              <SafetyBoot
-                position={[
-                  0,
-                  0.095,
-                  0.075,
-                ]}
-              />
-            </group>
-          ),
-        )}
+          <SafetyBoot
+            position={[
+              0,
+              -0.695,
+              0.075,
+            ]}
+          />
+        </group>
+
+
+        <group
+          ref={rightLeg}
+          position={[
+            0.115,
+            0.79,
+            0,
+          ]}
+        >
+          <mesh
+            position={[
+              0,
+              -0.33,
+              0,
+            ]}
+            castShadow
+          >
+            <cylinderGeometry
+              args={[
+                0.085,
+                0.105,
+                0.72,
+                12,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color={
+                trousers
+              }
+            />
+          </mesh>
+
+          <SafetyBoot
+            position={[
+              0,
+              -0.695,
+              0.075,
+            ]}
+          />
+        </group>
 
 
         <RoundedBox
@@ -1929,7 +2476,7 @@ export function FactoryWorker({
                 false
               }
             >
-              <WaterGlass />
+              <CoffeeCup />
             </group>
           </group>
         </group>
@@ -2145,6 +2692,7 @@ export function FactoryWorker({
               />
             </mesh>
           </group>
+        </group>
         </group>
       </group>
     </group>
