@@ -436,14 +436,62 @@ export function MontageLayout({
 
       {/* Employee access to WC / break area */}
 
+      {/* Employee route to ENTRÉE amenities */}
+
       <PedestrianPath
         position={[
-          8,
+          -20,
           0.027,
-          25,
+          -22,
         ]}
         length={12}
-        width={1.05}
+        width={0.82}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+
+      <PedestrianPath
+        position={[
+          -29.5,
+          0.027,
+          -28,
+        ]}
+        length={19}
+        width={0.82}
+      />
+
+
+      <PedestrianPath
+        position={[
+          -39,
+          0.027,
+          -29.2,
+        ]}
+        length={2.4}
+        width={0.82}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+
+      {/*
+ * ONE controlled pedestrian spur to the
+ * central meeting room.
+ *
+ * Thin white only 
+ */}
+
+      <PedestrianPath
+        position={[
+          0,
+          0.028,
+          9,
+        ]}
+        length={13}
+        width={0.42}
         rotation={
           Math.PI / 2
         }

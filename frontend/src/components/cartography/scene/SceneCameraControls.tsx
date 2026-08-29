@@ -8,6 +8,7 @@ import {
 } from '@react-three/drei'
 
 import {
+  useFrame,
   useThree,
 } from '@react-three/fiber'
 
@@ -27,13 +28,24 @@ export type CameraAction =
   | 'zoom-in'
   | 'zoom-out'
   | 'reset'
+  | 'focus'
+
+
+export interface CameraCommand {
+  type: CameraAction
+
+  id: number
+
+  target?: [
+    number,
+    number,
+  ]
+}
 
 
 interface SceneCameraControlsProps {
-  command: {
-    type: CameraAction
-    id: number
-  }
+  command:
+    CameraCommand
 
   onZoomChange:
     (zoom: number) => void
@@ -64,18 +76,18 @@ const MAX_ZOOM = 195
 
 const ZOOM_STEP = 12
 
+const FOCUS_ZOOM = 158
 
-/*
- * Keep the useful factory in reach without
- * letting the target escape into dead space.
- */
-const TARGET_MIN_X = -40
+const FOCUS_DURATION = 0.65
 
-const TARGET_MAX_X = 64
 
-const TARGET_MIN_Z = -31
+const TARGET_MIN_X = -43
 
-const TARGET_MAX_Z = 32
+const TARGET_MAX_X = 67
+
+const TARGET_MIN_Z = -34
+
+const TARGET_MAX_Z = 33
 
 
 const DEFAULT_DISTANCE =
@@ -100,6 +112,23 @@ const MAX_DISTANCE =
   )
 
 
+interface FocusAnimation {
+  progress: number
+
+  startCamera:
+    Vector3
+
+  endCamera:
+    Vector3
+
+  startTarget:
+    Vector3
+
+  endTarget:
+    Vector3
+}
+
+
 function clamp(
   value: number,
   minimum: number,
@@ -111,6 +140,27 @@ function clamp(
       maximum,
       value,
     ),
+  )
+}
+
+
+function smoothStep(
+  value: number,
+) {
+  const t =
+    clamp(
+      value,
+      0,
+      1,
+    )
+
+  return (
+    t *
+    t *
+    (
+      3 -
+      2 * t
+    )
   )
 }
 
@@ -155,6 +205,28 @@ function zoomToDistance(
 }
 
 
+function safeTarget(
+  x: number,
+  z: number,
+) {
+  return new Vector3(
+    clamp(
+      x,
+      TARGET_MIN_X,
+      TARGET_MAX_X,
+    ),
+
+    0,
+
+    clamp(
+      z,
+      TARGET_MIN_Z,
+      TARGET_MAX_Z,
+    ),
+  )
+}
+
+
 function constrainView(
   cameraPosition:
     Vector3,
@@ -162,43 +234,28 @@ function constrainView(
   target:
     Vector3,
 ) {
-  const safeX =
-    clamp(
+  const safe =
+    safeTarget(
       target.x,
-      TARGET_MIN_X,
-      TARGET_MAX_X,
-    )
-
-
-  const safeZ =
-    clamp(
       target.z,
-      TARGET_MIN_Z,
-      TARGET_MAX_Z,
     )
 
 
   const correctionX =
-    safeX -
+    safe.x -
     target.x
 
 
   const correctionZ =
-    safeZ -
+    safe.z -
     target.z
 
 
-  target.set(
-    safeX,
-    0,
-    safeZ,
+  target.copy(
+    safe,
   )
 
 
-  /*
-   * Correct camera and target together.
-   * This preserves the current viewing angle.
-   */
   cameraPosition.x +=
     correctionX
 
@@ -217,6 +274,12 @@ export function SceneCameraControls({
     )
 
 
+  const focusAnimation =
+    useRef<FocusAnimation | null>(
+      null,
+    )
+
+
   const camera =
     useThree(
       (state) =>
@@ -226,7 +289,8 @@ export function SceneCameraControls({
 
   function handleChange() {
     if (
-      !controls.current
+      !controls.current ||
+      focusAnimation.current
     ) {
       return
     }
@@ -234,21 +298,90 @@ export function SceneCameraControls({
 
     constrainView(
       camera.position,
-
       controls.current.target,
     )
 
 
     onZoomChange(
       distanceToZoom(
-        camera.position
-          .distanceTo(
-            controls.current
-              .target,
-          ),
+        camera.position.distanceTo(
+          controls.current.target,
+        ),
       ),
     )
   }
+
+
+  useFrame(
+    (
+      _state,
+      delta,
+    ) => {
+      if (
+        !controls.current ||
+        !focusAnimation.current
+      ) {
+        return
+      }
+
+
+      const animation =
+        focusAnimation.current
+
+
+      animation.progress =
+        Math.min(
+          1,
+          animation.progress +
+          delta /
+          FOCUS_DURATION,
+        )
+
+
+      const progress =
+        smoothStep(
+          animation.progress,
+        )
+
+
+      camera.position.lerpVectors(
+        animation.startCamera,
+        animation.endCamera,
+        progress,
+      )
+
+
+      controls.current.target.lerpVectors(
+        animation.startTarget,
+        animation.endTarget,
+        progress,
+      )
+
+
+      controls.current.update()
+
+
+      onZoomChange(
+        distanceToZoom(
+          camera.position.distanceTo(
+            controls.current.target,
+          ),
+        ),
+      )
+
+
+      if (
+        animation.progress >=
+        1
+      ) {
+        focusAnimation.current =
+          null
+
+        controls.current.enabled =
+          true
+      }
+    },
+  )
 
 
   useEffect(() => {
@@ -257,21 +390,17 @@ export function SceneCameraControls({
     ) {
       constrainView(
         camera.position,
-
-        controls.current
-          .target,
+        controls.current.target,
       )
     }
 
 
     onZoomChange(
       distanceToZoom(
-        camera.position
-          .distanceTo(
-            controls.current
-              ?.target ??
-            DEFAULT_TARGET,
-          ),
+        camera.position.distanceTo(
+          controls.current?.target ??
+          DEFAULT_TARGET,
+        ),
       ),
     )
   }, [])
@@ -293,8 +422,15 @@ export function SceneCameraControls({
 
     if (
       command.type ===
-      'reset'
+        'reset'
     ) {
+      focusAnimation.current =
+        null
+
+      controls.current.enabled =
+        true
+
+
       camera.position.copy(
         DEFAULT_POSITION,
       )
@@ -313,6 +449,66 @@ export function SceneCameraControls({
     }
 
 
+    if (
+      command.type ===
+        'focus' &&
+      command.target
+    ) {
+      const endTarget =
+        safeTarget(
+          command.target[0],
+          command.target[1],
+        )
+
+
+      const direction =
+        camera.position
+          .clone()
+          .sub(
+            target,
+          )
+          .normalize()
+
+
+      /*
+       * Keep the user's current viewing direction
+       * while moving to a comfortable inspection
+       * distance around the double-clicked point.
+       */
+      const endCamera =
+        endTarget
+          .clone()
+          .add(
+            direction.multiplyScalar(
+              zoomToDistance(
+                FOCUS_ZOOM,
+              ),
+            ),
+          )
+
+
+      focusAnimation.current = {
+        progress: 0,
+
+        startCamera:
+          camera.position.clone(),
+
+        endCamera,
+
+        startTarget:
+          target.clone(),
+
+        endTarget,
+      }
+
+
+      controls.current.enabled =
+        false
+
+      return
+    }
+
+
     constrainView(
       camera.position,
       target,
@@ -321,10 +517,9 @@ export function SceneCameraControls({
 
     const currentZoom =
       distanceToZoom(
-        camera.position
-          .distanceTo(
-            target,
-          ),
+        camera.position.distanceTo(
+          target,
+        ),
       )
 
 
@@ -358,12 +553,11 @@ export function SceneCameraControls({
         target,
       )
       .add(
-        direction
-          .multiplyScalar(
-            zoomToDistance(
-              nextZoom,
-            ),
+        direction.multiplyScalar(
+          zoomToDistance(
+            nextZoom,
           ),
+        ),
       )
 
 
@@ -390,13 +584,6 @@ export function SceneCameraControls({
       enablePan
       enableRotate
 
-      /*
-       * Laptop/touchpad-friendly controls:
-       *
-       * left drag  = rotate / change elevation
-       * right drag = move the map
-       * wheel      = zoom
-       */
       mouseButtons={{
         LEFT:
           MOUSE.ROTATE,
@@ -432,11 +619,6 @@ export function SceneCameraControls({
         MAX_DISTANCE
       }
 
-      /*
-       * Enough vertical freedom to inspect
-       * the factory without reaching a
-       * ground-level or upside-down view.
-       */
       minPolarAngle={0.26}
 
       maxPolarAngle={1.24}

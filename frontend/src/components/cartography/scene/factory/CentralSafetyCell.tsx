@@ -4,46 +4,70 @@ import {
 } from '@react-three/drei'
 
 
-export function CentralSafetyCell() {
+function MeetingChair({
+  position,
+  rotation,
+}: {
+  position: [
+    number,
+    number,
+    number,
+  ]
+
+  rotation: number
+}) {
   return (
     <group
-      position={[
-        0,
-        0,
-        0,
-      ]}
+      position={position}
+      rotation-y={rotation}
     >
-      {/* Floor */}
-
-      <mesh
+      <RoundedBox
+        args={[
+          0.65,
+          0.12,
+          0.65,
+        ]}
+        radius={0.05}
+        smoothness={2}
         position={[
           0,
-          0.026,
+          0.47,
           0,
         ]}
       >
-        <boxGeometry
-          args={[
-            5.8,
-            0.02,
-            4,
-          ]}
-        />
-
         <meshStandardMaterial
-          color="#9ea29e"
-          roughness={0.88}
+          color="#454a47"
+          roughness={0.74}
         />
-      </mesh>
+      </RoundedBox>
 
 
-      {/* Corner frame */}
+      <RoundedBox
+        args={[
+          0.65,
+          0.76,
+          0.1,
+        ]}
+        radius={0.04}
+        smoothness={2}
+        position={[
+          0,
+          0.88,
+          -0.29,
+        ]}
+      >
+        <meshStandardMaterial
+          color="#3f4541"
+          roughness={0.74}
+        />
+      </RoundedBox>
+
 
       {[
-        [-2.85, -1.95],
-        [-2.85, 1.95],
-        [2.85, -1.95],
-        [2.85, 1.95],
+        [-0.23, -0.23],
+        [-0.23, 0.23],
+        [0.23, -0.23],
+        [0.23, 0.23],
       ].map(
         (
           [
@@ -56,21 +80,92 @@ export function CentralSafetyCell() {
             key={index}
             position={[
               x,
-              1.4,
+              0.23,
               z,
             ]}
           >
             <boxGeometry
               args={[
-                0.11,
-                2.8,
-                0.11,
+                0.045,
+                0.46,
+                0.045,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#353a37"
+              metalness={0.32}
+              roughness={0.5}
+            />
+          </mesh>
+        ),
+      )}
+    </group>
+  )
+}
+
+
+export function CentralSafetyCell() {
+  return (
+    <group>
+      {/* Floor */}
+
+      <mesh
+        position={[
+          0,
+          0.026,
+          0,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            6,
+            0.02,
+            4.6,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#a7aaa6"
+          roughness={0.88}
+        />
+      </mesh>
+
+
+      {/* Four graphite corner columns */}
+
+      {[
+        [-2.95, -2.25],
+        [-2.95, 2.25],
+        [2.95, -2.25],
+        [2.95, 2.25],
+      ].map(
+        (
+          [
+            x,
+            z,
+          ],
+          index,
+        ) => (
+          <mesh
+            key={index}
+            position={[
+              x,
+              1.45,
+              z,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                0.1,
+                2.9,
+                0.1,
               ]}
             />
 
             <meshStandardMaterial
               color="#3d4440"
-              metalness={0.42}
+              metalness={0.4}
               roughness={0.46}
             />
           </mesh>
@@ -81,127 +176,111 @@ export function CentralSafetyCell() {
       {/* Side glass */}
 
       {[
-        -2.82,
-        2.82,
+        -2.92,
+        2.92,
       ].map(
         (x) => (
           <mesh
             key={x}
             position={[
               x,
-              1.4,
+              1.45,
               0,
             ]}
           >
             <boxGeometry
               args={[
-                0.055,
-                2.7,
-                3.8,
+                0.045,
+                2.8,
+                4.35,
               ]}
             />
 
             <meshStandardMaterial
-              color="#c5d4d4"
+              color="#d2dddd"
               transparent
-              opacity={0.3}
-              roughness={0.16}
+              opacity={0.22}
+              roughness={0.12}
             />
           </mesh>
         ),
       )}
 
 
-      {/* Rear glass */}
+      {/* Rear wall glass */}
 
       <mesh
         position={[
           0,
-          1.4,
-          -1.92,
+          1.45,
+          -2.22,
         ]}
       >
         <boxGeometry
           args={[
-            5.65,
-            2.7,
-            0.055,
+            5.8,
+            2.8,
+            0.045,
           ]}
         />
 
         <meshStandardMaterial
-          color="#c5d4d4"
+          color="#d2dddd"
           transparent
-          opacity={0.3}
-          roughness={0.16}
+          opacity={0.22}
+          roughness={0.12}
         />
       </mesh>
 
 
-      {/* Front glass with a visible entrance gap */}
+      {/* Front glass — central door gap */}
 
-      <mesh
-        position={[
-          -1.55,
-          1.4,
-          1.92,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            2.55,
-            2.7,
-            0.055,
-          ]}
-        />
+      {[
+        -1.85,
+        1.85,
+      ].map(
+        (x) => (
+          <mesh
+            key={x}
+            position={[
+              x,
+              1.45,
+              2.22,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                2.05,
+                2.8,
+                0.045,
+              ]}
+            />
 
-        <meshStandardMaterial
-          color="#c5d4d4"
-          transparent
-          opacity={0.3}
-          roughness={0.16}
-        />
-      </mesh>
-
-
-      <mesh
-        position={[
-          1.55,
-          1.4,
-          1.92,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            2.55,
-            2.7,
-            0.055,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#c5d4d4"
-          transparent
-          opacity={0.3}
-          roughness={0.16}
-        />
-      </mesh>
+            <meshStandardMaterial
+              color="#d2dddd"
+              transparent
+              opacity={0.22}
+              roughness={0.12}
+            />
+          </mesh>
+        ),
+      )}
 
 
-      {/* Strong readable room sign */}
+      {/* Meeting room label */}
 
       <RoundedBox
         args={[
-          4.3,
-          0.58,
-          0.09,
+          4.8,
+          0.56,
+          0.1,
         ]}
         radius={0.06}
         smoothness={2}
         position={[
           0,
-          2.48,
-          1.98,
+          2.56,
+          2.3,
         ]}
       >
         <meshStandardMaterial
@@ -214,39 +293,134 @@ export function CentralSafetyCell() {
       <Text
         position={[
           0,
-          2.48,
-          2.04,
+          2.56,
+          2.36,
         ]}
-        fontSize={0.31}
+        fontSize={0.29}
         color="#f3f3ed"
         anchorX="center"
         anchorY="middle"
       >
-        SUPERVISION UET
+        SALLE DE RÉUNION UET
       </Text>
 
 
-      {/* KPI display */}
+      {/* Round meeting table */}
+
+      <mesh
+        position={[
+          0,
+          0.78,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            1.15,
+            1.15,
+            0.14,
+            28,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#765a40"
+          roughness={0.7}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          0,
+          0.39,
+          0,
+        ]}
+      >
+        <cylinderGeometry
+          args={[
+            0.18,
+            0.34,
+            0.78,
+            14,
+          ]}
+        />
+
+        <meshStandardMaterial
+          color="#3c423e"
+          metalness={0.36}
+          roughness={0.48}
+        />
+      </mesh>
+
+
+      <MeetingChair
+        position={[
+          0,
+          0,
+          1.55,
+        ]}
+        rotation={
+          Math.PI
+        }
+      />
+
+
+      <MeetingChair
+        position={[
+          0,
+          0,
+          -1.55,
+        ]}
+        rotation={0}
+      />
+
+
+      <MeetingChair
+        position={[
+          -1.55,
+          0,
+          0,
+        ]}
+        rotation={
+          Math.PI / 2
+        }
+      />
+
+
+      <MeetingChair
+        position={[
+          1.55,
+          0,
+          0,
+        ]}
+        rotation={
+          -Math.PI / 2
+        }
+      />
+
+
+      {/* Small production planning screen */}
 
       <group
         position={[
           0,
-          1.62,
-          -1.9,
+          1.55,
+          -2.2,
         ]}
       >
         <RoundedBox
           args={[
-            3.9,
-            1.45,
-            0.12,
+            2.65,
+            1.05,
+            0.1,
           ]}
-          radius={0.08}
+          radius={0.07}
           smoothness={2}
         >
           <meshStandardMaterial
-            color="#202522"
-            roughness={0.42}
+            color="#2d332f"
+            roughness={0.44}
           />
         </RoundedBox>
 
@@ -254,26 +428,26 @@ export function CentralSafetyCell() {
         <Text
           position={[
             0,
-            0.44,
-            0.07,
+            0.28,
+            0.06,
           ]}
-          fontSize={0.22}
+          fontSize={0.21}
           color="#f1f1eb"
           anchorX="center"
           anchorY="middle"
         >
-          PERFORMANCE PRODUCTION
+          POINT UET
         </Text>
 
 
         <Text
           position={[
-            -1.15,
-            0.02,
-            0.07,
+            0,
+            -0.05,
+            0.06,
           ]}
-          fontSize={0.2}
-          color="#76aa7f"
+          fontSize={0.18}
+          color="#79a784"
           anchorX="center"
           anchorY="middle"
         >
@@ -284,190 +458,17 @@ export function CentralSafetyCell() {
         <Text
           position={[
             0,
-            0.02,
-            0.07,
+            -0.31,
+            0.06,
           ]}
-          fontSize={0.2}
-          color="#d1aa34"
-          anchorX="center"
-          anchorY="middle"
-        >
-          OBJECTIF 97%
-        </Text>
-
-
-        <Text
-          position={[
-            1.2,
-            0.02,
-            0.07,
-          ]}
-          fontSize={0.2}
-          color="#79a784"
-          anchorX="center"
-          anchorY="middle"
-        >
-          DISP. 96%
-        </Text>
-
-
-        <Text
-          position={[
-            0,
-            -0.4,
-            0.07,
-          ]}
-          fontSize={0.18}
+          fontSize={0.16}
           color="#dedfd9"
           anchorX="center"
           anchorY="middle"
         >
-          PRODUCTION — OBJECTIFS TENUS
+          PRODUCTION • SÉCURITÉ • OBJECTIFS
         </Text>
       </group>
-
-
-      {/* Monitoring console */}
-
-      <group
-        position={[
-          0,
-          0,
-          0.45,
-        ]}
-      >
-        <RoundedBox
-          args={[
-            2.8,
-            0.18,
-            0.95,
-          ]}
-          radius={0.06}
-          smoothness={2}
-          position={[
-            0,
-            0.88,
-            0,
-          ]}
-        >
-          <meshStandardMaterial
-            color="#505652"
-            metalness={0.18}
-            roughness={0.62}
-          />
-        </RoundedBox>
-
-
-        {[
-          -1.05,
-          1.05,
-        ].map(
-          (x) => (
-            <mesh
-              key={x}
-              position={[
-                x,
-                0.43,
-                0,
-              ]}
-            >
-              <boxGeometry
-                args={[
-                  0.08,
-                  0.86,
-                  0.08,
-                ]}
-              />
-
-              <meshStandardMaterial
-                color="#3d4340"
-                metalness={0.38}
-                roughness={0.48}
-              />
-            </mesh>
-          ),
-        )}
-
-
-        {[
-          -0.65,
-          0.65,
-        ].map(
-          (x) => (
-            <group
-              key={x}
-              position={[
-                x,
-                1.28,
-                0,
-              ]}
-            >
-              <RoundedBox
-                args={[
-                  0.92,
-                  0.58,
-                  0.09,
-                ]}
-                radius={0.05}
-                smoothness={2}
-              >
-                <meshStandardMaterial
-                  color="#252b28"
-                  roughness={0.48}
-                />
-              </RoundedBox>
-
-
-              <mesh
-                position={[
-                  0,
-                  0,
-                  0.055,
-                ]}
-              >
-                <boxGeometry
-                  args={[
-                    0.72,
-                    0.4,
-                    0.015,
-                  ]}
-                />
-
-                <meshStandardMaterial
-                  color="#8da59b"
-                  emissive="#586e64"
-                  emissiveIntensity={0.34}
-                  roughness={0.3}
-                />
-              </mesh>
-            </group>
-          ),
-        )}
-      </group>
-
-
-      {/* Small wall cabinet */}
-
-      <RoundedBox
-        args={[
-          0.8,
-          1.35,
-          0.42,
-        ]}
-        radius={0.06}
-        smoothness={2}
-        position={[
-          2.18,
-          0.75,
-          -1.55,
-        ]}
-      >
-        <meshStandardMaterial
-          color="#676d69"
-          metalness={0.12}
-          roughness={0.66}
-        />
-      </RoundedBox>
     </group>
   )
 }

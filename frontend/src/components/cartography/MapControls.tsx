@@ -5,8 +5,11 @@ import {
 
 interface MapControlsProps {
   zoom: number
+
   onZoomIn:() => void
+
   onZoomOut:() => void
+
   onReset:() => void
 }
 
@@ -22,7 +25,6 @@ export function MapControls({
       className="map-controls"
       aria-label="Contrôles de la cartographie"
     >
-
       <button
         className="map-control-button"
         type="button"
@@ -65,7 +67,8 @@ export function MapControls({
         className="map-control-button"
         type="button"
         onClick={onReset}
-        aria-label="Recentrer"
+        aria-label="Vue générale"
+        title="Vue générale"
       >
         <Icon
           name="focus"
@@ -73,6 +76,49 @@ export function MapControls({
         />
       </button>
 
+
+      <span
+        className="map-controls__divider"
+      />
+
+
+      <span
+        style={{
+          display:
+            'inline-flex',
+
+          alignItems:
+            'center',
+
+          gap:
+            '6px',
+
+          padding:
+            '0 10px',
+
+          fontSize:
+            '10px',
+
+          fontWeight:
+            600,
+
+          letterSpacing:
+            '0.02em',
+
+          whiteSpace:
+            'nowrap',
+
+          color:
+            '#6d716e',
+        }}
+      >
+        <Icon
+          name="focus"
+          size={13}
+        />
+
+        Double-cliquez pour centrer
+      </span>
     </div>
   )
 }

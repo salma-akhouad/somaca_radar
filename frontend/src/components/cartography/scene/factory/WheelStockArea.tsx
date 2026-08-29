@@ -93,7 +93,10 @@ function WheelRack({
     ]
 }) {
     return (
-        <group position={position}>
+        <group 
+        position={position} 
+        scale={1.16}
+        >
             {[
                 -1.1,
                 1.1,
@@ -597,9 +600,9 @@ export function WheelStockArea() {
             >
                 <boxGeometry
                     args={[
-                        5.5,
+                        6.6,
                         0.02,
-                        0.85,
+                        1.05,
                     ]}
                 />
 
@@ -621,7 +624,7 @@ export function WheelStockArea() {
                     0,
                     0,
                 ]}
-                fontSize={0.5}
+                fontSize={0.64}
                 color="#ffffff"
                 anchorX="center"
                 anchorY="middle"

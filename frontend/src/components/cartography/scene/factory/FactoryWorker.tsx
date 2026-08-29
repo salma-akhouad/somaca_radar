@@ -1988,30 +1988,64 @@ export function FactoryWorker({
           />
 
 
-          <mesh
-            position={[
-              0,
-              0.07,
-              -0.1,
-            ]}
-            scale={[
-              1,
-              0.72,
-              0.78,
-            ]}
-          >
-            <sphereGeometry
-              args={[
-                0.18,
-                12,
-                10,
-              ]}
-            />
+          <>
+            {/* Full hair cap remains visible when helmet is removed */}
 
-            <meshStandardMaterial
-              color={hair}
-            />
-          </mesh>
+            <mesh
+              position={[
+                0,
+                0.105,
+                -0.035,
+              ]}
+              scale={[
+                1.03,
+                0.58,
+                0.98,
+              ]}
+            >
+              <sphereGeometry
+                args={[
+                  0.195,
+                  12,
+                  10,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={hair}
+                roughness={0.82}
+              />
+            </mesh>
+
+
+            {/* Back hair volume */}
+
+            <mesh
+              position={[
+                0,
+                0.015,
+                -0.145,
+              ]}
+              scale={[
+                0.92,
+                0.9,
+                0.62,
+              ]}
+            >
+              <sphereGeometry
+                args={[
+                  0.18,
+                  12,
+                  10,
+                ]}
+              />
+
+              <meshStandardMaterial
+                color={hair}
+                roughness={0.84}
+              />
+            </mesh>
+          </>
 
 
           {gender ===

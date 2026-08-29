@@ -11,7 +11,7 @@ import {
 } from './SceneCameraControls'
 
 import type {
-  CameraAction,
+  CameraCommand,
 } from './SceneCameraControls'
 
 import {
@@ -24,10 +24,8 @@ import type {
 
 
 interface MontageSceneProps {
-  command: {
-    type: CameraAction
-    id: number
-  }
+  command:
+    CameraCommand
 
   onZoomChange:
     (zoom: number) => void
@@ -37,6 +35,12 @@ interface MontageSceneProps {
 
   onPoleSelect:
     (pole: PoleConfig) => void
+
+  onFloorDoubleClick:
+    (
+      x: number,
+      z: number,
+    ) => void
 }
 
 
@@ -61,6 +65,7 @@ export function MontageScene({
   onZoomChange,
   selectedPole,
   onPoleSelect,
+  onFloorDoubleClick,
 }: MontageSceneProps) {
   return (
     <>
@@ -98,21 +103,30 @@ export function MontageScene({
 
       <directionalLight
         castShadow
+
         position={[
           26,
           32,
           20,
         ]}
+
         color="#f0eee4"
+
         intensity={0.76}
+
         shadow-mapSize={[
           2048,
           2048,
         ]}
+
         shadow-camera-left={-55}
+
         shadow-camera-right={75}
+
         shadow-camera-top={45}
+
         shadow-camera-bottom={-45}
+
         shadow-bias={
           -0.00015
         }
@@ -128,26 +142,37 @@ export function MontageScene({
         ) => (
           <rectAreaLight
             key={`${x}-${z}`}
+
             position={[
               x,
               6.15,
               z,
             ]}
+
             rotation={[
               -Math.PI / 2,
               0,
               0,
             ]}
+
             color="#fff0cf"
+
             intensity={5.35}
+
             width={19}
+
             height={15}
           />
         ),
       )}
 
 
-      <FactoryFloor />
+      <FactoryFloor
+        onDoubleClick={
+          onFloorDoubleClick
+        }
+      />
+
 
       <FactoryEnvelope />
 
@@ -157,6 +182,7 @@ export function MontageScene({
           selectedPole?.id ??
           null
         }
+
         onPoleSelect={
           onPoleSelect
         }
@@ -165,6 +191,7 @@ export function MontageScene({
 
       <SceneCameraControls
         command={command}
+
         onZoomChange={
           onZoomChange
         }

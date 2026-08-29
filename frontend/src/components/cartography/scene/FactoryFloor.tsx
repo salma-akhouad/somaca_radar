@@ -6,7 +6,17 @@ import {
 } from 'three'
 
 
-export function FactoryFloor() {
+interface FactoryFloorProps {
+  onDoubleClick?: (
+    x: number,
+    z: number,
+  ) => void
+}
+
+
+export function FactoryFloor({
+  onDoubleClick,
+}: FactoryFloorProps) {
   const floorTexture = useMemo(() => {
     const canvas = document.createElement('canvas')
 
@@ -131,9 +141,25 @@ export function FactoryFloor() {
           ===================================================== */}
 
       <mesh
-        position={[15, -0.025, 0]}
-        rotation-x={-Math.PI / 2}
+        position={[
+          15,
+          -0.025,
+          0,
+        ]}
+        rotation-x={
+          -Math.PI / 2
+        }
         receiveShadow
+        onDoubleClick={(
+          event,
+        ) => {
+          event.stopPropagation()
+
+          onDoubleClick?.(
+            event.point.x,
+            event.point.z,
+          )
+        }}
       >
         <planeGeometry
           args={[

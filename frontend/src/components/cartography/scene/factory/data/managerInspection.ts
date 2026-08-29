@@ -3,6 +3,7 @@ export type ManagerFocus =
   | 'right-car'
   | 'right-worker'
   | 'upper-line'
+  | 'meeting-room'
   | 'left-car'
   | 'left-worker'
 
@@ -23,7 +24,8 @@ export interface ManagerTimelineSample {
 
   resting: boolean
 
-  focus: ManagerFocus
+  focus:
+    ManagerFocus
 
   talkingTo?:
     ManagerConversation
@@ -39,21 +41,18 @@ type RoutePoint = {
 
   resting?: boolean
 
-  focus?: ManagerFocus
+  focus?:
+    ManagerFocus
 
   talkingTo?:
     ManagerConversation
 }
 
 
-const WALK_SPEED = 1.55
+const WALK_SPEED =
+  1.55
 
 
-/*
- * The office is centred at [30, 8].
- * [29.7, 9.33] aligns with the right-hand
- * chair of the existing office workstation.
- */
 const OFFICE_CHAIR = {
   x: 29.7,
   z: 9.33,
@@ -62,9 +61,6 @@ const OFFICE_CHAIR = {
 
 const ROUTE:
   RoutePoint[] = [
-    /*
-     * He starts seated in his office.
-     */
     {
       ...OFFICE_CHAIR,
 
@@ -76,10 +72,6 @@ const ROUTE:
     },
 
 
-    /*
-     * Stand and leave the office through
-     * the existing door route.
-     */
     {
       x: 31,
       z: 9.4,
@@ -156,10 +148,56 @@ const ROUTE:
       x: 0,
       z: 19,
 
-      pause: 8,
+      pause: 6,
 
       focus:
         'upper-line',
+    },
+
+
+    /*
+     * Uses the single central pedestrian
+     * spur to visit the UET meeting room.
+     */
+
+    {
+      x: 0,
+      z: 16,
+    },
+
+    {
+      x: 0,
+      z: 3,
+    },
+
+    {
+      x: 0,
+      z: 2.2,
+    },
+
+    {
+      x: 1.75,
+      z: 1.35,
+
+      pause: 7,
+
+      focus:
+        'meeting-room',
+    },
+
+    {
+      x: 0,
+      z: 2.2,
+    },
+
+    {
+      x: 0,
+      z: 16,
+    },
+
+    {
+      x: 0,
+      z: 19,
     },
 
 
@@ -255,9 +293,6 @@ const ROUTE:
     },
 
 
-    /*
-     * Back to the office chair.
-     */
     {
       ...OFFICE_CHAIR,
 
@@ -274,19 +309,24 @@ type TimelineSegment =
   | {
       kind: 'walk'
 
-      from: RoutePoint
+      from:
+        RoutePoint
 
-      to: RoutePoint
+      to:
+        RoutePoint
 
-      duration: number
+      duration:
+        number
     }
 
   | {
       kind: 'pause'
 
-      at: RoutePoint
+      at:
+        RoutePoint
 
-      duration: number
+      duration:
+        number
     }
 
 
@@ -324,9 +364,11 @@ ROUTE.forEach(
       point.pause
     ) {
       TIMELINE.push({
-        kind: 'pause',
+        kind:
+          'pause',
 
-        at: point,
+        at:
+          point,
 
         duration:
           point.pause,
@@ -345,11 +387,14 @@ ROUTE.forEach(
 
 
       TIMELINE.push({
-        kind: 'walk',
+        kind:
+          'walk',
 
-        from: point,
+        from:
+          point,
 
-        to: next,
+        to:
+          next,
 
         duration:
           distance(
@@ -377,14 +422,12 @@ const TOTAL_DURATION =
 
 
 function pauseRotation(
-  point: RoutePoint,
+  point:
+    RoutePoint,
 ) {
   if (
     point.resting
   ) {
-    /*
-     * Face the workstation while seated.
-     */
     return Math.PI
   }
 
@@ -399,6 +442,9 @@ function pauseRotation(
       return Math.PI / 2
 
     case 'upper-line':
+      return Math.PI
+
+    case 'meeting-room':
       return Math.PI
 
     case 'left-worker':
@@ -456,8 +502,7 @@ export function sampleManagerTimeline(
 
         resting:
           Boolean(
-            segment.at
-              .resting,
+            segment.at.resting,
           ),
 
         focus:
@@ -465,14 +510,14 @@ export function sampleManagerTimeline(
           'none',
 
         talkingTo:
-          segment.at
-            .talkingTo,
+          segment.at.talkingTo,
       }
     }
 
 
     const progress =
-      segment.duration === 0
+      segment.duration ===
+      0
         ? 1
         : remaining /
           segment.duration
@@ -573,6 +618,12 @@ export function getManagerFocusTarget(
         16,
       ]
 
+    case 'meeting-room':
+      return [
+        0,
+        -2,
+      ]
+
     case 'left-worker':
       return [
         -21.1,
@@ -600,10 +651,6 @@ export function managerNeedsDoorOpen(
     )
 
 
-  /*
-   * Resting inside the office means
-   * the door can stay closed.
-   */
   if (
     manager.resting
   ) {

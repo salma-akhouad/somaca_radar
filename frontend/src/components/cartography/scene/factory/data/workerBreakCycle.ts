@@ -23,20 +23,26 @@ export interface WorkerBreakRequest {
 
 
 export interface WorkerBreakSample {
-  stage: WorkerBreakStage
+  stage:
+    WorkerBreakStage
 
-  complete: boolean
+  complete:
+    boolean
 
-  x: number
+  x:
+    number
 
-  z: number
+  z:
+    number
 
-  yaw: number
+  yaw:
+    number
 
   seatIndex:
     0 | 1
 
-  walking: boolean
+  walking:
+    boolean
 }
 
 
@@ -72,25 +78,10 @@ const SECOND_SEATED_DURATION =
   8
 
 
-/*
- * A worker has a short window in which
- * they may start their break.
- *
- * If their workstation is busy for that
- * entire window, they simply skip this
- * cycle instead of teleporting halfway
- * through a walk later.
- */
 const REQUEST_WINDOW =
   12
 
 
-/*
- * Groups are separated by enough time
- * for even the longest round trip.
- *
- * Maximum simultaneous break workers = 2.
- */
 const BREAK_CYCLE_DURATION =
   430
 
@@ -114,13 +105,32 @@ const BREAK_STARTS:
   }
 
 
+const SEAT_A:
+  Point = {
+    x: -40.5,
+    z: -30.35,
+  }
+
+
+const SEAT_B:
+  Point = {
+    x: -36.5,
+    z: -30.35,
+  }
+
+
 /*
- * These points deliberately follow the
- * visible white pedestrian network.
+ * Shared safe route:
  *
- * Shared destination:
- * horizontal path z = 19
- * vertical employee path x = 8
+ * existing people network
+ *      ↓
+ * x = -20
+ *      ↓
+ * z = -28
+ *      ↓
+ * ENTRÉE amenities
+ *
+ * It stays clear of both AGV routes.
  */
 const ROUTES:
   Record<
@@ -147,19 +157,26 @@ const ROUTES:
         },
 
         {
-          x: 8,
+          x: -20,
           z: 19,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -20,
+          z: -28,
         },
 
         {
-          x: 4.25,
-          z: 30.4,
+          x: -39,
+          z: -28,
         },
+
+        {
+          x: -40.5,
+          z: -28,
+        },
+
+        SEAT_A,
       ],
     },
 
@@ -180,23 +197,20 @@ const ROUTES:
 
         {
           x: -20,
-          z: 19,
+          z: -28,
         },
 
         {
-          x: 8,
-          z: 19,
+          x: -39,
+          z: -28,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -40.5,
+          z: -28,
         },
 
-        {
-          x: 4.25,
-          z: 30.4,
-        },
+        SEAT_A,
       ],
     },
 
@@ -221,19 +235,26 @@ const ROUTES:
         },
 
         {
-          x: 8,
+          x: -20,
           z: 19,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -20,
+          z: -28,
         },
 
         {
-          x: 10.75,
-          z: 30.4,
+          x: -39,
+          z: -28,
         },
+
+        {
+          x: -36.5,
+          z: -28,
+        },
+
+        SEAT_B,
       ],
     },
 
@@ -248,8 +269,8 @@ const ROUTES:
         },
 
         /*
-         * Move away from the wheel AGV
-         * before joining the pedestrian path.
+         * First step away from
+         * the wheel AGV delivery.
          */
         {
           x: -20,
@@ -258,23 +279,20 @@ const ROUTES:
 
         {
           x: -20,
-          z: 19,
+          z: -28,
         },
 
         {
-          x: 8,
-          z: 19,
+          x: -39,
+          z: -28,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -40.5,
+          z: -28,
         },
 
-        {
-          x: 4.25,
-          z: 30.4,
-        },
+        SEAT_A,
       ],
     },
 
@@ -294,19 +312,26 @@ const ROUTES:
         },
 
         {
-          x: 8,
+          x: -20,
           z: 19,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -20,
+          z: -28,
         },
 
         {
-          x: 10.75,
-          z: 30.4,
+          x: -39,
+          z: -28,
         },
+
+        {
+          x: -36.5,
+          z: -28,
+        },
+
+        SEAT_B,
       ],
     },
 
@@ -321,8 +346,8 @@ const ROUTES:
         },
 
         /*
-         * First move away from the seat AGV
-         * delivery point at [23, 4].
+         * First move away from
+         * the seat AGV at [23, 4].
          */
         {
           x: 20,
@@ -335,19 +360,26 @@ const ROUTES:
         },
 
         {
-          x: 8,
+          x: -20,
           z: 19,
         },
 
         {
-          x: 8,
-          z: 30.4,
+          x: -20,
+          z: -28,
         },
 
         {
-          x: 10.75,
-          z: 30.4,
+          x: -39,
+          z: -28,
         },
+
+        {
+          x: -36.5,
+          z: -28,
+        },
+
+        SEAT_B,
       ],
     },
   }
@@ -469,7 +501,8 @@ function sampleRoute(
 
 
     const progress =
-      segmentLength === 0
+      segmentLength ===
+      0
         ? 1
         : remaining /
           segmentLength
@@ -515,7 +548,7 @@ function sampleRoute(
 
     z: last.z,
 
-    yaw: Math.PI,
+    yaw: 0,
   }
 }
 
@@ -575,9 +608,19 @@ export function sampleWorkerBreak(
     ]
 
 
+  const outwardPoints =
+    route.points
+
+
+  const returnPoints =
+    [
+      ...route.points,
+    ].reverse()
+
+
   const length =
     routeLength(
-      route.points,
+      outwardPoints,
     )
 
 
@@ -592,7 +635,7 @@ export function sampleWorkerBreak(
   ) {
     const sample =
       sampleRoute(
-        route.points,
+        outwardPoints,
 
         breakElapsed *
         WALK_SPEED,
@@ -621,8 +664,8 @@ export function sampleWorkerBreak(
 
 
   const destination =
-    route.points[
-      route.points.length - 1
+    outwardPoints[
+      outwardPoints.length - 1
     ]
 
 
@@ -637,12 +680,14 @@ export function sampleWorkerBreak(
       z:
         destination.z,
 
-      yaw:
-        route.seatIndex === 0
-          ? Math.PI / 2
-          : -Math.PI / 2,
+      /*
+       * Chairs face north toward
+       * their corresponding tables.
+       */
+      yaw: 0,
 
-      stage: 'sit',
+      stage:
+        'sit',
 
       complete: false,
 
@@ -670,12 +715,10 @@ export function sampleWorkerBreak(
       z:
         destination.z,
 
-      yaw:
-        route.seatIndex === 0
-          ? Math.PI / 2
-          : -Math.PI / 2,
+      yaw: 0,
 
-      stage: 'drink',
+      stage:
+        'drink',
 
       complete: false,
 
@@ -703,12 +746,10 @@ export function sampleWorkerBreak(
       z:
         destination.z,
 
-      yaw:
-        route.seatIndex === 0
-          ? Math.PI / 2
-          : -Math.PI / 2,
+      yaw: 0,
 
-      stage: 'sit',
+      stage:
+        'sit',
 
       complete: false,
 
@@ -729,25 +770,27 @@ export function sampleWorkerBreak(
     returnElapsed <
     walkDuration
   ) {
+    /*
+     * Important:
+     *
+     * sample the REVERSED route directly.
+     * We no longer calculate a forward yaw
+     * and then blindly add PI.
+     *
+     * This fixes workers visually walking
+     * backwards on some return segments.
+     */
     const sample =
       sampleRoute(
-        route.points,
+        returnPoints,
 
-        length -
         returnElapsed *
         WALK_SPEED,
       )
 
 
-    /*
-     * Reverse direction while returning.
-     */
     return {
       ...sample,
-
-      yaw:
-        sample.yaw +
-        Math.PI,
 
       stage:
         'walk-back',
@@ -763,7 +806,7 @@ export function sampleWorkerBreak(
 
 
   const home =
-    route.points[0]
+    outwardPoints[0]
 
 
   return {

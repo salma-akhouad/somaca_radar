@@ -5,25 +5,27 @@ import {
 
 
 export const AMENITIES_POSITION = [
-  8,
+  -39,
   0,
-  31,
+  -29,
 ] as const
 
 
+/*
+ * These are the exact centres of the
+ * two chairs actually used during breaks.
+ */
 export const BREAK_SEATS = [
   {
-    x: 4.25,
-    z: 30.4,
-    yaw:
-      Math.PI / 2,
+    x: -40.5,
+    z: -30.35,
+    yaw: 0,
   },
 
   {
-    x: 10.75,
-    z: 30.4,
-    yaw:
-      -Math.PI / 2,
+    x: -36.5,
+    z: -30.35,
+    yaw: 0,
   },
 ] as const
 
@@ -47,9 +49,9 @@ function Chair({
     >
       <RoundedBox
         args={[
-          0.62,
+          0.68,
           0.12,
-          0.62,
+          0.68,
         ]}
         radius={0.055}
         smoothness={2}
@@ -60,7 +62,7 @@ function Chair({
         ]}
       >
         <meshStandardMaterial
-          color="#4c504d"
+          color="#4b504d"
           roughness={0.78}
         />
       </RoundedBox>
@@ -68,30 +70,30 @@ function Chair({
 
       <RoundedBox
         args={[
-          0.62,
-          0.78,
-          0.09,
+          0.68,
+          0.82,
+          0.1,
         ]}
         radius={0.04}
         smoothness={2}
         position={[
           0,
-          0.9,
-          -0.27,
+          0.91,
+          -0.3,
         ]}
       >
         <meshStandardMaterial
-          color="#454a47"
+          color="#434844"
           roughness={0.78}
         />
       </RoundedBox>
 
 
       {[
-        [-0.23, -0.23],
-        [-0.23, 0.23],
-        [0.23, -0.23],
-        [0.23, 0.23],
+        [-0.24, -0.24],
+        [-0.24, 0.24],
+        [0.24, -0.24],
+        [0.24, 0.24],
       ].map(
         (
           [
@@ -110,9 +112,9 @@ function Chair({
           >
             <boxGeometry
               args={[
-                0.045,
+                0.05,
                 0.46,
-                0.045,
+                0.05,
               ]}
             />
 
@@ -144,9 +146,9 @@ function BreakTable({
     >
       <RoundedBox
         args={[
-          2.25,
+          2.35,
           0.14,
-          1.18,
+          1.2,
         ]}
         radius={0.07}
         smoothness={2}
@@ -157,17 +159,17 @@ function BreakTable({
         ]}
       >
         <meshStandardMaterial
-          color="#7a5c3e"
+          color="#795b3e"
           roughness={0.72}
         />
       </RoundedBox>
 
 
       {[
-        [-0.87, -0.4],
-        [-0.87, 0.4],
-        [0.87, -0.4],
-        [0.87, 0.4],
+        [-0.92, -0.42],
+        [-0.92, 0.42],
+        [0.92, -0.42],
+        [0.92, 0.42],
       ].map(
         (
           [
@@ -210,9 +212,9 @@ function Tray() {
     <group>
       <RoundedBox
         args={[
-          0.95,
+          1,
           0.045,
-          0.58,
+          0.6,
         ]}
         radius={0.05}
         smoothness={2}
@@ -229,11 +231,9 @@ function Tray() {
       </RoundedBox>
 
 
-      {/* Water bottle */}
-
       <mesh
         position={[
-          -0.24,
+          -0.27,
           1.09,
           0,
         ]}
@@ -248,7 +248,7 @@ function Tray() {
         />
 
         <meshStandardMaterial
-          color="#a9c3c8"
+          color="#aac3c8"
           transparent
           opacity={0.75}
           roughness={0.18}
@@ -256,11 +256,9 @@ function Tray() {
       </mesh>
 
 
-      {/* Cups */}
-
       {[
-        0.05,
-        0.26,
+        0.04,
+        0.25,
         0.43,
       ].map(
         (x) => (
@@ -282,9 +280,9 @@ function Tray() {
             />
 
             <meshStandardMaterial
-              color="#d6dcda"
+              color="#d7dcda"
               transparent
-              opacity={0.7}
+              opacity={0.72}
               roughness={0.16}
             />
           </mesh>
@@ -445,11 +443,6 @@ function PersonIcon({
               -0.04,
               0.02,
             ]}
-            rotation-z={
-              x < 0
-                ? -0.13
-                : 0.13
-            }
           >
             <boxGeometry
               args={[
@@ -491,8 +484,6 @@ function RestroomDoor({
         0,
       ]}
     >
-      {/* Blue door */}
-
       <RoundedBox
         args={[
           1.55,
@@ -536,8 +527,6 @@ function RestroomDoor({
         />
       </mesh>
 
-
-      {/* White pictogram plate */}
 
       <RoundedBox
         args={[
@@ -594,8 +583,6 @@ function RestroomDoor({
 function RestroomCabinet() {
   return (
     <group>
-      {/* Shared surround */}
-
       <RoundedBox
         args={[
           4.15,
@@ -623,6 +610,7 @@ function RestroomCabinet() {
         label="FEMMES"
       />
 
+
       <RestroomDoor
         x={0.92}
         gender="man"
@@ -630,11 +618,9 @@ function RestroomCabinet() {
       />
 
 
-      {/* Large shared WC sign */}
-
       <RoundedBox
         args={[
-          2.2,
+          2.25,
           0.58,
           0.07,
         ]}
@@ -718,28 +704,6 @@ function WaterDispenser() {
           roughness={0.2}
         />
       </mesh>
-
-
-      <mesh
-        position={[
-          0,
-          1.02,
-          0.33,
-        ]}
-      >
-        <boxGeometry
-          args={[
-            0.38,
-            0.24,
-            0.035,
-          ]}
-        />
-
-        <meshStandardMaterial
-          color="#333936"
-          roughness={0.56}
-        />
-      </mesh>
     </group>
   )
 }
@@ -774,13 +738,13 @@ function Plant() {
       <mesh
         position={[
           0,
-          0.94,
+          0.95,
           0,
         ]}
       >
         <cylinderGeometry
           args={[
-            0.04,
+            0.045,
             0.055,
             0.95,
             8,
@@ -795,16 +759,15 @@ function Plant() {
 
 
       {[
-        [-0.24, 1.2, 0],
-        [0.22, 1.35, 0.04],
-        [-0.2, 1.52, -0.04],
-        [0.18, 1.7, 0],
+        [-0.24, 1.2],
+        [0.22, 1.38],
+        [-0.2, 1.55],
+        [0.18, 1.72],
       ].map(
         (
           [
             x,
             y,
-            z,
           ],
           index,
         ) => (
@@ -813,13 +776,13 @@ function Plant() {
             position={[
               x,
               y,
-              z,
+              0,
             ]}
-            rotation-z={
-              x < 0
-                ? -0.6
-                : 0.6
-            }
+            scale={[
+              1,
+              0.65,
+              0.7,
+            ]}
           >
             <sphereGeometry
               args={[
@@ -831,7 +794,8 @@ function Plant() {
 
             <meshStandardMaterial
               color={
-                index % 2 === 0
+                index % 2 ===
+                0
                   ? '#58714c'
                   : '#49643f'
               }
@@ -845,6 +809,124 @@ function Plant() {
 }
 
 
+function BreakAreaSign() {
+  return (
+    <group
+      position={[
+        2.7,
+        0,
+        3.55,
+      ]}
+    >
+      {/* Supports */}
+
+      {[
+        -2.45,
+        2.45,
+      ].map(
+        (x) => (
+          <mesh
+            key={x}
+            position={[
+              x,
+              1.65,
+              0,
+            ]}
+          >
+            <boxGeometry
+              args={[
+                0.07,
+                3.3,
+                0.07,
+              ]}
+            />
+
+            <meshStandardMaterial
+              color="#383e3a"
+              metalness={0.3}
+              roughness={0.5}
+            />
+          </mesh>
+        ),
+      )}
+
+
+      {/* White industrial sign */}
+
+      <RoundedBox
+        args={[
+          5.4,
+          0.92,
+          0.12,
+        ]}
+        radius={0.1}
+        smoothness={3}
+        position={[
+          0,
+          2.7,
+          0,
+        ]}
+      >
+        <meshStandardMaterial
+          color="#f3f4ef"
+          emissive="#f3f4ef"
+          emissiveIntensity={0.12}
+          roughness={0.7}
+        />
+      </RoundedBox>
+
+
+      {/* Restrained green LED accents */}
+
+      {[
+        -2.53,
+        2.53,
+      ].map(
+        (x) => (
+          <RoundedBox
+            key={x}
+            args={[
+              0.08,
+              0.78,
+              0.15,
+            ]}
+            radius={0.03}
+            smoothness={2}
+            position={[
+              x,
+              2.7,
+              0.07,
+            ]}
+          >
+            <meshStandardMaterial
+              color="#4b8b65"
+              emissive="#4b8b65"
+              emissiveIntensity={0.75}
+              toneMapped={false}
+            />
+          </RoundedBox>
+        ),
+      )}
+
+
+      <Text
+        position={[
+          0,
+          2.7,
+          0.075,
+        ]}
+        fontSize={0.43}
+        color="#202321"
+        anchorX="center"
+        anchorY="middle"
+      >
+        ESPACE PAUSE
+      </Text>
+    </group>
+  )
+}
+
+
 export function WorkerAmenities() {
   return (
     <group
@@ -852,7 +934,7 @@ export function WorkerAmenities() {
         AMENITIES_POSITION
       }
     >
-      {/* Compact employee area */}
+      {/* Neutral local floor */}
 
       <mesh
         position={[
@@ -863,9 +945,9 @@ export function WorkerAmenities() {
       >
         <boxGeometry
           args={[
-            14,
+            17,
             0.018,
-            8.8,
+            9,
           ]}
         />
 
@@ -876,41 +958,41 @@ export function WorkerAmenities() {
       </mesh>
 
 
-      <Text
+      {/*
+       * WC sits close to the exterior left wall.
+       * Rotating it makes the blue doors face
+       * inward toward the factory.
+       */}
+      <group
         position={[
-          -1.2,
-          0.055,
-          -3.75,
-        ]}
-        rotation={[
-          -Math.PI / 2,
+          -7,
           0,
-          0,
+          1.6,
         ]}
-        fontSize={0.44}
-        color="#343936"
-        anchorX="center"
-        anchorY="middle"
+        rotation-y={
+          Math.PI / 2
+        }
       >
-        ESPACE PAUSE
-      </Text>
+        <RestroomCabinet />
+      </group>
 
 
-      {/* Rest zone */}
+      {/* Rest area — intentionally separated from WC */}
 
       <BreakTable
         position={[
-          -2.4,
+          -1.5,
           0,
-          -0.6,
+          0,
         ]}
       />
 
+
       <group
         position={[
-          -2.4,
+          -1.5,
           0,
-          -0.6,
+          0,
         ]}
       >
         <Tray />
@@ -919,91 +1001,82 @@ export function WorkerAmenities() {
 
       <BreakTable
         position={[
-          1.4,
+          2.5,
           0,
-          -0.6,
+          0,
+        ]}
+      />
+
+
+      {/* Active break chairs */}
+
+      <Chair
+        position={[
+          -1.5,
+          0,
+          -1.35,
         ]}
       />
 
 
       <Chair
         position={[
-          -3.75,
+          2.5,
           0,
-          -0.6,
+          -1.35,
+        ]}
+      />
+
+
+      {/* Additional available chairs */}
+
+      <Chair
+        position={[
+          -1.5,
+          0,
+          1.35,
         ]}
         rotation={
-          Math.PI / 2
+          Math.PI
         }
       />
 
-      <Chair
-        position={[
-          -1.05,
-          0,
-          -0.6,
-        ]}
-        rotation={
-          -Math.PI / 2
-        }
-      />
 
       <Chair
         position={[
-          0.05,
+          2.5,
           0,
-          -0.6,
+          1.35,
         ]}
         rotation={
-          Math.PI / 2
-        }
-      />
-
-      <Chair
-        position={[
-          2.75,
-          0,
-          -0.6,
-        ]}
-        rotation={
-          -Math.PI / 2
+          Math.PI
         }
       />
 
 
       <group
         position={[
-          -5.3,
+          5,
           0,
-          2.3,
-        ]}
-      >
-        <Plant />
-      </group>
-
-
-      <group
-        position={[
-          -5.2,
-          0,
-          -2.45,
+          -2.4,
         ]}
       >
         <WaterDispenser />
       </group>
 
 
-      {/* WC kept separate from the tables */}
-
       <group
         position={[
-          4.15,
+          5,
           0,
-          2.55,
+          2.25,
         ]}
       >
-        <RestroomCabinet />
+        <Plant />
       </group>
+
+
+      <BreakAreaSign />
     </group>
   )
 }
