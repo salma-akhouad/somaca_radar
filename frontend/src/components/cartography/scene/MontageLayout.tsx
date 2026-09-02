@@ -120,6 +120,10 @@ import {
   FireSafetyStations,
 } from './factory/FireSafetyStations'
 
+import {
+  LivePoleStatusOverlay,
+} from './factory/LivePoleStatusOverlay'
+
 interface MontageLayoutProps {
   selectedPoleId?:
   string | null
@@ -375,6 +379,7 @@ export function MontageLayout({
         ),
       )}
 
+      <LivePoleStatusOverlay />
 
       <OverheadAssemblyLine />
 

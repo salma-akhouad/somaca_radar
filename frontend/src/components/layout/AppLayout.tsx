@@ -7,5 +7,21 @@ import { TopHeader } from './TopHeader'
 export function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  return <div className="app-shell"><Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} /><div className="workspace"><TopHeader /><main className="main-content"><Outlet /></main></div><SomacaHelperLauncher /></div>
+  return (
+    <div className="app-shell">
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((value) => !value)}
+      />
+
+      <div className="workspace">
+        <TopHeader />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
+
+      <SomacaHelperLauncher />
+    </div>
+  )
 }

@@ -2,37 +2,50 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { useLocation } from 'react-router-dom'
+import { Icon } from '../common/Icon'
+import { NotificationCenter } from '../notifications/NotificationCenter'
+import { useAuth } from '../../auth/AuthContext'
 
-import {
-  Icon,
-} from '../common/Icon'
-
+const PAGE_META: Record<
+  string,
+  {
+    title: string
+    subtitle: string
+  }
+> = {
+  '/cartography': {
+    title: 'MONTAGE',
+    subtitle: 'CARTOGRAPHIE EN TEMPS RÉEL',
+  },
+  '/incidents': {
+    title: 'INCIDENTS',
+    subtitle: 'TRAITEMENT ET SUIVI DES INCIDENTS',
+  },
+  '/supervision': {
+    title: 'SUPERVISION',
+    subtitle: 'ÉTAT DE L’INSTALLATION',
+  },
+  '/administration': {
+    title: 'ADMINISTRATION',
+    subtitle: 'CONFIGURATION DU SYSTÈME',
+  },
+}
 
 function LiveClock() {
-  const [
-    now,
-    setNow,
-  ] = useState(
-    () => new Date(),
-  )
-
+  const [now, setNow] =
+    useState(() => new Date())
 
   useEffect(() => {
     const interval =
       window.setInterval(
-        () =>
-          setNow(
-            new Date(),
-          ),
-        47,
+        () => setNow(new Date()),
+        1000,
       )
 
     return () =>
-      window.clearInterval(
-        interval,
-      )
+      window.clearInterval(interval)
   }, [])
-
 
   const time =
     new Intl.DateTimeFormat(
@@ -45,7 +58,6 @@ function LiveClock() {
       },
     ).format(now)
 
-
   const date =
     new Intl.DateTimeFormat(
       'fr-FR',
@@ -57,26 +69,13 @@ function LiveClock() {
       },
     ).format(now)
 
-
   return (
     <div
       className="live-clock"
       aria-label="Date et heure locales"
     >
       <div className="live-clock__time">
-        <span>
-          {time}
-        </span>
-
-        <small>
-          .
-          {String(
-            now.getMilliseconds(),
-          ).padStart(
-            3,
-            '0',
-          )}
-        </small>
+        <span>{time}</span>
       </div>
 
       <div className="live-clock__date">
@@ -86,56 +85,59 @@ function LiveClock() {
   )
 }
 
-
 export function TopHeader() {
+  const location = useLocation()
+  const { user, logout } = useAuth()
+  const [profileOpen, setProfileOpen] = useState(false)
+
+  const meta = PAGE_META[location.pathname] ?? PAGE_META['/cartography']
+  const initials =
+    `${user?.prenom?.[0] ?? ''}${user?.nom?.[0] ?? ''}`.toUpperCase() || 'SR'
+
   return (
     <header className="top-header">
       <div className="page-heading">
-        <h1>
-          MONTAGE
-        </h1>
-
-        <p>
-          CARTOGRAPHIE EN TEMPS RÉEL
-        </p>
+        <h1>{meta.title}</h1>
+        <p>{meta.subtitle}</p>
       </div>
-
 
       <div className="top-header__actions">
         <div className="system-status">
           <span />
-
           TEMPS RÉEL ACTIF
         </div>
 
-
         <LiveClock />
+        <NotificationCenter />
 
+        <div className="profile-menu">
+          <button
+            className="profile-button"
+            type="button"
+            aria-label="Ouvrir le profil"
+            aria-expanded={profileOpen}
+            onClick={() => setProfileOpen((value) => !value)}
+          >
+            <span>{initials}</span>
+            <Icon name="chevron" size={16} />
+          </button>
 
-        <button
-          className="header-icon-button"
-          aria-label="Notifications"
-        >
-          <Icon
-            name="bell"
-            size={21}
-          />
-        </button>
-
-
-        <button
-          className="profile-button"
-          aria-label="Ouvrir le profil"
-        >
-          <span>
-            SR
-          </span>
-
-          <Icon
-            name="chevron"
-            size={16}
-          />
-        </button>
+          {profileOpen && (
+            <div className="profile-popover">
+              <strong>
+                {user?.prenom} {user?.nom}
+              </strong>
+              <span>{user?.email}</span>
+              <small>{user?.role}</small>
+              <button type="button" onClick={() => {
+                setProfileOpen(false)
+                void logout()
+              }}>
+                Se déconnecter
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
