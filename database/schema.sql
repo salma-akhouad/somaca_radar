@@ -17,6 +17,7 @@ CREATE TABLE session (
     token            VARCHAR(64) NOT NULL UNIQUE,
     date_creation    TIMESTAMP NOT NULL DEFAULT NOW(),
     date_expiration  TIMESTAMP NOT NULL,
+    date_revocation  TIMESTAMP NULL,
     id_util          INTEGER NOT NULL REFERENCES utilisateur(id_util)
 );
 

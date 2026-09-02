@@ -4,13 +4,14 @@ from sqlalchemy import func
 from datetime import datetime, timedelta, timezone
 from uuid import UUID # Universally Unique Identifier, a 128-bit number used to uniquely identify information in computer systems. 
 from passlib.context import CryptContext
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.exc import IntegrityError
 from .database import SessionLocal, get_db
 from .models import (Machine, Role, Utilisateur, Session as SessionModel, Departement, Unite, Poteau, 
                      Etat, StatutHistorique, SomacaHelperMessage, Incident, IncidentStatusHistory, 
-                    IncidentContact, IncidentStatus, ContactType
+                     IncidentContact, IncidentStatus, ContactType
                     )
 from .schemas import (CurrentStatusOut,MachineDetailOut, MachineCreate, MachineDetailOut,RoleCreate,
                       UtilisateurCreate, SessionCreate, DepartementCreate, UniteCreate, PoteauCreate, 
@@ -21,13 +22,25 @@ from .schemas import (CurrentStatusOut,MachineDetailOut, MachineCreate, MachineD
                       LoginResponse, HelperConversationSummaryOut, HelperAskRequest, HelperAskResponse, 
                       HelperResponseStatus, RoutingResult, IncidentCreate, IncidentUpdate, IncidentStatusUpdate,
                       IncidentOut, IncidentStatusHistoryOut, IncidentContactCreate, IncidentContactOut,TechnicianOut,
-                      )
-from .auth import _resolve_user_from_token, create_access_token, get_current_user, require_role, ACCESS_TOKEN_EXPIRE_MINUTES, RoleName
+                      CurrentUserOut)
+from .auth import (ACCESS_TOKEN_EXPIRE_MINUTES, RoleName, _resolve_user_from_token, create_access_token, get_current_token,
+                   get_current_user, hash_token, require_role, revoke_current_token_session)
 from .somaca_helper_service import SomacaHelperServiceError, SomacaHelperClarificationError, detect_intent, analyze_routing, generate_final_answer,  generate_clarification_answer
 from .gemini_client import GEMINI_MODEL, HELPER_CONTEXT_MESSAGE_LIMIT
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # WebSocket manager to handle multiple connections and broadcast messages to all connected clients
 class ConnectionManager:
@@ -226,18 +239,70 @@ def create_utilisateur(utilisateur: UtilisateurCreate, db: Session = Depends(get
 
 # special case: re-hash password if it's part of the update
 @app.patch("/utilisateurs/{id_util}", response_model=UtilisateurOut)
-def update_utilisateur(id_util: int, utilisateur: UtilisateurUpdate, db: Session = Depends(get_db),
-                         _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    existing = db.query(Utilisateur).filter(Utilisateur.id_util == id_util).first()
+def update_utilisateur(
+    id_util: int,
+    utilisateur: UtilisateurUpdate,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR)
+    ),
+):
+    existing = (
+        db.query(Utilisateur)
+        .filter(
+            Utilisateur.id_util == id_util
+        )
+        .first()
+    )
+
     if existing is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    data = utilisateur.model_dump(exclude_unset=True)
-    if "mot_de_passe" in data:
-        data["mot_de_passe"] = pwd_context.hash(data["mot_de_passe"])
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    data = utilisateur.model_dump(
+        exclude_unset=True
+    )
+
+    password_changed = (
+        "mot_de_passe" in data
+        and data["mot_de_passe"] is not None
+    )
+
+    if password_changed:
+        data["mot_de_passe"] = pwd_context.hash(
+            data["mot_de_passe"]
+        )
+
     for field, value in data.items():
-        setattr(existing, field, value)
+        setattr(
+            existing,
+            field,
+            value,
+        )
+
+    if password_changed:
+        now = datetime.now(timezone.utc)
+
+        (
+            db.query(SessionModel)
+            .filter(
+                SessionModel.id_util == id_util,
+                SessionModel.date_expiration > now,
+                SessionModel.date_revocation.is_(None),
+            )
+            .update(
+                {
+                    SessionModel.date_revocation: now
+                },
+                synchronize_session=False,
+            )
+        )
+
     commit_or_409(db)
     db.refresh(existing)
+
     return existing
 
 @app.delete("/utilisateurs/{id_util}", status_code=status.HTTP_204_NO_CONTENT)
@@ -273,22 +338,90 @@ def get_technicians(
         .all()
     )
 
+
 # Sessions
-@app.get("/sessions", response_model=list[SessionOut],)
-def get_sessions(db: Session = Depends(get_db),
-                   _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    return db.query(SessionModel).all()
+@app.get("/sessions", response_model=list[SessionOut])
+def get_sessions(
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR)
+    ),
+):
+    return (
+        db.query(SessionModel)
+        .order_by(
+            SessionModel.date_creation.desc()
+        )
+        .all()
+    )
 
-@app.delete("/sessions/{id_session}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_session(id_session: int, db: Session = Depends(get_db),
-                    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR))):
-    existing = db.query(SessionModel).filter(SessionModel.id_session == id_session).first()
+@app.patch("/sessions/{id_session}/revoke", response_model=SessionOut)
+def revoke_session(
+    id_session: int,
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR)
+    ),
+):
+    existing = (
+        db.query(SessionModel)
+        .filter(
+            SessionModel.id_session == id_session
+        )
+        .first()
+    )
+
     if existing is None:
-        raise HTTPException(status_code=404, detail="Session not found")
-    db.delete(existing)
-    commit_or_409(db, "Cannot delete: other records still reference this resource.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found",
+        )
 
+    date_revocation = getattr(
+        existing,
+        "date_revocation",
+    )
 
+    if date_revocation is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Session is already revoked",
+        )
+
+    expiration = getattr(
+        existing,
+        "date_expiration",
+    )
+
+    now = datetime.now(timezone.utc)
+
+    if expiration.tzinfo is None:
+        now_for_comparison = now.replace(
+            tzinfo=None
+        )
+    else:
+        now_for_comparison = now
+
+    if expiration <= now_for_comparison:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Session is already expired",
+        )
+
+    setattr(
+        existing,
+        "date_revocation",
+        now_for_comparison,
+    )
+
+    commit_or_409(
+        db,
+        "Could not revoke session",
+    )
+
+    db.refresh(existing)
+
+    return existing
 # Departements
 @app.get("/departements", response_model=list[DepartementOut])
 def get_departements(db: Session = Depends(get_db),
@@ -1045,19 +1178,55 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     token = create_access_token(cast(int, user.id_util))
     # Hashing the token before storing it in the database to enhance security.
-    token_hash = hashlib.sha256(token.encode()).hexdigest() 
-    expire_time = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES) # timedelta is a class used to represent a duration, the difference between two dates or times. 
+    token_hash = hash_token(token) 
+    now = datetime.now(timezone.utc)
+    expire_time = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES) # timedelta is a class used to represent a duration, the difference between two dates or times. 
 
     new_session = SessionModel(
         id_util=user.id_util,
         token=token_hash,
-        date_creation=datetime.now(timezone.utc),
+        date_creation=now,
         date_expiration=expire_time,
+        date_revocation=None,
     )
     db.add(new_session)
     db.commit()
     return LoginResponse(access_token=token, token_type="bearer") 
 # bearer represent the way the token is sent in the Authorization header of HTTP requests. The client includes the token in the header as follows: "Authorization
+
+
+@app.post("/logout",status_code=status.HTTP_204_NO_CONTENT)
+def logout(
+    token: str = Depends(get_current_token),
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(get_current_user),
+):
+    revoked = revoke_current_token_session(
+        token,
+        db,
+    )
+
+    if not revoked:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session is already expired or revoked",
+        )
+
+    return None
+
+# Returns the current user's information based on the provided JWT token. 
+@app.get("/me", response_model=CurrentUserOut)
+def get_me(
+    current_user: Utilisateur = Depends(get_current_user),
+):
+    return {
+        "id_util": current_user.id_util,
+        "nom": current_user.nom,
+        "prenom": current_user.prenom,
+        "email": current_user.email,
+        "id_role": current_user.id_role,
+        "role": current_user.role.nom_role.lower(),
+    }
 
 
 # WebSocket endpoint - streams machine status updates

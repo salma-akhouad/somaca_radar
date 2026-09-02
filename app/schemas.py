@@ -60,20 +60,29 @@ class UtilisateurBase(BaseModel):
     id_role: int
 
 class UtilisateurCreate(UtilisateurBase):
-    mot_de_passe: str
+    mot_de_passe: str = Field(
+        min_length=8,
+        max_length=128,
+    )
 
 class UtilisateurUpdate(BaseModel):
     nom: Optional[str] = None
     prenom: Optional[str] = None
     email: Optional[str] = None
     id_role: Optional[int] = None
-    mot_de_passe: Optional[str] = None
+    mot_de_passe: Optional[str] = Field(
+    default=None,
+    min_length=8,
+    max_length=128,
+)
 
 class UtilisateurOut(UtilisateurBase):
     id_util: int
     class Config:
         from_attributes = True
 
+class CurrentUserOut(UtilisateurOut):
+    role: str
 
 class SessionBase(BaseModel):
     date_creation: datetime
@@ -91,6 +100,7 @@ class SessionUpdate(BaseModel):
 
 class SessionOut(SessionBase):
     id_session: int
+    date_revocation: Optional[datetime] = None
     class Config:
         from_attributes = True
 

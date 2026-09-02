@@ -183,6 +183,7 @@ class Session(Base):
     )
     date_creation = Column(DateTime)
     date_expiration = Column(DateTime)
+    date_revocation = Column(DateTime, nullable=True)
     id_util = Column(Integer, ForeignKey("utilisateur.id_util"), index=True)
 
 class Departement(Base):
