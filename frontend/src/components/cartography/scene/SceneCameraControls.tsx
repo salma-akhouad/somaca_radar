@@ -29,6 +29,7 @@ export type CameraAction =
   | 'zoom-out'
   | 'reset'
   | 'focus'
+  | 'focus-detail'
 
 
 export interface CameraCommand {
@@ -77,6 +78,8 @@ const MAX_ZOOM = 195
 const ZOOM_STEP = 12
 
 const FOCUS_ZOOM = 158
+
+const DETAIL_FOCUS_ZOOM = 178
 
 const FOCUS_DURATION = 0.65
 
@@ -450,8 +453,14 @@ export function SceneCameraControls({
 
 
     if (
-      command.type ===
-        'focus' &&
+      (
+        command.type ===
+          'focus'
+        ||
+        command.type ===
+          'focus-detail'
+      )
+      &&
       command.target
     ) {
       const endTarget =
@@ -470,10 +479,16 @@ export function SceneCameraControls({
           .normalize()
 
 
+      const focusZoom =
+        command.type ===
+          'focus-detail'
+          ? DETAIL_FOCUS_ZOOM
+          : FOCUS_ZOOM
+
+
       /*
-       * Keep the user's current viewing direction
-       * while moving to a comfortable inspection
-       * distance around the double-clicked point.
+       * Keep the user's current viewing direction while choosing
+       * a slightly tighter distance for incident-driven focus.
        */
       const endCamera =
         endTarget
@@ -481,7 +496,7 @@ export function SceneCameraControls({
           .add(
             direction.multiplyScalar(
               zoomToDistance(
-                FOCUS_ZOOM,
+                focusZoom,
               ),
             ),
           )

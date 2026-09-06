@@ -171,6 +171,7 @@ class Utilisateur(Base): # Base means that this class is a SQLAlchemy model, and
     mot_de_passe = Column(String)
     id_role = Column(Integer, ForeignKey("role.id_role"))
     role = relationship("Role")
+    notifications_read_at = Column(DateTime(timezone=True),nullable=True)
 
 class Session(Base):
     __tablename__ = "session"

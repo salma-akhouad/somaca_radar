@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 from typing import cast
 from sqlalchemy import func
@@ -5,7 +6,8 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID # Universally Unique Identifier, a 128-bit number used to uniquely identify information in computer systems. 
 from passlib.context import CryptContext
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect
+from fastapi import BackgroundTasks, FastAPI, Depends, HTTPException, Request, Response, status, WebSocket, WebSocketDisconnect
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.exc import IntegrityError
 from .database import SessionLocal, get_db
@@ -22,9 +24,10 @@ from .schemas import (CurrentStatusOut,MachineDetailOut, MachineCreate, MachineD
                       LoginResponse, HelperConversationSummaryOut, HelperAskRequest, HelperAskResponse, 
                       HelperResponseStatus, RoutingResult, IncidentCreate, IncidentUpdate, IncidentStatusUpdate,
                       IncidentOut, IncidentStatusHistoryOut, IncidentContactCreate, IncidentContactOut,TechnicianOut,
-                      CurrentUserOut)
-from .auth import (ACCESS_TOKEN_EXPIRE_MINUTES, RoleName, _resolve_user_from_token, create_access_token, get_current_token,
-                   get_current_user, hash_token, require_role, revoke_current_token_session)
+                      CurrentUserOut, NotificationReadOut, NotificationReadRequest)
+from .auth import (ACCESS_TOKEN_EXPIRE_MINUTES, SESSION_COOKIE_NAME, RoleName, _resolve_user_from_token,
+                   clear_session_cookie, create_access_token, get_current_token, get_current_user, hash_token,
+                   require_role, revoke_current_token_session, set_session_cookie)
 from .somaca_helper_service import SomacaHelperServiceError, SomacaHelperClarificationError, detect_intent, analyze_routing, generate_final_answer,  generate_clarification_answer
 from .gemini_client import GEMINI_MODEL, HELPER_CONTEXT_MESSAGE_LIMIT
 
@@ -36,11 +39,25 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def build_incident_event(
+    event_type: str,
+    incident: Incident,
+):
+    return jsonable_encoder({
+        "type": event_type,
+        "incident":
+            IncidentOut.model_validate(
+                incident
+            ),
+    })
 
 # WebSocket manager to handle multiple connections and broadcast messages to all connected clients
 class ConnectionManager:
@@ -67,6 +84,7 @@ class ConnectionManager:
             self.disconnect(connection)
 
 manager = ConnectionManager() 
+incident_manager = ConnectionManager()
 
 # bcrypt is a password hashing algorithm that is designed to be slow and computationally expensive, making it more resistant to brute-force attacks. 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto") # The deprecated="auto" argument means that if the password hash uses an older scheme, it will automatically be rehashed with the new scheme upon verification.
@@ -577,19 +595,35 @@ def get_statuts(db: Session = Depends(get_db), _: Utilisateur = Depends(get_curr
 # Here we didn't use StatutHistoriqueOut, we used StatutHistorique because we want to return the raw SQLAlchemy model instances, which will be automatically converted to the StatutHistoriqueOut Pydantic model by FastAPI when sending the response. 
 
 @app.post("/statuts", response_model=StatutHistoriqueOut)
-async def create_statut(statut: StatutHistoriqueCreate, db: Session = Depends(get_db),
-                         _: Utilisateur = Depends(require_role(RoleName.TECHNICIEN, RoleName.ADMINISTRATEUR))):
-    new_statut = StatutHistorique(**statut.model_dump(), date_changement=datetime.now(timezone.utc))
+async def create_statut(
+    statut: StatutHistoriqueCreate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        require_role(
+            RoleName.TECHNICIEN,
+            RoleName.ADMINISTRATEUR,
+        )
+    ),
+):
+    new_statut = StatutHistorique(
+        **statut.model_dump(),
+        id_util=current_user.id_util,
+        date_changement=datetime.now(
+            timezone.utc
+        ),
+    )
     db.add(new_statut)
     commit_or_409(db)
     db.refresh(new_statut)
 
     # Broadcast the new status change to all connected clients like the web dashboard, so they can update their UI in real-time without needing to refresh the page.
     await manager.broadcast({
+        "type": "machine_status_changed",
+        "id_statut": new_statut.id_statut,
         "id_machine": new_statut.id_machine,
         "id_etat": new_statut.id_etat,
-        "date_changement": new_statut.date_changement.isoformat(), # isoformat() converts the datetime object to a string in ISO 8601 format, which is a widely accepted standard for representing date and time. 
-        # This ensures that the date and time are communicated in a consistent and unambiguous way across different systems and platforms.
+        "id_util": new_statut.id_util,
+        "date_changement": new_statut.date_changement.isoformat(),
         "description_probleme": new_statut.description_probleme,
     })
 
@@ -856,11 +890,14 @@ def delete_helper_conversation(
 
 
 # Incident Management
-@app.post("/incidents",response_model=IncidentOut,
+@app.post(
+    "/incidents",
+    response_model=IncidentOut,
     status_code=status.HTTP_201_CREATED,
 )
 def create_incident(
     incident: IncidentCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(
         require_role(
@@ -872,7 +909,8 @@ def create_incident(
     machine = (
         db.query(Machine)
         .filter(
-            Machine.id_machine == incident.id_machine
+            Machine.id_machine
+            == incident.id_machine
         )
         .first()
     )
@@ -892,16 +930,19 @@ def create_incident(
     )
 
     db.add(new_incident)
-    try:
-        db.flush() # it sends the pending changes to the database without committing the transaction. This allows us to get 
-        # The auto-generated primary key (id_incident) for the new incident before we commit the transaction. If there is an 
-        # IntegrityError (PostgreSQL correctly detected that something we asked it to store violates a database rule.), we 
-        # can catch it and handle it appropriately without having committed any changes to the database yet.
 
-        initial_history = IncidentStatusHistory(
-            id_incident=new_incident.id_incident,
-            status=IncidentStatus.OUVERT,
-            changed_by_user_id=current_user.id_util,
+    try:
+        db.flush()
+
+        initial_history = (
+            IncidentStatusHistory(
+                id_incident=
+                    new_incident.id_incident,
+                status=
+                    IncidentStatus.OUVERT,
+                changed_by_user_id=
+                    current_user.id_util,
+            )
         )
 
         db.add(initial_history)
@@ -909,17 +950,26 @@ def create_incident(
 
     except IntegrityError:
         db.rollback()
+
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            # 409 is within the range of 400 to 499, which indicates that the client made an error in the request. 
-            # In this case, it suggests that there was a conflict with the current state of the resource, such as a duplicate value or an invalid foreign key reference.
-            detail="Could not create incident",
+            status_code=
+                status.HTTP_409_CONFLICT,
+            detail=
+                "Could not create incident",
         )
-    
-    # refresh() is used to reload the instance from the database, ensuring that we have the most up-to-date data, including any auto-generated fields like the primary key (id_incident) and timestamps.
-    # because the model we are returning is IncidentOut, which includes the id_incident field, we need to ensure that this field is populated with the correct value from the database before returning the response.
+
     db.refresh(new_incident)
+
+    background_tasks.add_task(
+        incident_manager.broadcast,
+        build_incident_event(
+            "incident_created",
+            new_incident,
+        ),
+    )
+
     return new_incident
+
 
 @app.get("/incidents",response_model=list[IncidentOut])
 def get_incidents(
@@ -954,34 +1004,42 @@ def get_incident(
 
     return incident
 
-@app.patch("/incidents/{id_incident}", response_model=IncidentOut)
+
+@app.patch(
+    "/incidents/{id_incident}",
+    response_model=IncidentOut,
+)
 def update_incident(
     id_incident: int,
     incident: IncidentUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(
-        require_role(RoleName.ADMINISTRATEUR,RoleName.TECHNICIEN)
-    )):
-
+        require_role(
+            RoleName.ADMINISTRATEUR,
+            RoleName.TECHNICIEN,
+        )
+    ),
+):
     existing = (
         db.query(Incident)
         .filter(
-            Incident.id_incident == id_incident
+            Incident.id_incident
+            == id_incident
         )
         .first()
     )
 
     if existing is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=
+                status.HTTP_404_NOT_FOUND,
             detail="Incident not found",
         )
-    
-    data = incident.model_dump(exclude_unset=True) 
-    # It creates a dictionary of the fields that were provided in the request, excluding
-    #  any fields that were not set. This allows us to only update the fields that the client 
-    # wants to change, without overwriting other fields with default values. It gives us: 
-    # field_name : new_value
+
+    data = incident.model_dump(
+        exclude_unset=True
+    )
 
     if (
         current_user.role.nom_role.lower()
@@ -992,40 +1050,67 @@ def update_incident(
             "severity",
         }
 
-        if forbidden_fields.intersection(data):
+        if forbidden_fields.intersection(
+            data
+        ):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=
+                    status.HTTP_403_FORBIDDEN,
                 detail=(
-                    "Technicians cannot modify the problem or severity.",
+                    "Technicians cannot modify "
+                    "the problem or severity."
                 ),
             )
-        
+
     for field, value in data.items():
-        setattr(existing, field, value)
+        setattr(
+            existing,
+            field,
+            value,
+        )
 
     commit_or_409(db)
+    db.refresh(existing)
+
+    background_tasks.add_task(
+        incident_manager.broadcast,
+        build_incident_event(
+            "incident_updated",
+            existing,
+        ),
+    )
+
     return existing
 
-@app.patch("/incidents/{id_incident}/status", response_model=IncidentOut)
+@app.patch(
+    "/incidents/{id_incident}/status",
+    response_model=IncidentOut,
+)
 def update_incident_status(
     id_incident: int,
     status_update: IncidentStatusUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(
-        require_role(RoleName.ADMINISTRATEUR,RoleName.TECHNICIEN)
+        require_role(
+            RoleName.ADMINISTRATEUR,
+            RoleName.TECHNICIEN,
+        )
     ),
 ):
     existing = (
         db.query(Incident)
         .filter(
-            Incident.id_incident == id_incident
+            Incident.id_incident
+            == id_incident
         )
         .first()
     )
 
     if existing is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=
+                status.HTTP_404_NOT_FOUND,
             detail="Incident not found",
         )
 
@@ -1033,22 +1118,54 @@ def update_incident_status(
         IncidentStatus,
         existing.status,
     )
-    if existing_status == status_update.status:
+
+    if (
+        existing_status
+        == status_update.status
+    ):
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Incident already has this status",
+            status_code=
+                status.HTTP_409_CONFLICT,
+            detail=
+                "Incident already has this status",
         )
 
-    setattr(existing,"status",status_update.status)
-    history_entry = IncidentStatusHistory(
-        id_incident=existing.id_incident,
-        status=status_update.status,
-        changed_by_user_id=current_user.id_util,
+    setattr(
+        existing,
+        "status",
+        status_update.status,
+    )
+
+    history_entry = (
+        IncidentStatusHistory(
+            id_incident=
+                existing.id_incident,
+            status=
+                status_update.status,
+            changed_by_user_id=
+                current_user.id_util,
+        )
     )
 
     db.add(history_entry)
-    commit_or_409(db,"Could not update incident status")
+
+    commit_or_409(
+        db,
+        "Could not update incident status",
+    )
+
+    db.refresh(existing)
+
+    background_tasks.add_task(
+        incident_manager.broadcast,
+        build_incident_event(
+            "incident_updated",
+            existing,
+        ),
+    )
+
     return existing
+
 
 @app.get("/incidents/{id_incident}/history",
     response_model=list[IncidentStatusHistoryOut],
@@ -1171,48 +1288,40 @@ def get_incident_contacts(
 
 # Authentication
 @app.post("/login", response_model=LoginResponse)
-def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+def login(credentials: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.query(Utilisateur).filter(Utilisateur.email == credentials.email).first()
-    # Verify user exists and password matches
     if user is None or not pwd_context.verify(credentials.mot_de_passe, user.mot_de_passe):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
-    token = create_access_token(cast(int, user.id_util))
-    # Hashing the token before storing it in the database to enhance security.
-    token_hash = hash_token(token) 
-    now = datetime.now(timezone.utc)
-    expire_time = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES) # timedelta is a class used to represent a duration, the difference between two dates or times. 
 
+    token = create_access_token(cast(int, user.id_util))
+    now = datetime.now(timezone.utc)
     new_session = SessionModel(
         id_util=user.id_util,
-        token=token_hash,
+        token=hash_token(token),
         date_creation=now,
-        date_expiration=expire_time,
-        date_revocation=None,
+        date_expiration=now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     db.add(new_session)
-    db.commit()
-    return LoginResponse(access_token=token, token_type="bearer") 
+    commit_or_409(db, "Could not create authentication session")
+    set_session_cookie(response, token)
+    return LoginResponse(authenticated=True)
 # bearer represent the way the token is sent in the Authorization header of HTTP requests. The client includes the token in the header as follows: "Authorization
 
 
-@app.post("/logout",status_code=status.HTTP_204_NO_CONTENT)
+@app.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
-    token: str = Depends(get_current_token),
+    request: Request,
+    response: Response,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
 ):
-    revoked = revoke_current_token_session(
-        token,
-        db,
-    )
+    token = request.cookies.get(SESSION_COOKIE_NAME)
 
-    if not revoked:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Session is already expired or revoked",
-        )
+    if token:
+        revoke_current_token_session(token, db)
 
+    clear_session_cookie(response)
     return None
+
 
 # Returns the current user's information based on the provided JWT token. 
 @app.get("/me", response_model=CurrentUserOut)
@@ -1226,35 +1335,209 @@ def get_me(
         "email": current_user.email,
         "id_role": current_user.id_role,
         "role": current_user.role.nom_role.lower(),
+        "notifications_read_at": current_user.notifications_read_at,
+    }
+
+
+@app.post("/notifications/read", response_model=NotificationReadOut)
+def mark_notifications_read(
+    payload: NotificationReadRequest | None = None,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        get_current_user
+    ),
+):
+    now = datetime.now(
+        timezone.utc
+    )
+
+    requested_read_at = (
+        payload.read_at
+        if payload is not None
+        and payload.read_at is not None
+        else now
+    )
+
+    if (
+        requested_read_at.tzinfo
+        is None
+    ):
+        requested_read_at = (
+            requested_read_at.replace(
+                tzinfo=timezone.utc
+            )
+        )
+    else:
+        requested_read_at = (
+            requested_read_at.astimezone(
+                timezone.utc
+            )
+        )
+
+    # Never let a client move the read cursor into the future.
+    target_read_at = min(
+        requested_read_at,
+        now,
+    )
+
+    current_read_at = (
+        current_user.notifications_read_at
+    )
+
+    if current_read_at is not None:
+        if (
+            current_read_at.tzinfo
+            is None
+        ):
+            current_read_at = (
+                current_read_at.replace(
+                    tzinfo=timezone.utc
+                )
+            )
+        else:
+            current_read_at = (
+                current_read_at.astimezone(
+                    timezone.utc
+                )
+            )
+
+        # The cursor must only move forward.
+        target_read_at = max(
+            target_read_at,
+            current_read_at,
+        )
+
+    setattr(
+        current_user,
+        "notifications_read_at",
+        target_read_at,
+    )
+
+    commit_or_409(
+        db,
+        "Could not update notification state",
+    )
+
+    return {
+        "read_at":
+            target_read_at,
     }
 
 
 # WebSocket endpoint - streams machine status updates
-@app.websocket("/ws/statuts") # the complete URL for the WebSocket connection will be something like ws://yourdomain.com/ws/statuts?token=..., it has 2 parts : the path ( /ws/statuts) and the query parameter (?token=...).
-async def websocket_statuts(websocket: WebSocket, token: str): # FastAPI reads the token automatically from the query parameter
-    await websocket.accept() 
-    '''
-        Wait until the server finishes sending the WebSocket handshake acceptance to the browser or client.
-        This network operation may take time, so `await` lets FastAPI handle other clients instead of blocking while waiting.
-    '''
-
+@app.websocket("/ws/statuts")
+async def websocket_statuts(websocket: WebSocket):
     if len(manager.active_connections) >= manager.MAX_CONNECTIONS:
-        await websocket.close(code=1013)  # 1013 = registered WebSocket code for "Try Again Later"
+        await websocket.close(code=1013)
         return
-    
+
+    token = websocket.cookies.get(SESSION_COOKIE_NAME)
+    if not token:
+        await websocket.close(code=1008)
+        return
+
     db = SessionLocal()
     try:
-        _resolve_user_from_token(token, db) # Both HTTP and WebSocket endpoints can use the same token validation logic, ensuring consistent authentication (not the same way of transporting) across different types of connections.
-                                            # Here we are not assigning the result to a variable because we only need to validate the token; we don't need the user object for any further processing in this function, since all roles can read the dashboard.
+        _resolve_user_from_token(token, db)
     except HTTPException:
-        await websocket.close(code=1008)  # 1008 = WebSocket's standard "policy violation" close code (Failed authentication in our case)
-        return 
-    finally: # finally block is executed no matter what happens in the try block. 
-            db.close()  # released immediately — Because this WebSocket function doesn't return until the client disconnects, which could be minutes, hours, whatever a dashboard stays open
-    
-    manager.active_connections.append(websocket)  # This line remembers the communication channel (the WebSocket object) with the client in the active_connections list, allowing the server to send messages to this client later.
+        await websocket.close(code=1008)
+        return
+    finally:
+        db.close()
+
+    await websocket.accept()
+    manager.active_connections.append(websocket)
+
     try:
-        while True: # This infinite loop keeps the WebSocket connection open, allowing the server to continuously send updates to the client. The loop will only exit if the client disconnects or an error occurs.
-            await websocket.receive_text()  # it waits for a message from the client. This is necessary to keep the connection alive and to detect when the client disconnects. The server doesn't actually use the received message, but it needs to call receive_text() to avoid the connection being closed due to inactivity. And it waits wihtout consuming CPU ressources.
+        while True:
+            try:
+                await asyncio.wait_for(websocket.receive_text(), timeout=30)
+            except asyncio.TimeoutError:
+                pass
+
+            db = SessionLocal()
+            try:
+                _resolve_user_from_token(token, db)
+            except HTTPException:
+                await websocket.close(code=1008)
+                return
+            finally:
+                db.close()
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)
+
+
+@app.websocket("/ws/incidents")
+async def websocket_incidents(
+    websocket: WebSocket,
+):
+    if (
+        len(
+            incident_manager.active_connections
+        )
+        >= incident_manager.MAX_CONNECTIONS
+    ):
+        await websocket.close(code=1013)
+        return
+
+    token = websocket.cookies.get(
+        SESSION_COOKIE_NAME
+    )
+
+    if not token:
+        await websocket.close(code=1008)
+        return
+
+    db = SessionLocal()
+
+    try:
+        _resolve_user_from_token(
+            token,
+            db,
+        )
+    except HTTPException:
+        await websocket.close(code=1008)
+        return
+    finally:
+        db.close()
+
+    await websocket.accept()
+
+    incident_manager.active_connections.append(
+        websocket
+    )
+
+    try:
+        while True:
+            try:
+                await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=30,
+                )
+            except asyncio.TimeoutError:
+                pass
+
+            db = SessionLocal()
+
+            try:
+                _resolve_user_from_token(
+                    token,
+                    db,
+                )
+            except HTTPException:
+                await websocket.close(
+                    code=1008
+                )
+                return
+            finally:
+                db.close()
+
+    except WebSocketDisconnect:
+        pass
+
+    finally:
+        incident_manager.disconnect(
+            websocket
+        )

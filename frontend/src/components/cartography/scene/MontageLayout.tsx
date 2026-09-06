@@ -3,6 +3,10 @@ import {
 } from './markings/IndustrialLane'
 
 import {
+  useOperations,
+} from '../../../operations/OperationsContext'
+
+import {
   ProductionHandoff,
 } from './factory/ProductionHandoff'
 
@@ -120,9 +124,6 @@ import {
   FireSafetyStations,
 } from './factory/FireSafetyStations'
 
-import {
-  LivePoleStatusOverlay,
-} from './factory/LivePoleStatusOverlay'
 
 interface MontageLayoutProps {
   selectedPoleId?:
@@ -140,6 +141,22 @@ export function MontageLayout({
   selectedPoleId,
   onPoleSelect,
 }: MontageLayoutProps) {
+  const {
+    poleStates,
+  } =
+    useOperations()
+
+
+  const operationalLevelByPoleId =
+    new Map(
+      poleStates.map(
+        (state) => [
+          state.poleId,
+          state.level,
+        ],
+      ),
+    )
+
   const uets =
     Object.values(
       UET_LAYOUT,
@@ -364,22 +381,36 @@ export function MontageLayout({
 
 
       {montagePoles.map(
-        (pole) => (
-          <ProductionStation
-            key={pole.id}
-            pole={pole}
-            selected={
-              selectedPoleId ===
-              pole.id
-            }
-            onSelect={
-              onPoleSelect
-            }
-          />
-        ),
-      )}
+        (pole) => {
+          const poleId =
+            Number(
+              pole.id.replace(
+                'P-',
+                '',
+              ),
+            )
 
-      <LivePoleStatusOverlay />
+          return (
+            <ProductionStation
+              key={pole.id}
+              pole={pole}
+              selected={
+                selectedPoleId ===
+                pole.id
+              }
+              operationalLevel={
+                operationalLevelByPoleId.get(
+                  poleId,
+                )
+                ?? 'operational'
+              }
+              onSelect={
+                onPoleSelect
+              }
+            />
+          )
+        },
+      )}
 
       <OverheadAssemblyLine />
 

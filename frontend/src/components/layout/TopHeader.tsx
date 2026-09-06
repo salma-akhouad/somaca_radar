@@ -1,11 +1,13 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
+import { useOperations } from '../../operations/OperationsContext'
 import { Icon } from '../common/Icon'
 import { NotificationCenter } from '../notifications/NotificationCenter'
-import { useAuth } from '../../auth/AuthContext'
 
 const PAGE_META: Record<
   string,
@@ -18,33 +20,74 @@ const PAGE_META: Record<
     title: 'MONTAGE',
     subtitle: 'CARTOGRAPHIE EN TEMPS RÉEL',
   },
+
   '/incidents': {
     title: 'INCIDENTS',
     subtitle: 'TRAITEMENT ET SUIVI DES INCIDENTS',
   },
+
   '/supervision': {
     title: 'SUPERVISION',
     subtitle: 'ÉTAT DE L’INSTALLATION',
   },
+
   '/administration': {
     title: 'ADMINISTRATION',
     subtitle: 'CONFIGURATION DU SYSTÈME',
   },
 }
 
+const REALTIME_LABELS = {
+  connected: 'TEMPS RÉEL ACTIF',
+  connecting: 'CONNEXION TEMPS RÉEL',
+  fallback: 'MODE DE SECOURS',
+  unavailable: 'CONNEXION INDISPONIBLE',
+} as const
+
 function LiveClock() {
   const [now, setNow] =
     useState(() => new Date())
 
+  const millisecondsRef =
+    useRef<HTMLSpanElement | null>(
+      null,
+    )
+
   useEffect(() => {
-    const interval =
+    const secondsTimer =
       window.setInterval(
         () => setNow(new Date()),
         1000,
       )
 
-    return () =>
-      window.clearInterval(interval)
+    const millisecondsTimer =
+      window.setInterval(
+        () => {
+          if (
+            !millisecondsRef.current
+          ) {
+            return
+          }
+
+          millisecondsRef.current
+            .textContent =
+            `.${String(
+              new Date()
+                .getMilliseconds(),
+            ).padStart(3, '0')}`
+        },
+        40,
+      )
+
+    return () => {
+      window.clearInterval(
+        secondsTimer,
+      )
+
+      window.clearInterval(
+        millisecondsTimer,
+      )
+    }
   }, [])
 
   const time =
@@ -75,7 +118,15 @@ function LiveClock() {
       aria-label="Date et heure locales"
     >
       <div className="live-clock__time">
-        <span>{time}</span>
+        <span>
+          {time}
+          <span
+            ref={millisecondsRef}
+            className="live-clock__milliseconds"
+          >
+            .000
+          </span>
+        </span>
       </div>
 
       <div className="live-clock__date">
@@ -87,27 +138,54 @@ function LiveClock() {
 
 export function TopHeader() {
   const location = useLocation()
-  const { user, logout } = useAuth()
-  const [profileOpen, setProfileOpen] = useState(false)
 
-  const meta = PAGE_META[location.pathname] ?? PAGE_META['/cartography']
+  const {
+    user,
+    logout,
+  } = useAuth()
+
+  const {
+    realtimeStatus,
+  } = useOperations()
+
+  const [
+    profileOpen,
+    setProfileOpen,
+  ] = useState(false)
+
+  const meta =
+    PAGE_META[location.pathname]
+    ?? PAGE_META['/cartography']
+
   const initials =
-    `${user?.prenom?.[0] ?? ''}${user?.nom?.[0] ?? ''}`.toUpperCase() || 'SR'
+    `${user?.prenom?.[0] ?? ''}${user?.nom?.[0] ?? ''}`
+      .toUpperCase()
+    || 'SR'
 
   return (
     <header className="top-header">
       <div className="page-heading">
         <h1>{meta.title}</h1>
-        <p>{meta.subtitle}</p>
+
+        <p>
+          {meta.subtitle}
+        </p>
       </div>
 
       <div className="top-header__actions">
-        <div className="system-status">
+        <div
+          className={
+            `system-status system-status--${realtimeStatus}`
+          }
+          aria-live="polite"
+        >
           <span />
-          TEMPS RÉEL ACTIF
+
+          {REALTIME_LABELS[realtimeStatus]}
         </div>
 
         <LiveClock />
+
         <NotificationCenter />
 
         <div className="profile-menu">
@@ -116,10 +194,20 @@ export function TopHeader() {
             type="button"
             aria-label="Ouvrir le profil"
             aria-expanded={profileOpen}
-            onClick={() => setProfileOpen((value) => !value)}
+            onClick={() =>
+              setProfileOpen(
+                (value) => !value,
+              )
+            }
           >
-            <span>{initials}</span>
-            <Icon name="chevron" size={16} />
+            <span>
+              {initials}
+            </span>
+
+            <Icon
+              name="chevron"
+              size={16}
+            />
           </button>
 
           {profileOpen && (
@@ -127,12 +215,22 @@ export function TopHeader() {
               <strong>
                 {user?.prenom} {user?.nom}
               </strong>
-              <span>{user?.email}</span>
-              <small>{user?.role}</small>
-              <button type="button" onClick={() => {
-                setProfileOpen(false)
-                void logout()
-              }}>
+
+              <span>
+                {user?.email}
+              </span>
+
+              <small>
+                {user?.role}
+              </small>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileOpen(false)
+                  void logout()
+                }}
+              >
                 Se déconnecter
               </button>
             </div>

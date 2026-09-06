@@ -301,6 +301,8 @@ button {
 }
 
 .top-header {
+  position: relative;
+  z-index: 100;
   height: clamp(76px, 9.4vh, 88px);
   flex: 0 0 auto;
   display: flex;
@@ -308,7 +310,7 @@ button {
   justify-content: space-between;
   gap: 20px;
   padding: 11px clamp(20px, 2.3vw, 34px);
-  overflow: hidden;
+  overflow: visible;
   background: rgba(255, 254, 250, .83);
   border-bottom: 1px solid var(--border);
 }
@@ -369,6 +371,18 @@ button {
   height: 9px;
   border-radius: 50%;
   background: var(--green);
+}
+
+.system-status--connecting span {
+  background: var(--warning);
+}
+
+.system-status--fallback span {
+  background: var(--warning);
+}
+
+.system-status--unavailable span {
+  background: var(--critical);
 }
 
 .live-clock {
@@ -644,8 +658,8 @@ button {
   position: absolute;
   top: 70px;
   right: 18px;
-  z-index: 3;
-  width: min(310px, calc(100% - 36px));
+  z-index: 8;
+  width: min(350px, calc(100% - 36px));
   overflow: hidden;
   border: 1px solid rgba(90, 91, 86, .22);
   border-radius: 14px;
@@ -705,50 +719,53 @@ button {
   background: #e3e1da;
 }
 
-.pole-details__summary {
-  min-height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 17px;
+.pole-details__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   border-bottom: 1px solid var(--border);
-  color: #696b65;
-  font-size: 11px;
+  background: rgba(245, 244, 239, .72);
 }
 
-.pole-details__summary strong {
-  color: #343633;
-  font-size: 15px;
+.pole-details__tab {
+  min-height: 41px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #777a74;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .055em;
+  cursor: pointer;
 }
 
-.pole-details__machines {
-  padding: 8px;
+.pole-details__tab:hover { color: #343733; }
+
+.pole-details__tab--active {
+  border-bottom-color: var(--yellow);
+  color: #343733;
+  background: rgba(255, 252, 241, .7);
 }
+
+.pole-details__body {
+  max-height: min(470px, calc(100vh - 250px));
+  overflow: auto;
+}
+
+.pole-details__machines { padding: 8px; }
 
 .pole-machine {
-  min-height: 58px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 14px;
   padding: 9px 10px;
-  border-radius: 9px;
 }
 
-.pole-machine+.pole-machine {
-  border-top: 1px solid #ebe9e2;
-}
-
-.pole-machine__identity {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.pole-machine__identity div {
-  min-width: 0;
-}
+.pole-machine + .pole-machine { border-top: 1px solid #ebe9e2; }
+.pole-machine__identity { min-width: 0; }
+.pole-machine__identity div { min-width: 0; }
 
 .pole-machine__identity strong {
   display: block;
@@ -767,56 +784,153 @@ button {
   letter-spacing: .04em;
 }
 
-.pole-machine__status {
-  width: 9px;
-  height: 9px;
-  flex: 0 0 9px;
-  border-radius: 50%;
-}
-
-.pole-machine__status--online {
-  background: #6f9b76;
-}
-
-.pole-machine__status--warning {
-  background: #b69036;
-}
-
-.pole-machine__status--fault {
-  background: #9a4b43;
-}
-
-.pole-machine__status--offline {
-  background: #666b67;
-}
-
-.pole-machine__badge {
+.pole-machine__state {
   flex: 0 0 auto;
-  padding: 5px 7px;
-  border-radius: 999px;
+  max-width: 128px;
+  font-size: 9px;
+  font-weight: 850;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.pole-machine__state--online { color: #5b8d66; }
+.pole-machine__state--warning { color: #a2761e; }
+.pole-machine__state--fault { color: #a7473f; }
+.pole-machine__state--offline { color: #626863; }
+
+.pole-details__details { padding: 0 14px 14px; }
+.pole-details__section { padding: 15px 0; }
+.pole-details__section + .pole-details__section { border-top: 1px solid #e6e4dd; }
+
+.pole-details__section h3 {
+  margin: 0 0 10px;
+  color: #777b75;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .10em;
+}
+
+.pole-details__healthy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.pole-details__healthy strong { color: #53775b; font-size: 11px; }
+.pole-details__healthy span,
+.pole-details__empty-text {
+  margin: 0;
+  color: #7c817c;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.pole-current-issues,
+.pole-active-incidents {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.pole-current-issue {
+  padding: 10px 11px;
+  border: 1px solid #e2e0d9;
+  border-radius: 8px;
+  background: rgba(255, 255, 252, .58);
+}
+
+.pole-current-issue__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pole-current-issue__header > div { min-width: 0; }
+.pole-current-issue__header > div strong,
+.pole-current-issue__header > div small { display: block; }
+
+.pole-current-issue__header > div strong {
+  overflow: hidden;
+  color: #3d403c;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pole-current-issue__header > div small {
+  margin-top: 3px;
+  color: #8a8e89;
+  font-size: 9px;
+}
+
+.pole-current-issue__field { margin-top: 10px; }
+.pole-current-issue__field > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #858983;
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: .035em;
+  letter-spacing: .07em;
+  text-transform: uppercase;
 }
 
-.pole-machine__badge--online {
-  background: #e5eee6;
-  color: #537359;
+.pole-current-issue__field p,
+.pole-active-incident p {
+  margin: 0;
+  color: #565b57;
+  font-size: 10px;
+  line-height: 1.45;
 }
 
-.pole-machine__badge--warning {
-  background: #f3ead3;
-  color: #866b29;
+.pole-current-issue__time {
+  display: block;
+  margin-top: 8px;
+  color: #91958f;
+  font-size: 8px;
 }
 
-.pole-machine__badge--fault {
-  background: #f0deda;
-  color: #82443d;
+.pole-details__clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-.pole-machine__badge--offline {
-  background: #e4e5e2;
-  color: #626660;
+.pole-active-incident {
+  padding: 10px 11px;
+  border-left: 2px solid #c9c9c3;
+  background: rgba(247, 246, 241, .58);
+}
+
+.pole-active-incident--focused {
+  border-left-color: var(--yellow);
+  background: #faf7ea;
+}
+
+.pole-active-incident__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.pole-active-incident__meta strong { color: #3f433f; font-size: 10px; }
+.pole-active-incident__meta span { color: #777d78; font-size: 9px; font-weight: 700; }
+
+.pole-details__incident-link {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6b5616;
+  font-size: 9px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* Helper launcher */
@@ -1345,10 +1459,6 @@ button {
   white-space: nowrap;
 }
 
-/* =========================================================
-   CARTOGRAPHY POLISH — STAGE D
-   ========================================================= */
-
 /* Unified navigation hand */
 .map-stage__canvas {
   cursor: grab;
@@ -1469,4 +1579,142 @@ button {
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.05em;
+}
+
+.system-status--connected span {
+  background: var(--green);
+}
+
+.system-status--connecting span {
+  background: var(--warning);
+}
+
+.system-status--fallback span {
+  background: var(--warning);
+}
+
+.system-status--unavailable span {
+  background: var(--critical);
+}
+
+.live-clock__milliseconds {
+  position: relative;
+  top: 2px;
+  margin-left: 1px;
+  color: var(--text-muted);
+  font-size: 0.62em;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.legend-dot--stopped {
+  background: #b9c1bc;
+  border: 1px solid #737b76;
+}
+
+
+/* Operational information must stay above SOMACA Helper. */
+.pole-details {
+  z-index: 8;
+}
+
+
+/* Preserve the main hierarchy:
+   POSTE DE PRODUCTION / P-xx / UET remain dominant,
+   while machine and incident information stays readable. */
+
+.pole-details__tab {
+  font-size: 11px;
+}
+
+.pole-machine__identity strong {
+  font-size: 12px;
+}
+
+.pole-machine__identity small {
+  font-size: 10px;
+}
+
+.pole-machine__state {
+  font-size: 10px;
+}
+
+.pole-details__section h3 {
+  font-size: 10px;
+}
+
+.pole-details__healthy strong {
+  font-size: 12px;
+}
+
+.pole-details__healthy span,
+.pole-details__empty-text {
+  font-size: 11px;
+}
+
+.pole-current-issue__header > div strong {
+  font-size: 12px;
+}
+
+.pole-current-issue__header > div small {
+  font-size: 10px;
+}
+
+.pole-current-issue__field > span {
+  font-size: 9px;
+}
+
+.pole-current-issue__field p,
+.pole-active-incident p {
+  font-size: 11px;
+}
+
+.pole-current-issue__time {
+  font-size: 9px;
+}
+
+.pole-active-incident__meta strong {
+  font-size: 11px;
+}
+
+.pole-active-incident__meta span {
+  font-size: 10px;
+}
+
+.pole-details__incident-link {
+  font-size: 10px;
+}
+
+.route-loading {
+  min-width: 0;
+  min-height: 100%;
+  flex: 1 1 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  color: #4f5651;
+
+  font-family:
+    "Arial Narrow",
+    "Roboto Condensed",
+    Arial,
+    sans-serif;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  letter-spacing: .075em;
+
+  text-align: center;
+}
+
+.route-loading .app-loading__mark {
+  width: 38px;
+  height: 38px;
+
+  border-width: 4px;
 }

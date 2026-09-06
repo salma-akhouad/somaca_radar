@@ -134,7 +134,7 @@ export const montagePoles: PoleConfig[] = [
     rotation: -Math.PI / 2,
     machines: [
       { id: 'P04-TAB', kind: 'tablet' },
-      { id: 'P04-SCN', kind: 'scanner', status: 'warning' },
+      { id: 'P04-SCN', kind: 'scanner' },
     ],
   },
 
@@ -212,7 +212,7 @@ export const montagePoles: PoleConfig[] = [
     position: [7.9, 0, 23.5],
     machines: [
       { id: 'P11-TAB', kind: 'tablet' },
-      { id: 'P11-SCN', kind: 'scanner', status: 'offline' },
+      { id: 'P11-SCN', kind: 'scanner' },
     ],
   },
 
@@ -282,7 +282,7 @@ export const montagePoles: PoleConfig[] = [
     position: [-23.5, 0, -7.2],
     rotation: Math.PI / 2,
     machines: [
-      { id: 'P17-DSP', kind: 'inspection', status: 'fault' },
+      { id: 'P17-DSP', kind: 'inspection' },
       { id: 'P17-PC', kind: 'pc' },
     ],
   },
@@ -354,7 +354,7 @@ export const montagePoles: PoleConfig[] = [
     position: [7.9, 0, -23.5],
     rotation: Math.PI,
     machines: [
-      { id: 'P23-TAB', kind: 'tablet', status: 'warning' },
+      { id: 'P23-TAB', kind: 'tablet'},
       { id: 'P23-SCN', kind: 'scanner' },
     ],
   },

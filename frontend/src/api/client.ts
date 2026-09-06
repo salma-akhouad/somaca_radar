@@ -10,6 +10,7 @@ import type {
     IncidentStatus,
     LoginResponse,
     Machine,
+    NotificationReadResponse,
     Poteau,
     Role,
     SessionRecord,
@@ -25,10 +26,13 @@ const API_BASE_URL = (
     'http://localhost:8000'
 ).replace(/\/$/, '')
 
-const TOKEN_KEY = 'somaca_access_token'
 const AUTH_EXPIRED_EVENT = 'somaca:auth-expired'
 
 let authExpiredDispatched = false
+
+interface RequestBehavior {
+    notifyAuthExpired?: boolean
+}
 
 export class ApiError extends Error {
     status: number
@@ -43,29 +47,11 @@ export class ApiError extends Error {
     }
 }
 
-export function getStoredToken() {
-    return localStorage.getItem(TOKEN_KEY)
-}
-
-export function storeToken(token: string) {
-    authExpiredDispatched = false
-    localStorage.setItem(
-        TOKEN_KEY,
-        token,
-    )
-}
-
-export function clearStoredToken() {
-    localStorage.removeItem(TOKEN_KEY)
-}
-
 export function getApiBaseUrl() {
     return API_BASE_URL
 }
 
 export function expireStoredSession() {
-    clearStoredToken()
-
     if (authExpiredDispatched) return
 
     authExpiredDispatched = true
@@ -73,6 +59,10 @@ export function expireStoredSession() {
     window.dispatchEvent(
         new Event(AUTH_EXPIRED_EVENT),
     )
+}
+
+export function resetAuthExpiredDispatch() {
+    authExpiredDispatched = false
 }
 
 export function onAuthExpired(
@@ -91,6 +81,27 @@ export function onAuthExpired(
     }
 }
 
+
+export const markNotificationsReadRequest =
+    (
+        readAt?: string,
+    ) =>
+        request<NotificationReadResponse>(
+            '/notifications/read',
+            {
+                method: 'POST',
+
+                body:
+                    readAt
+                        ? JSON.stringify({
+                            read_at:
+                                readAt,
+                        })
+                        : undefined,
+            },
+        )
+
+
 function errorMessage(
     status: number,
     path: string,
@@ -105,7 +116,7 @@ function errorMessage(
     switch (status) {
         case 401:
             return (
-                'Votre session a expiré. '
+                "Votre session n’est plus valide. "
                 + 'Veuillez vous reconnecter.'
             )
 
@@ -147,6 +158,7 @@ function errorMessage(
 async function request<T>(
     path: string,
     init: RequestInit = {},
+    behavior: RequestBehavior = {},
 ): Promise<T> {
     const headers = new Headers(
         init.headers,
@@ -161,16 +173,6 @@ async function request<T>(
             'application/json',
         )
     }
-
-    const token = getStoredToken()
-
-    if (token) {
-        headers.set(
-            'Authorization',
-            `Bearer ${token}`,
-        )
-    }
-
     let response: Response
 
     try {
@@ -179,6 +181,7 @@ async function request<T>(
             {
                 ...init,
                 headers,
+                credentials: 'include',
             },
         )
     } catch {
@@ -205,18 +208,55 @@ async function request<T>(
     if (!response.ok) {
         if (
             response.status === 401
-            && token
             && path !== '/login'
+            && behavior.notifyAuthExpired !== false
         ) {
             expireStoredSession()
         }
 
-        throw new ApiError(
-            response.status,
+        let message =
             errorMessage(
                 response.status,
                 path,
-            ),
+            )
+
+        if (
+            body
+            && typeof body === 'object'
+            && 'detail' in body
+            && typeof (
+                body as {
+                    detail?: unknown
+                }
+            ).detail === 'string'
+        ) {
+            const detail =
+                (
+                    body as {
+                        detail: string
+                    }
+                ).detail
+
+            if (
+                response.status === 409
+                && detail.includes(
+                    'other records still reference',
+                )
+            ) {
+                message =
+                    'Suppression impossible. '
+                    + 'Cet élément est encore utilisé '
+                    + 'par d’autres données.'
+            } else if (
+                response.status === 409
+            ) {
+                message = detail
+            }
+        }
+
+        throw new ApiError(
+            response.status,
+            message,
         )
     }
 
@@ -246,8 +286,17 @@ export const logoutRequest = () =>
         },
     )
 
-export const getMe = () =>
-    request<CurrentUser>('/me')
+export const getMe = (
+    options: { notifyAuthExpired?: boolean } = {},
+) =>
+    request<CurrentUser>(
+        '/me',
+        {},
+        {
+            notifyAuthExpired:
+                options.notifyAuthExpired ?? true,
+        },
+    )
 
 /* =========================================================
    MACHINES
@@ -539,14 +588,14 @@ export const getSessions = () =>
 
 
 export const revokeSession = (
-  id: number,
+    id: number,
 ) =>
-  request<SessionRecord>(
-    `/sessions/${id}/revoke`,
-    {
-      method: 'PATCH',
-    },
-  )
+    request<SessionRecord>(
+        `/sessions/${id}/revoke`,
+        {
+            method: 'PATCH',
+        },
+    )
 
 
 /* =========================================================

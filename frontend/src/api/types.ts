@@ -7,11 +7,11 @@ export interface CurrentUser {
   email: string
   id_role: number
   role: RoleName
+  notifications_read_at: string | null
 }
 
 export interface LoginResponse {
-  access_token: string
-  token_type: string
+  authenticated: boolean
 }
 
 export interface Machine {
@@ -34,6 +34,10 @@ export interface User {
   prenom: string
   email: string
   id_role: number
+}
+
+export interface NotificationReadResponse {
+  read_at: string
 }
 
 export interface SessionRecord {
@@ -140,6 +144,8 @@ export interface PoleOperationalState {
 export interface OperationsNotification {
   id: string
   level: Exclude<PoleOperationalLevel, 'operational'>
+  severity: IncidentSeverity
+  isUnread: boolean
   title: string
   description: string
   timestamp: string

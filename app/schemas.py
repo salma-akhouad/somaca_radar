@@ -83,6 +83,14 @@ class UtilisateurOut(UtilisateurBase):
 
 class CurrentUserOut(UtilisateurOut):
     role: str
+    notifications_read_at: Optional[datetime] = None
+
+
+class NotificationReadRequest(BaseModel):
+    read_at: Optional[datetime] = None
+    
+class NotificationReadOut(BaseModel):
+    read_at: datetime
 
 class SessionBase(BaseModel):
     date_creation: datetime
@@ -175,7 +183,6 @@ class StatutHistoriqueBase(BaseModel):
     description_probleme: Optional[str] = None
     id_machine: int
     id_etat: int
-    id_util: Optional[int] = None
 
 class StatutHistoriqueCreate(StatutHistoriqueBase):
     pass
@@ -190,6 +197,7 @@ class StatutHistoriqueUpdate(BaseModel):
 
 class StatutHistoriqueOut(StatutHistoriqueBase):
     id_statut: int
+    id_util: Optional[int] = None
     date_changement: datetime
     class Config:
         from_attributes = True
@@ -200,8 +208,7 @@ class LoginRequest(BaseModel):
     mot_de_passe: str
     
 class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+    authenticated: bool = True
 
 
 class CurrentStatusOut(BaseModel):

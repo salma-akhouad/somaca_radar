@@ -1,158 +1,143 @@
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
 } from 'react'
 import type { ReactNode } from 'react'
 
 import {
-  clearStoredToken,
-  getMe,
-  getStoredToken,
-  login as loginRequest,
-  logoutRequest,
-  onAuthExpired,
-  storeToken,
+    getMe,
+    login as loginRequest,
+    logoutRequest,
+    onAuthExpired,
+    resetAuthExpiredDispatch,
 } from '../api/client'
 import type { CurrentUser } from '../api/types'
 
 interface AuthContextValue {
-  user: CurrentUser | null
-  loading: boolean
-  isAdmin: boolean
-  login: (
-    email: string,
-    password: string,
-  ) => Promise<void>
-  logout: () => Promise<void>
+    user: CurrentUser | null
+    loading: boolean
+    isAdmin: boolean
+    authNotice: string | null
+    clearAuthNotice: () => void
+    login: (email: string, password: string) => Promise<void>
+    logout: () => Promise<void>
 }
 
-const AuthContext =
-  createContext<AuthContextValue | null>(
-    null,
-  )
+const AuthContext = createContext<AuthContextValue | null>(null)
 
-export function AuthProvider({
-  children,
-}: {
-  children: ReactNode
-}) {
-  const [user, setUser] =
-    useState<CurrentUser | null>(null)
+const SESSION_ENDED_MESSAGE =
+    'Votre session n’est plus valide. Veuillez vous reconnecter.'
 
-  const [loading, setLoading] =
-    useState(true)
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<CurrentUser | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [authNotice, setAuthNotice] = useState<string | null>(null)
 
-  useEffect(() => {
-    return onAuthExpired(() => {
-      clearStoredToken()
-      setUser(null)
-      setLoading(false)
-    })
-  }, [])
-
-  useEffect(() => {
-    let active = true
-
-    async function restore() {
-      if (!getStoredToken()) {
-        if (active) {
-          setLoading(false)
-        }
-
-        return
-      }
-
-      try {
-        const current = await getMe()
-
-        if (active) {
-          setUser(current)
-        }
-      } catch {
-        clearStoredToken()
-
-        if (active) {
-          setUser(null)
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void restore()
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  async function login(
-    email: string,
-    password: string,
-  ) {
-    const response = await loginRequest(
-      email,
-      password,
+    useEffect(
+        () => onAuthExpired(() => {
+            setUser(null)
+            setLoading(false)
+            setAuthNotice(SESSION_ENDED_MESSAGE)
+        }),
+        [],
     )
 
-    storeToken(response.access_token)
+    useEffect(() => {
+        let active = true
 
-    try {
-      const current = await getMe()
-      setUser(current)
-    } catch (error) {
-      clearStoredToken()
-      setUser(null)
-      throw error
+        async function restore() {
+            try {
+                const current = await getMe({
+                    notifyAuthExpired: false,
+                })
+
+                if (!active) return
+
+                resetAuthExpiredDispatch()
+                setUser(current)
+                setAuthNotice(null)
+            } catch {
+                if (active) {
+                    setUser(null)
+                }
+            } finally {
+                if (active) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        void restore()
+
+        return () => {
+            active = false
+        }
+    }, [])
+
+    function clearAuthNotice() {
+        setAuthNotice(null)
     }
-  }
 
-  async function logout() {
-    try {
-      if (getStoredToken()) {
-        await logoutRequest()
-      }
-    } catch {
-      // Local logout must still succeed
-      // if the server is unavailable.
-    } finally {
-      clearStoredToken()
-      setUser(null)
+    async function login(
+        email: string,
+        password: string,
+    ) {
+        setAuthNotice(null)
+
+        await loginRequest(
+            email,
+            password,
+        )
+
+        const current = await getMe({
+            notifyAuthExpired: false,
+        })
+
+        resetAuthExpiredDispatch()
+        setUser(current)
     }
-  }
 
-  const value = useMemo(
-    () => ({
-      user,
-      loading,
-      isAdmin:
-        user?.role === 'administrateur',
-      login,
-      logout,
-    }),
-    [user, loading],
-  )
+    async function logout() {
+        try {
+            await logoutRequest()
+        } catch {
+            // Leaving the local authenticated workspace must not depend on
+            // whether the server can still validate the current session.
+        } finally {
+            setAuthNotice(null)
+            setUser(null)
+        }
+    }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+    const value = useMemo(
+        () => ({
+            user,
+            loading,
+            isAdmin: user?.role === 'administrateur',
+            authNotice,
+            clearAuthNotice,
+            login,
+            logout,
+        }),
+        [user, loading, authNotice],
+    )
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+    const context = useContext(AuthContext)
 
-  if (!context) {
-    throw new Error(
-      'useAuth must be used inside AuthProvider',
-    )
-  }
+    if (!context) {
+        throw new Error('useAuth must be used inside AuthProvider')
+    }
 
-  return context
+    return context
 }

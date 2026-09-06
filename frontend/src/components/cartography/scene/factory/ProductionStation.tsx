@@ -4,6 +4,15 @@ import {
 } from '@react-three/drei'
 
 import {
+  DoubleSide,
+  Shape,
+} from 'three'
+
+import type {
+  PoleOperationalLevel,
+} from '../../../../api/types'
+
+import {
   MachineVisual,
 } from './MachineVisuals'
 
@@ -15,6 +24,7 @@ import type {
 interface ProductionStationProps {
   pole: PoleConfig
   selected?: boolean
+  operationalLevel?: PoleOperationalLevel
   onSelect?: (pole: PoleConfig) => void
 }
 
@@ -22,10 +32,10 @@ interface ProductionStationProps {
 const machineSlots: Array<
   [number, number, number]
 > = [
-  [-0.48, 0, -0.08],
-  [0.7, 0, 0.18],
-  [0.08, 0, 0.58],
-]
+    [-0.48, 0, -0.08],
+    [0.7, 0, 0.18],
+    [0.08, 0, 0.58],
+  ]
 
 
 const stationBorderColor =
@@ -41,19 +51,256 @@ const selectedPlateColor =
   '#f1ead3'
 
 
+const WARNING_COLORS: Record<
+  Exclude<
+    PoleOperationalLevel,
+    'operational'
+  >,
+  string
+> = {
+  /*
+   * Stronger orange than the SOMACA production yellow,
+   * so Attention requise remains visible in the factory.
+   */
+  alert: '#c66e16',
+
+  /*
+   * Muted industrial warning red.
+   */
+  critical: '#c54840',
+
+  /*
+   * Light graphite/white-grey treatment for Inconnu.
+   * Intentionally much lighter than the old dark grey.
+   */
+  stopped: '#b9c1bc',
+}
+
+
+const WARNING_OUTER =
+  new Shape()
+
+WARNING_OUTER.moveTo(
+  0,
+  0.68,
+)
+
+WARNING_OUTER.lineTo(
+  -0.78,
+  -0.58,
+)
+
+WARNING_OUTER.lineTo(
+  0.78,
+  -0.58,
+)
+
+WARNING_OUTER.closePath()
+
+
+const WARNING_INNER =
+  new Shape()
+
+WARNING_INNER.moveTo(
+  0,
+  0.48,
+)
+
+WARNING_INNER.lineTo(
+  -0.56,
+  -0.42,
+)
+
+WARNING_INNER.lineTo(
+  0.56,
+  -0.42,
+)
+
+WARNING_INNER.closePath()
+
+
+function WarningFace({
+  color,
+  back = false,
+}: {
+  color: string
+  back?: boolean
+}) {
+  return (
+    <group
+      rotation-y={
+        back
+          ? Math.PI
+          : 0
+      }
+    >
+      {/* Colored warning border */}
+      <mesh>
+        <shapeGeometry
+          args={[
+            WARNING_OUTER,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color={color}
+          side={DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+
+
+      {/* Warm-white sign surface */}
+      <mesh
+        position={[
+          0,
+          -0.025,
+          0.018,
+        ]}
+      >
+        <shapeGeometry
+          args={[
+            WARNING_INNER,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color="#f6f3e9"
+          side={DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+
+
+      {/*
+       * Heavy exclamation mark made from geometry rather
+       * than font text, so it stays genuinely bold and black.
+       */}
+      <mesh
+        position={[
+          0,
+          0.08,
+          0.042,
+        ]}
+      >
+        <boxGeometry
+          args={[
+            0.105,
+            0.40,
+            0.025,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color="#171a18"
+          toneMapped={false}
+        />
+      </mesh>
+
+
+      <mesh
+        position={[
+          0,
+          -0.27,
+          0.042,
+        ]}
+      >
+        <circleGeometry
+          args={[
+            0.072,
+            24,
+          ]}
+        />
+
+        <meshBasicMaterial
+          color="#171a18"
+          side={DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+
+function WarningPlacard({
+  level,
+}: {
+  level: PoleOperationalLevel
+}) {
+  if (
+    level === 'operational'
+  ) {
+    return null
+  }
+
+  const color =
+    WARNING_COLORS[level]
+
+  return (
+    <group
+      /*
+       * The sign sits directly beneath the production beam.
+       * No suspension bar: the warning itself remains clear.
+       */
+      position={[
+        0.18,
+        2.12,
+        -0.68,
+      ]}
+    >
+      {/* Front face */}
+      <group
+        position={[
+          0,
+          0,
+          0.026,
+        ]}
+      >
+        <WarningFace
+          color={color}
+        />
+      </group>
+
+
+      {/* Back face: identical appearance */}
+      <group
+        position={[
+          0,
+          0,
+          -0.026,
+        ]}
+      >
+        <WarningFace
+          color={color}
+          back
+        />
+      </group>
+    </group>
+  )
+}
+
 export function ProductionStation({
   pole,
   selected = false,
+  operationalLevel =
+  'operational',
   onSelect,
 }: ProductionStationProps) {
   return (
     <group
       position={pole.position}
+
       rotation-y={
         pole.rotation ??
         0
       }
 
+      /*
+       * One click contract for the whole production station:
+       * equipment, pole, nameplate and warning placard all
+       * resolve to the same production post.
+       */
       onClick={(event) => {
         event.stopPropagation()
 
@@ -259,6 +506,7 @@ export function ProductionStation({
       </mesh>
 
 
+      {/* Physical station identifier plate */}
       <RoundedBox
         args={[
           0.72,
@@ -285,6 +533,7 @@ export function ProductionStation({
       </RoundedBox>
 
 
+      {/* First face of the pole identifier */}
       <Text
         position={[
           -1.2,
@@ -294,6 +543,22 @@ export function ProductionStation({
         rotation-y={
           Math.PI
         }
+        fontSize={0.18}
+        color="#303531"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {pole.id}
+      </Text>
+
+
+      {/* Second face of the same pole identifier */}
+      <Text
+        position={[
+          -1.2,
+          3.34,
+          -0.645,
+        ]}
         fontSize={0.18}
         color="#303531"
         anchorX="center"
@@ -329,6 +594,13 @@ export function ProductionStation({
       </mesh>
 
 
+      <WarningPlacard
+        level={
+          operationalLevel
+        }
+      />
+
+
       {pole.machines.map(
         (
           machine,
@@ -346,8 +618,8 @@ export function ProductionStation({
             }
             position={
               machineSlots[
-                index %
-                machineSlots.length
+              index %
+              machineSlots.length
               ]
             }
           />
