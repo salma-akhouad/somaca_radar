@@ -1,8 +1,19 @@
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from './auth/AuthContext'
-import { OperationsProvider } from './operations/OperationsContext'
-import { AppRoutes } from './routes/AppRoutes'
+import {
+  BrowserRouter,
+} from 'react-router-dom'
+
+import {
+  AuthProvider,
+} from './auth/AuthContext'
+import {
+  OperationsProvider,
+} from './operations/OperationsContext'
+import {
+  AppRoutes,
+} from './routes/AppRoutes'
+
 import './styles/operational.css'
+
 
 function App() {
   return (
@@ -15,5 +26,6 @@ function App() {
     </BrowserRouter>
   )
 }
+
 
 export default App

@@ -1,11 +1,33 @@
-import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { Canvas } from '@react-three/fiber'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
-import { MapControls } from './MapControls'
-import { MapLegend } from './MapLegend'
-import { PoleDetailsPanel } from './PoleDetailsPanel'
-import { MontageScene } from './scene/MontageScene'
+import {
+  Canvas,
+  useFrame,
+} from '@react-three/fiber'
+
+import {
+  useLocation,
+} from 'react-router-dom'
+
+import {
+  AppLoading,
+} from '../common/AppLoading'
+import {
+  MapControls,
+} from './MapControls'
+import {
+  MapLegend,
+} from './MapLegend'
+import {
+  PoleDetailsPanel,
+} from './PoleDetailsPanel'
+import {
+  MontageScene,
+} from './scene/MontageScene'
 
 import type {
   CameraAction,
@@ -20,22 +42,76 @@ import type {
   PoleConfig,
 } from './scene/factory/data/montageLayoutData'
 
+
 export type PolePanelTab =
   | 'machines'
   | 'details'
+
 
 interface CartographyLocationState {
   focusPoleId?: number | null
   incidentId?: number | null
 }
 
+
+interface MapReadySignalProps {
+  onReady: () => void
+}
+
+
+/*
+ * useFrame runs as part of the real Three.js render loop.
+ * The extra requestAnimationFrame lets the first canvas frame reach the screen
+ * before the loading overlay is removed.
+ */
+function MapReadySignal({
+  onReady,
+}: MapReadySignalProps) {
+  const hasReportedReady =
+    useRef(false)
+
+  useFrame(() => {
+    if (
+      hasReportedReady.current
+    ) {
+      return
+    }
+
+    hasReportedReady.current =
+      true
+
+    window.requestAnimationFrame(
+      onReady,
+    )
+  })
+
+  return null
+}
+
+
 export function MapStage() {
-  const location = useLocation()
-  const handledNavigationKey = useRef('')
+  const location =
+    useLocation()
 
-  const [zoom, setZoom] = useState(100)
+  const handledNavigationKey =
+    useRef('')
 
-  const [command, setCommand] =
+  const [
+    mapReady,
+    setMapReady,
+  ] =
+    useState(false)
+
+  const [
+    zoom,
+    setZoom,
+  ] =
+    useState(100)
+
+  const [
+    command,
+    setCommand,
+  ] =
     useState<CameraCommand>({
       type: 'none',
       id: 0,
@@ -44,61 +120,99 @@ export function MapStage() {
   const [
     selectedPole,
     setSelectedPole,
-  ] = useState<PoleConfig | null>(null)
+  ] =
+    useState<PoleConfig | null>(
+      null,
+    )
 
   const [
     panelTab,
     setPanelTab,
-  ] = useState<PolePanelTab>('machines')
+  ] =
+    useState<PolePanelTab>(
+      'machines',
+    )
 
   const [
     focusedIncidentId,
     setFocusedIncidentId,
-  ] = useState<number | null>(null)
+  ] =
+    useState<number | null>(
+      null,
+    )
+
 
   function sendCameraCommand(
     type: CameraAction,
     target?: [number, number],
   ) {
-    setCommand((current) => ({
-      type,
-      id: current.id + 1,
-      target,
-    }))
+    setCommand(
+      (current) => ({
+        type,
+        id: current.id + 1,
+        target,
+      }),
+    )
   }
 
+
   function clearSelection() {
-    setSelectedPole(null)
-    setPanelTab('machines')
-    setFocusedIncidentId(null)
+    setSelectedPole(
+      null,
+    )
+
+    setPanelTab(
+      'machines',
+    )
+
+    setFocusedIncidentId(
+      null,
+    )
   }
+
 
   function selectPole(
     pole: PoleConfig,
   ) {
-    setSelectedPole(pole)
-    setPanelTab('machines')
-    setFocusedIncidentId(null)
+    setSelectedPole(
+      pole,
+    )
+
+    setPanelTab(
+      'machines',
+    )
+
+    setFocusedIncidentId(
+      null,
+    )
   }
+
 
   function focusArea(
     x: number,
     z: number,
   ) {
     clearSelection()
+
     sendCameraCommand(
       'focus',
       [x, z],
     )
   }
 
+
   useEffect(() => {
-    const state = location.state as CartographyLocationState | null
+    const state =
+      location.state as
+        CartographyLocationState
+        | null
 
     const poleId =
       state?.focusPoleId
 
-    if (!poleId) return
+    if (!poleId) {
+      return
+    }
 
     const key =
       `${location.key}-${poleId}-${state?.incidentId ?? 'none'}`
@@ -114,20 +228,32 @@ export function MapStage() {
       key
 
     const prototypeId =
-      `P-${String(poleId).padStart(2, '0')}`
+      `P-${String(
+        poleId,
+      ).padStart(
+        2,
+        '0',
+      )}`
 
     const pole =
       montagePoles.find(
         (item) =>
-          item.id === prototypeId,
+          item.id
+          === prototypeId,
       )
 
-    if (!pole) return
+    if (!pole) {
+      return
+    }
 
     const incidentId =
-      state?.incidentId ?? null
+      state?.incidentId
+      ?? null
 
-    setSelectedPole(pole)
+    setSelectedPole(
+      pole,
+    )
+
     setFocusedIncidentId(
       incidentId,
     )
@@ -152,74 +278,119 @@ export function MapStage() {
     location.state,
   ])
 
+
   return (
-    <section
-      className="map-stage"
-      aria-label="Cartographie 3D Montage"
-    >
-      <div className="map-stage__canvas">
-        <Canvas
-          shadows
-          dpr={[1, 1.5]}
-          camera={{
-            position: [24, 24, 30],
-            fov: 42,
-            near: 0.1,
-            far: 180,
-          }}
-          gl={{
-            antialias: true,
-          }}
-          onPointerMissed={
-            clearSelection
-          }
-        >
-          <MontageScene
-            command={command}
-            onZoomChange={setZoom}
-            selectedPole={selectedPole}
-            onPoleSelect={selectPole}
-            onFloorDoubleClick={
-              focusArea
+    <>
+      {
+        !mapReady
+        && (
+          <AppLoading />
+        )
+      }
+
+      <section
+        className="map-stage"
+        aria-label="Cartographie 3D Montage"
+      >
+        <div className="map-stage__canvas">
+          <Canvas
+            shadows
+            dpr={[1, 1.5]}
+            camera={{
+              position: [
+                24,
+                24,
+                30,
+              ],
+              fov: 42,
+              near: 0.1,
+              far: 180,
+            }}
+            gl={{
+              antialias: true,
+            }}
+            onPointerMissed={
+              clearSelection
             }
-          />
-        </Canvas>
-      </div>
+          >
+            <MontageScene
+              command={
+                command
+              }
+              onZoomChange={
+                setZoom
+              }
+              selectedPole={
+                selectedPole
+              }
+              onPoleSelect={
+                selectPole
+              }
+              onFloorDoubleClick={
+                focusArea
+              }
+            />
 
-      <MapLegend />
+            <MapReadySignal
+              onReady={
+                () =>
+                  setMapReady(
+                    true,
+                  )
+              }
+            />
+          </Canvas>
+        </div>
 
-      {selectedPole && (
-        <PoleDetailsPanel
-          pole={selectedPole}
-          activeTab={panelTab}
-          focusedIncidentId={
-            focusedIncidentId
+        <MapLegend />
+
+        {
+          selectedPole
+          && (
+            <PoleDetailsPanel
+              pole={
+                selectedPole
+              }
+              activeTab={
+                panelTab
+              }
+              focusedIncidentId={
+                focusedIncidentId
+              }
+              onTabChange={
+                setPanelTab
+              }
+              onClose={
+                clearSelection
+              }
+            />
+          )
+        }
+
+        <MapControls
+          zoom={
+            zoom
           }
-          onTabChange={setPanelTab}
-          onClose={
-            clearSelection
+          onZoomIn={
+            () =>
+              sendCameraCommand(
+                'zoom-in',
+              )
+          }
+          onZoomOut={
+            () =>
+              sendCameraCommand(
+                'zoom-out',
+              )
+          }
+          onReset={
+            () =>
+              sendCameraCommand(
+                'reset',
+              )
           }
         />
-      )}
-
-      <MapControls
-        zoom={zoom}
-        onZoomIn={() =>
-          sendCameraCommand(
-            'zoom-in',
-          )
-        }
-        onZoomOut={() =>
-          sendCameraCommand(
-            'zoom-out',
-          )
-        }
-        onReset={() =>
-          sendCameraCommand(
-            'reset',
-          )
-        }
-      />
-    </section>
+      </section>
+    </>
   )
 }

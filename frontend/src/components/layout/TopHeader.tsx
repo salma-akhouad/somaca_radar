@@ -3,60 +3,121 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useLocation } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext'
-import { useOperations } from '../../operations/OperationsContext'
-import { Icon } from '../common/Icon'
-import { NotificationCenter } from '../notifications/NotificationCenter'
+import {
+  useLocation,
+} from 'react-router-dom'
 
-const PAGE_META: Record<
-  string,
-  {
-    title: string
-    subtitle: string
-  }
-> = {
-  '/cartography': {
-    title: 'MONTAGE',
-    subtitle: 'CARTOGRAPHIE EN TEMPS RÉEL',
-  },
+import type {
+  RoleName,
+} from '../../api/types'
+import {
+  useAuth,
+} from '../../auth/AuthContext'
+import {
+  useOperations,
+} from '../../operations/OperationsContext'
+import {
+  Icon,
+} from '../common/Icon'
+import {
+  NotificationCenter,
+} from '../notifications/NotificationCenter'
 
-  '/incidents': {
-    title: 'INCIDENTS',
-    subtitle: 'TRAITEMENT ET SUIVI DES INCIDENTS',
-  },
 
-  '/supervision': {
-    title: 'SUPERVISION',
-    subtitle: 'ÉTAT DE L’INSTALLATION',
-  },
-
-  '/administration': {
-    title: 'ADMINISTRATION',
-    subtitle: 'CONFIGURATION DU SYSTÈME',
-  },
+interface PageMeta {
+  eyebrow: string
+  title: string
+  subtitle: string
 }
 
+
+const PAGE_META:
+  Record<string, PageMeta> = {
+    '/cartography': {
+      eyebrow:
+        'ATELIER MONTAGE',
+      title:
+        'CARTOGRAPHIE',
+      subtitle:
+        'Visualisation 3D et suivi en temps réel.',
+    },
+
+    '/incidents': {
+      eyebrow:
+        'SUIVI OPÉRATIONNEL',
+      title:
+        'INCIDENTS',
+      subtitle:
+        'Traitement et suivi des incidents.',
+    },
+
+    '/supervision': {
+      eyebrow:
+        'TABLEAU DE BORD',
+      title:
+        'ÉTAT DE L’USINE',
+      subtitle:
+        'Vue consolidée de la santé opérationnelle.',
+    },
+
+    '/administration': {
+      eyebrow:
+        'GESTION DU SYSTÈME',
+      title:
+        'ADMINISTRATION',
+      subtitle:
+        'Configuration et gouvernance du système.',
+    },
+  }
+
+
 const REALTIME_LABELS = {
-  connected: 'TEMPS RÉEL ACTIF',
-  connecting: 'CONNEXION TEMPS RÉEL',
-  fallback: 'MODE DE SECOURS',
-  unavailable: 'CONNEXION INDISPONIBLE',
+  connected:
+    'TEMPS RÉEL ACTIF',
+  connecting:
+    'CONNEXION TEMPS RÉEL',
+  fallback:
+    'MODE DE SECOURS',
+  unavailable:
+    'CONNEXION INDISPONIBLE',
 } as const
 
+
+const ROLE_LABELS:
+  Record<RoleName, string> = {
+    operateur_de_production:
+      'Opérateur de production',
+    superviseur:
+      'Superviseur',
+    technicien:
+      'Technicien',
+    administrateur:
+      'Administrateur',
+  }
+
+
 function LiveClock() {
-  const [now, setNow] =
-    useState(() => new Date())
+  const [
+    now,
+    setNow,
+  ] =
+    useState(
+      () =>
+        new Date(),
+    )
 
   const millisecondsRef =
-    useRef<HTMLSpanElement | null>(
-      null,
-    )
+    useRef<
+      HTMLSpanElement | null
+    >(null)
 
   useEffect(() => {
     const secondsTimer =
       window.setInterval(
-        () => setNow(new Date()),
+        () =>
+          setNow(
+            new Date(),
+          ),
         1000,
       )
 
@@ -74,7 +135,10 @@ function LiveClock() {
             `.${String(
               new Date()
                 .getMilliseconds(),
-            ).padStart(3, '0')}`
+            ).padStart(
+              3,
+              '0',
+            )}`
         },
         40,
       )
@@ -90,27 +154,42 @@ function LiveClock() {
     }
   }, [])
 
+
   const time =
     new Intl.DateTimeFormat(
       'fr-FR',
       {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
+        hour:
+          '2-digit',
+        minute:
+          '2-digit',
+        second:
+          '2-digit',
+        hour12:
+          false,
       },
-    ).format(now)
+    ).format(
+      now,
+    )
+
 
   const date =
     new Intl.DateTimeFormat(
       'fr-FR',
       {
-        weekday: 'short',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
+        weekday:
+          'short',
+        day:
+          '2-digit',
+        month:
+          'short',
+        year:
+          'numeric',
       },
-    ).format(now)
+    ).format(
+      now,
+    )
+
 
   return (
     <div
@@ -120,8 +199,11 @@ function LiveClock() {
       <div className="live-clock__time">
         <span>
           {time}
+
           <span
-            ref={millisecondsRef}
+            ref={
+              millisecondsRef
+            }
             className="live-clock__milliseconds"
           >
             .000
@@ -136,41 +218,76 @@ function LiveClock() {
   )
 }
 
+
 export function TopHeader() {
-  const location = useLocation()
+  const location =
+    useLocation()
 
   const {
     user,
     logout,
-  } = useAuth()
+  } =
+    useAuth()
 
   const {
     realtimeStatus,
-  } = useOperations()
+  } =
+    useOperations()
 
   const [
     profileOpen,
     setProfileOpen,
-  ] = useState(false)
+  ] =
+    useState(false)
+
 
   const meta =
-    PAGE_META[location.pathname]
-    ?? PAGE_META['/cartography']
+    PAGE_META[
+      location.pathname
+    ]
+    ?? PAGE_META[
+      '/cartography'
+    ]
+
 
   const initials =
-    `${user?.prenom?.[0] ?? ''}${user?.nom?.[0] ?? ''}`
-      .toUpperCase()
+    (
+      `${user?.prenom?.[0] ?? ''}`
+      + `${user?.nom?.[0] ?? ''}`
+    ).toUpperCase()
     || 'SR'
+
+
+  const roleLabel =
+    user
+      ? ROLE_LABELS[
+          user.role
+        ]
+      : ''
+
 
   return (
     <header className="top-header">
       <div className="page-heading">
-        <h1>{meta.title}</h1>
+        <span className="page-heading__eyebrow">
+          {meta.eyebrow}
+        </span>
+
+        <div className="page-heading__title">
+          <h1>
+            {meta.title}
+          </h1>
+
+          <i
+            aria-hidden="true"
+          />
+        </div>
 
         <p>
           {meta.subtitle}
         </p>
       </div>
+
 
       <div className="top-header__actions">
         <div
@@ -181,23 +298,34 @@ export function TopHeader() {
         >
           <span />
 
-          {REALTIME_LABELS[realtimeStatus]}
+          {
+            REALTIME_LABELS[
+              realtimeStatus
+            ]
+          }
         </div>
+
 
         <LiveClock />
 
+
         <NotificationCenter />
+
 
         <div className="profile-menu">
           <button
             className="profile-button"
             type="button"
             aria-label="Ouvrir le profil"
-            aria-expanded={profileOpen}
-            onClick={() =>
-              setProfileOpen(
-                (value) => !value,
-              )
+            aria-expanded={
+              profileOpen
+            }
+            onClick={
+              () =>
+                setProfileOpen(
+                  (value) =>
+                    !value,
+                )
             }
           >
             <span>
@@ -210,31 +338,46 @@ export function TopHeader() {
             />
           </button>
 
-          {profileOpen && (
-            <div className="profile-popover">
-              <strong>
-                {user?.prenom} {user?.nom}
-              </strong>
 
-              <span>
-                {user?.email}
-              </span>
+          {
+            profileOpen
+            && (
+              <div className="profile-popover">
+                <strong>
+                  {
+                    user?.prenom
+                  } {
+                    user?.nom
+                  }
+                </strong>
 
-              <small>
-                {user?.role}
-              </small>
+                <span>
+                  {
+                    user?.email
+                  }
+                </span>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileOpen(false)
-                  void logout()
-                }}
-              >
-                Se déconnecter
-              </button>
-            </div>
-          )}
+                <small>
+                  {roleLabel}
+                </small>
+
+                <button
+                  type="button"
+                  onClick={
+                    () => {
+                      setProfileOpen(
+                        false,
+                      )
+
+                      void logout()
+                    }
+                  }
+                >
+                  Se déconnecter
+                </button>
+              </div>
+            )
+          }
         </div>
       </div>
     </header>

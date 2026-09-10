@@ -1,243 +1,223 @@
-from pydantic import BaseModel, Field, model_validator
-""" 
-    BaseModel is Pydantic's parent class. By inheriting from it, our classes gains Pydantic features:
-    validation;
-    conversion;
-    JSON generation;
-    Swagger documentation;
-    methods such as model_dump() and model_validate(). 
-"""
 from datetime import date, datetime
-from typing import Any, Optional, Literal
-from enum import Enum 
-from uuid import UUID 
-from .models import IncidentStatus, IncidentSeverity, ContactType
-# Universally Unique Identifier, a 128-bit number used to uniquely identify information in computer systems. In this context, it's used to uniquely identify a conversation in the SomacaHelper system.
+from enum import Enum
+from typing import Any, Literal
+from uuid import UUID
 
-# Pydantic schema : describes how data is allowed to enter or leave the API,
-# Itinteracts directly with the frontend and JSON, serving as the bridge for data validation, serialization, and API documentation
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from .models import ContactType, IncidentSeverity, IncidentStatus
+
+
+# SQLAlchemy models represent persisted records; Pydantic schemas define
+# the validated JSON contract exchanged through the API.
+
 
 class MachineBase(BaseModel):
-    nom_machine: str
+    nom_machine: str = Field(min_length=1, max_length=150)
     ip_address: str
-    mac_address: Optional[str] = None
+    mac_address: str | None = None
     date_installation: date
     id_poteau: int
+
 
 class MachineCreate(MachineBase):
     pass
 
+
 class MachineUpdate(BaseModel):
-    nom_machine: Optional[str] = None
-    ip_address: Optional[str] = None
-    mac_address: Optional[str] = None
-    date_installation: Optional[date] = None
-    id_poteau: Optional[int] = None
+    nom_machine: str | None = Field(default=None, min_length=1, max_length=150)
+    ip_address: str | None = None
+    mac_address: str | None = None
+    date_installation: date | None = None
+    id_poteau: int | None = None
+
 
 class MachineOut(MachineBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id_machine: int
-    class Config:
-        from_attributes = True # This line tells Pydantic to read the data from the attributes of the SQLAlchemy model instance, rather than expecting a dictionary.
-class RoleBase(BaseModel):
-    nom_role: str
+    actif: bool
+    date_decommissionnement: datetime | None = None
 
-class RoleCreate(RoleBase):
-    pass
 
-class RoleUpdate(BaseModel):
-    nom_role: Optional[str] = None
+class RoleOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-class RoleOut(RoleBase):
     id_role: int
-    class Config:
-        from_attributes = True
+    nom_role: str
 
 
 class UtilisateurBase(BaseModel):
-    nom: str
-    prenom: str
-    email: str
+    nom: str = Field(min_length=1, max_length=100)
+    prenom: str = Field(min_length=1, max_length=100)
+    email: str = Field(min_length=3, max_length=150)
     id_role: int
 
+
 class UtilisateurCreate(UtilisateurBase):
-    mot_de_passe: str = Field(
-        min_length=8,
-        max_length=128,
-    )
+    mot_de_passe: str = Field(min_length=8, max_length=128)
+
 
 class UtilisateurUpdate(BaseModel):
-    nom: Optional[str] = None
-    prenom: Optional[str] = None
-    email: Optional[str] = None
-    id_role: Optional[int] = None
-    mot_de_passe: Optional[str] = Field(
-    default=None,
-    min_length=8,
-    max_length=128,
-)
+    nom: str | None = Field(default=None, min_length=1, max_length=100)
+    prenom: str | None = Field(default=None, min_length=1, max_length=100)
+    email: str | None = Field(default=None, min_length=3, max_length=150)
+    id_role: int | None = None
+    mot_de_passe: str | None = Field(default=None, min_length=8, max_length=128)
+
 
 class UtilisateurOut(UtilisateurBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id_util: int
-    class Config:
-        from_attributes = True
+    actif: bool
+    date_desactivation: datetime | None = None
+
 
 class CurrentUserOut(UtilisateurOut):
     role: str
-    notifications_read_at: Optional[datetime] = None
+    notifications_read_at: datetime | None = None
 
 
 class NotificationReadRequest(BaseModel):
-    read_at: Optional[datetime] = None
-    
+    read_at: datetime | None = None
+
+
 class NotificationReadOut(BaseModel):
     read_at: datetime
 
-class SessionBase(BaseModel):
+
+class SessionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_session: int
     date_creation: datetime
     date_expiration: datetime
+    date_revocation: datetime | None = None
     id_util: int
-
-class SessionCreate(SessionBase):
-     token: str
-
-class SessionUpdate(BaseModel):
-    date_creation: Optional[datetime] = None
-    date_expiration: Optional[datetime] = None
-    id_util: Optional[int] = None
-    token: Optional[str] = None
-
-class SessionOut(SessionBase):
-    id_session: int
-    date_revocation: Optional[datetime] = None
-    class Config:
-        from_attributes = True
 
 
 class DepartementBase(BaseModel):
-    nom_dep: str    
+    nom_dep: str = Field(min_length=1, max_length=100)
+
 
 class DepartementCreate(DepartementBase):
     pass
 
+
 class DepartementUpdate(BaseModel):
-    nom_dep: Optional[str] = None
+    nom_dep: str | None = Field(default=None, min_length=1, max_length=100)
+
 
 class DepartementOut(DepartementBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id_dep: int
-    class Config:
-        from_attributes = True
+    actif: bool
 
 
 class UniteBase(BaseModel):
-    nom_unite: str
+    nom_unite: str = Field(min_length=1, max_length=100)
     id_dep: int
+
 
 class UniteCreate(UniteBase):
     pass
 
+
 class UniteUpdate(BaseModel):
-    nom_unite: Optional[str] = None
-    id_dep: Optional[int] = None
+    nom_unite: str | None = Field(default=None, min_length=1, max_length=100)
+    id_dep: int | None = None
+
 
 class UniteOut(UniteBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id_unite: int
-    class Config:
-        from_attributes = True
+    actif: bool
 
 
-class PoteauBase(BaseModel):   
-    nom_poteau: str
-    id_unite: int    
+class PoteauBase(BaseModel):
+    nom_poteau: str = Field(min_length=1, max_length=100)
+    id_unite: int
+
 
 class PoteauCreate(PoteauBase):
     pass
 
+
 class PoteauUpdate(BaseModel):
-    nom_poteau: Optional[str] = None
-    id_unite: Optional[int] = None
+    nom_poteau: str | None = Field(default=None, min_length=1, max_length=100)
+    id_unite: int | None = None
+
 
 class PoteauOut(PoteauBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id_poteau: int
-    class Config:
-        from_attributes = True
+    actif: bool
 
 
-class EtatBase(BaseModel):
+class EtatOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_etat: int
     libelle_etat: str
     couleur: str
 
-class EtatCreate(EtatBase):
-    pass    
 
-class EtatUpdate(BaseModel):
-    libelle_etat: Optional[str] = None
-    couleur: Optional[str] = None
+class StatutHistoriqueOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-class EtatOut(EtatBase):
-    id_etat: int
-    class Config:
-        from_attributes = True
-
-
-class StatutHistoriqueBase(BaseModel):
-    description_probleme: Optional[str] = None
+    id_statut: int
+    date_changement: datetime
     id_machine: int
     id_etat: int
-
-class StatutHistoriqueCreate(StatutHistoriqueBase):
-    pass
-
-
-class StatutHistoriqueUpdate(BaseModel):
-    date_changement: Optional[datetime] = None
-    description_probleme: Optional[str] = None
-    id_machine: Optional[int] = None
-    id_etat: Optional[int] = None
-    id_util: Optional[int] = None
-
-class StatutHistoriqueOut(StatutHistoriqueBase):
-    id_statut: int
-    id_util: Optional[int] = None
-    date_changement: datetime
-    class Config:
-        from_attributes = True
-
-
-class LoginRequest(BaseModel):
-    email: str
-    mot_de_passe: str
-    
-class LoginResponse(BaseModel):
-    authenticated: bool = True
+    id_util: int | None = None
+    id_incident: int | None = None
 
 
 class CurrentStatusOut(BaseModel):
     id_statut: int
     date_changement: datetime
-    description_probleme: Optional[str] = None
+    id_incident: int | None = None
     etat: EtatOut
-    class Config:
-     from_attributes = True # When building this schema from an object, read object.field_name
+
 
 class MachineDetailOut(MachineOut):
-    current_status: Optional[CurrentStatusOut] = None
+    current_status: CurrentStatusOut | None = None
+
+
+class MachineStateChangeCreate(BaseModel):
+    id_etat: int
+    id_incident: int | None = None
+
+
+class LoginRequest(BaseModel):
+    email: str
+    mot_de_passe: str
+
+
+class LoginResponse(BaseModel):
+    authenticated: bool = True
 
 
 class ConversationRole(str, Enum):
     USER = "USER"
     ASSISTANT = "ASSISTANT"
 
+
 class HelperContext(BaseModel):
     current_page: str | None = None
     current_machine_id: int | None = None
 
-# API Contract Design of somaca_helper endpoint that is sent to the LLM for processing. It includes the question, conversation ID, and context.
+
 class HelperAskRequest(BaseModel):
     question: str = Field(min_length=1)
-    conversation_id: UUID  # which existing discussion this new message continues
-    context: HelperContext = Field(default_factory=HelperContext) # default_factory is used to create a new instance of HelperContext for each HelperAskRequest, ensuring that each request has its own context object.
+    conversation_id: UUID
+    context: HelperContext = Field(default_factory=HelperContext)
 
-# Intent routing
+
 class AnalysisIntent(str, Enum):
     SEARCH_INCIDENTS = "SEARCH_INCIDENTS"
     INCIDENT_STATISTICS = "INCIDENT_STATISTICS"
@@ -245,14 +225,10 @@ class AnalysisIntent(str, Enum):
     HISTORICAL_SUMMARY = "HISTORICAL_SUMMARY"
     EXTERNAL_SUPPORT_ANALYSIS = "EXTERNAL_SUPPORT_ANALYSIS"
 
-# It's an internal translation of the user’s natural-language question: it is returned by the LLM
-class RoutingResult(BaseModel): 
-    # The model_config attribute is used to configure the behavior of the Pydantic model. In this case, extra="forbid" means that any extra fields not defined in the model will raise a validation error. 
-    # This ensures that only the expected fields are present in the input data.
+
+class RoutingResult(BaseModel):
     intent: AnalysisIntent | None = None
-    # Parameters extracted from the question.
-    
-    # Incident/ Machine filters
+
     id_machine: int | None = None
     machine_name: str | None = None
     machine_ip: str | None = None
@@ -267,62 +243,44 @@ class RoutingResult(BaseModel):
     has_confirmed_cause: bool | None = None
     has_applied_solution: bool | None = None
 
-    # Location filters
     poteau_name: str | None = None
     unite_name: str | None = None
     departement_name: str | None = None
     location_level: Literal["machine", "poteau", "unite", "departement"] | None = None
 
-    # Contact filters
     contact_type: ContactType | None = None
     contacted_user_last_name: str | None = None
     contacted_user_email: str | None = None
 
-    # Clarification and unsupported request handling
-    needs_clarification: bool = False 
+    needs_clarification: bool = False
     clarification_question: str | None = None
-
-    # Used when the request is outside SomacaHelper's scope.
     unsupported: bool = False
     unsupported_reason: str | None = None
 
     @model_validator(mode="after")
-    def validate_routing_state(self) -> "RoutingResult": 
-        # RoutingResult is with quotes because the class is not fully defined yet when this method is being defined. 
-        # This is a forward reference, allowing the method to refer to the class itself before it is fully constructed.
+    def validate_routing_state(self) -> "RoutingResult":
         if (
             self.date_from is not None
             and self.date_to is not None
             and self.date_from > self.date_to
         ):
-            raise ValueError(
-                "date_from cannot be later than date_to"
-            )
+            raise ValueError("date_from cannot be later than date_to")
 
         if self.unsupported:
             if self.needs_clarification:
                 raise ValueError(
-                    "A request cannot be both unsupported "
-                    "and awaiting clarification"
+                    "A request cannot be both unsupported and awaiting clarification"
                 )
-
             if self.intent is not None:
-                raise ValueError(
-                    "An unsupported request must not have an intent"
-                )
-
+                raise ValueError("An unsupported request must not have an intent")
             if not self.unsupported_reason or not self.unsupported_reason.strip():
                 raise ValueError(
-                    "unsupported_reason is required "
-                    "when unsupported is true"
+                    "unsupported_reason is required when unsupported is true"
                 )
-
             if self.clarification_question is not None:
                 raise ValueError(
-                    "An unsupported request must not contain "
-                    "a clarification question"
+                    "An unsupported request must not contain a clarification question"
                 )
-
             return self
 
         if self.needs_clarification:
@@ -331,53 +289,45 @@ class RoutingResult(BaseModel):
                 or not self.clarification_question.strip()
             ):
                 raise ValueError(
-                    "clarification_question is required "
-                    "when needs_clarification is true"
+                    "clarification_question is required when needs_clarification is true"
                 )
-
             if self.unsupported_reason is not None:
                 raise ValueError(
-                    "A clarification result must not contain "
-                    "an unsupported reason"
+                    "A clarification result must not contain an unsupported reason"
                 )
-
             return self
 
         if self.intent is None:
             raise ValueError(
-                "A supported request that needs no clarification "
-                "must have an intent"
+                "A supported request that needs no clarification must have an intent"
             )
-
         if self.clarification_question is not None:
             raise ValueError(
-                "A completed routing result must not contain "
-                "a clarification question"
+                "A completed routing result must not contain a clarification question"
             )
-
         if self.unsupported_reason is not None:
-            raise ValueError(
-                "A supported request must not contain "
-                "an unsupported reason"
-            )
-        
+            raise ValueError("A supported request must not contain an unsupported reason")
+
         return self
-    
+
+
 class HelperResponseStatus(str, Enum):
     ANSWERED = "ANSWERED"
     CLARIFICATION_REQUIRED = "CLARIFICATION_REQUIRED"
     UNSUPPORTED_REQUEST = "UNSUPPORTED_REQUEST"
     ERROR = "ERROR"
 
-# what the API returns to the user after processing the question. It includes the status, answer, and any extracted facts.
+
 class HelperAskResponse(BaseModel):
     status: HelperResponseStatus
     answer: str
     intent: AnalysisIntent | None = None
     facts: dict[str, Any] = Field(default_factory=dict)
 
-# Schema for representing a message in the SomacaHelper system
+
 class SomacaHelperMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id_message: int
     conversation_id: UUID
     id_util: int
@@ -389,8 +339,6 @@ class SomacaHelperMessageOut(BaseModel):
     model_name: str | None = None
     date_creation: datetime
 
-    class Config:
-        from_attributes = True
 
 class HelperConversationSummaryOut(BaseModel):
     conversation_id: UUID
@@ -399,22 +347,28 @@ class HelperConversationSummaryOut(BaseModel):
     last_activity: datetime
 
 
-# Incidents 
-class IncidentCreate(BaseModel):
+class IncidentReportCreate(BaseModel):
     id_machine: int
-    problem: str
+    id_etat: int
+    problem: str = Field(min_length=3, max_length=500)
     severity: IncidentSeverity
 
+
 class IncidentUpdate(BaseModel):
-    problem: str | None = Field(default=None, min_length=1)
     severity: IncidentSeverity | None = None
-    confirmed_cause: str | None = None
-    applied_solution: str | None = None
+    severity_note: str | None = Field(default=None, max_length=2000)
+    confirmed_cause: str | None = Field(default=None, min_length=1, max_length=4000)
+    applied_solution: str | None = Field(default=None, min_length=1, max_length=4000)
+
 
 class IncidentStatusUpdate(BaseModel):
     status: IncidentStatus
+    note: str | None = Field(default=None, max_length=2000)
+
 
 class IncidentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id_incident: int
     id_machine: int
     problem: str
@@ -424,17 +378,60 @@ class IncidentOut(BaseModel):
     applied_solution: str | None = None
     created_at: datetime
     created_by_user_id: int
-    class Config:
-            from_attributes = True
+
+
+class ProblemReportOut(BaseModel):
+    incident: IncidentOut
+    machine_status: StatutHistoriqueOut
+
+
+class IncidentPageOut(BaseModel):
+    items: list[IncidentOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class IncidentPriorityItemOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_incident: int
+    problem: str
+    severity: IncidentSeverity
+    status: IncidentStatus
+    created_at: datetime
+
+
+class IncidentSummaryOut(BaseModel):
+    active_count: int
+    critical_active_count: int
+    waiting_count: int
+    oldest_active: list[IncidentPriorityItemOut]
+
 
 class IncidentStatusHistoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id_status_change: int
     id_incident: int
     status: IncidentStatus
     changed_at: datetime
     changed_by_user_id: int
-    class Config:
-        from_attributes = True
+    note: str | None = None
+
+
+class IncidentSeverityHistoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_severity_change: int
+    id_incident: int
+    old_severity: IncidentSeverity
+    new_severity: IncidentSeverity
+    changed_at: datetime
+    changed_by_user_id: int
+    note: str | None = None
+
 
 class IncidentContactCreate(BaseModel):
     contact_type: ContactType
@@ -445,41 +442,107 @@ class IncidentContactCreate(BaseModel):
         max_length=150,
     )
 
-    @model_validator(mode="after") 
-    def validate_contact(self) -> "IncidentContactCreate": 
+    @model_validator(mode="after")
+    def validate_contact(self) -> "IncidentContactCreate":
         if self.contact_type == ContactType.TECHNICIEN:
             if self.id_util is None:
-                raise ValueError(
-                    "A technician contact must reference a user"
-                )
-
+                raise ValueError("A technician contact must reference a user")
             if self.external_contact_name is not None:
                 raise ValueError(
                     "A technician contact must not use an external contact name"
                 )
-
         else:
             if self.id_util is not None:
                 raise ValueError(
                     "An external contact must not reference an application user"
                 )
 
+            if (
+                not self.external_contact_name
+                or not self.external_contact_name.strip()
+            ):
+                raise ValueError(
+                    "An external contact name is required"
+                )
+
         return self
 
+
 class IncidentContactOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id_contact: int
     id_incident: int
     contact_type: ContactType
     id_util: int | None = None
     external_contact_name: str | None = None
     contacted_at: datetime
-    class Config:
-            from_attributes = True
+
 
 class TechnicianOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id_util: int
     nom: str
     prenom: str
+    email: str
 
-    class Config:
-        from_attributes = True
+
+class EtatUsineSummaryOut(BaseModel):
+    total_machines: int
+    operational: int
+    attention: int
+    critical: int
+    unknown: int
+    operational_health: float
+    active_incidents: int
+    critical_active_incidents: int
+
+
+class EtatUsineTrendPointOut(BaseModel):
+    date: date
+    operational: int
+    attention: int
+    critical: int
+    unknown: int
+    operational_health: float
+    active_incidents: int
+    critical_active_incidents: int
+
+
+class EtatUsineWatchedPoleOut(BaseModel):
+    id_poteau: int
+    nom_poteau: str
+    id_unite: int
+    nom_unite: str
+    attention_machines: int
+    critical_machines: int
+    unknown_machines: int
+    active_incidents: int
+    critical_incidents: int
+    major_incidents: int
+    minor_incidents: int
+    highest_severity: IncidentSeverity | None = None
+
+
+class EtatUsineRecentChangeOut(BaseModel):
+    id_statut: int
+    changed_at: datetime
+    id_machine: int
+    machine_name: str
+    id_poteau: int
+    pole_name: str
+    id_unite: int
+    unite_name: str
+    previous_state: str | None = None
+    current_state: str
+    id_incident: int | None = None
+
+
+class EtatUsineOut(BaseModel):
+    scope: str
+    generated_at: datetime
+    summary: EtatUsineSummaryOut
+    trend: list[EtatUsineTrendPointOut]
+    watched_poles: list[EtatUsineWatchedPoleOut]
+    recent_changes: list[EtatUsineRecentChangeOut]

@@ -5,7 +5,7 @@ export const loadIncidentsPage = () =>
   import('../pages/IncidentsPage')
 
 export const loadSupervisionPage = () =>
-  import('../pages/SupervisionPage')
+  import('../pages/Etatdelusine')
 
 export const loadAdministrationPage = () =>
   import('../pages/AdministrationPage')

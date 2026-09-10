@@ -3,27 +3,33 @@ import type {
     CurrentUser,
     Departement,
     Etat,
+    EtatUsine,
     Incident,
     IncidentContact,
+    IncidentPage,
+    IncidentSummary,
     IncidentHistory,
     IncidentSeverity,
+    IncidentSeverityHistory,
     IncidentStatus,
     LoginResponse,
     Machine,
     NotificationReadResponse,
     Poteau,
+    ProblemReport,
     Role,
     SessionRecord,
     StatutHistorique,
     Technician,
     Unite,
     User,
+    IncidentActor,
 } from './types'
 
 
 const API_BASE_URL = (
-    import.meta.env.VITE_API_BASE_URL ??
-    'http://localhost:8000'
+    import.meta.env.VITE_API_BASE_URL
+    ?? 'http://localhost:8000'
 ).replace(/\/$/, '')
 
 const AUTH_EXPIRED_EVENT = 'somaca:auth-expired'
@@ -55,7 +61,6 @@ export function expireStoredSession() {
     if (authExpiredDispatched) return
 
     authExpiredDispatched = true
-
     window.dispatchEvent(
         new Event(AUTH_EXPIRED_EVENT),
     )
@@ -81,34 +86,13 @@ export function onAuthExpired(
     }
 }
 
-
-export const markNotificationsReadRequest =
-    (
-        readAt?: string,
-    ) =>
-        request<NotificationReadResponse>(
-            '/notifications/read',
-            {
-                method: 'POST',
-
-                body:
-                    readAt
-                        ? JSON.stringify({
-                            read_at:
-                                readAt,
-                        })
-                        : undefined,
-            },
-        )
-
-
-function errorMessage(
+function fallbackErrorMessage(
     status: number,
     path: string,
 ) {
     if (
-        status === 401 &&
-        path === '/login'
+        status === 401
+        && path === '/login'
     ) {
         return 'Adresse e-mail ou mot de passe incorrect.'
     }
@@ -116,7 +100,7 @@ function errorMessage(
     switch (status) {
         case 401:
             return (
-                "Votre session n’est plus valide. "
+                'Votre session n’est plus valide. '
                 + 'Veuillez vous reconnecter.'
             )
 
@@ -127,21 +111,16 @@ function errorMessage(
             )
 
         case 404:
-            return (
-                "L'élément demandé n'existe plus."
-            )
+            return "L'élément demandé n'existe plus."
 
         case 409:
             return (
                 'Cette opération entre en conflit '
-                + 'avec des données existantes.'
+                + 'avec les données existantes.'
             )
 
         case 422:
-            return (
-                'Certaines données saisies '
-                + 'sont invalides.'
-            )
+            return 'Certaines données saisies sont invalides.'
 
         default:
             if (status >= 500) {
@@ -155,14 +134,37 @@ function errorMessage(
     }
 }
 
+function backendDetail(
+    body: unknown,
+): string | null {
+    if (
+        body
+        && typeof body === 'object'
+        && 'detail' in body
+    ) {
+        const detail = (
+            body as {
+                detail?: unknown
+            }
+        ).detail
+
+        if (
+            typeof detail === 'string'
+            && detail.trim()
+        ) {
+            return detail
+        }
+    }
+
+    return null
+}
+
 async function request<T>(
     path: string,
     init: RequestInit = {},
     behavior: RequestBehavior = {},
 ): Promise<T> {
-    const headers = new Headers(
-        init.headers,
-    )
+    const headers = new Headers(init.headers)
 
     if (
         !headers.has('Content-Type')
@@ -173,6 +175,7 @@ async function request<T>(
             'application/json',
         )
     }
+
     let response: Response
 
     try {
@@ -214,45 +217,13 @@ async function request<T>(
             expireStoredSession()
         }
 
-        let message =
-            errorMessage(
+        const message = (
+            backendDetail(body)
+            ?? fallbackErrorMessage(
                 response.status,
                 path,
             )
-
-        if (
-            body
-            && typeof body === 'object'
-            && 'detail' in body
-            && typeof (
-                body as {
-                    detail?: unknown
-                }
-            ).detail === 'string'
-        ) {
-            const detail =
-                (
-                    body as {
-                        detail: string
-                    }
-                ).detail
-
-            if (
-                response.status === 409
-                && detail.includes(
-                    'other records still reference',
-                )
-            ) {
-                message =
-                    'Suppression impossible. '
-                    + 'Cet élément est encore utilisé '
-                    + 'par d’autres données.'
-            } else if (
-                response.status === 409
-            ) {
-                message = detail
-            }
-        }
+        )
 
         throw new ApiError(
             response.status,
@@ -262,6 +233,23 @@ async function request<T>(
 
     return body as T
 }
+
+
+export const markNotificationsReadRequest = (
+    readAt?: string,
+) =>
+    request<NotificationReadResponse>(
+        '/notifications/read',
+        {
+            method: 'POST',
+            body: readAt
+                ? JSON.stringify({
+                    read_at: readAt,
+                })
+                : undefined,
+        },
+    )
+
 
 export const login = (
     email: string,
@@ -278,6 +266,7 @@ export const login = (
         },
     )
 
+
 export const logoutRequest = () =>
     request<void>(
         '/logout',
@@ -286,8 +275,11 @@ export const logoutRequest = () =>
         },
     )
 
+
 export const getMe = (
-    options: { notifyAuthExpired?: boolean } = {},
+    options: {
+        notifyAuthExpired?: boolean
+    } = {},
 ) =>
     request<CurrentUser>(
         '/me',
@@ -298,58 +290,72 @@ export const getMe = (
         },
     )
 
-/* =========================================================
-   MACHINES
-   ========================================================= */
 
-export const getMachines = () =>
+export const getMachines = (
+    includeInactive = false,
+) =>
     request<Machine[]>(
-        '/machines',
+        includeInactive
+            ? '/machines?include_inactive=true'
+            : '/machines',
     )
 
 
 export const createMachine = (
-    payload:
-        Omit<
-            Machine,
-            'id_machine'
-        >,
+    payload: Omit<
+        Machine,
+        | 'id_machine'
+        | 'actif'
+        | 'date_decommissionnement'
+    >,
 ) =>
     request<Machine>(
         '/machines',
-
         {
             method: 'POST',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const patchMachine = (
     id: number,
-
-    payload:
-        Partial<
-            Omit<
-                Machine,
-                'id_machine'
-            >
-        >,
+    payload: Partial<
+        Omit<
+            Machine,
+            | 'id_machine'
+            | 'actif'
+            | 'date_decommissionnement'
+        >
+    >,
 ) =>
     request<Machine>(
         `/machines/${id}`,
-
         {
             method: 'PATCH',
+            body: JSON.stringify(payload),
+        },
+    )
 
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+
+export const decommissionMachine = (
+    id: number,
+) =>
+    request<Machine>(
+        `/machines/${id}/decommission`,
+        {
+            method: 'PATCH',
+        },
+    )
+
+
+export const reactivateMachine = (
+    id: number,
+) =>
+    request<Machine>(
+        `/machines/${id}/reactivate`,
+        {
+            method: 'PATCH',
         },
     )
 
@@ -359,91 +365,133 @@ export const deleteMachine = (
 ) =>
     request<void>(
         `/machines/${id}`,
-
         {
             method: 'DELETE',
         },
     )
 
 
-/* =========================================================
-   INCIDENTS
-   ========================================================= */
-
-export const getIncidents = () =>
+export const getActiveIncidents = () =>
     request<Incident[]>(
-        '/incidents',
+        '/incidents/active',
     )
 
 
-export const createIncident = (
+export const getIncidentsPage = (
+    params: {
+        page?: number
+        pageSize?: number
+        search?: string
+        severity?: IncidentSeverity | 'all'
+        status?: IncidentStatus | 'all'
+        focusId?: number | null
+    } = {},
+) => {
+    const query = new URLSearchParams()
+
+    query.set(
+        'page',
+        String(params.page ?? 1),
+    )
+    query.set(
+        'page_size',
+        String(params.pageSize ?? 25),
+    )
+
+    if (params.search?.trim()) {
+        query.set(
+            'search',
+            params.search.trim(),
+        )
+    }
+
+    if (
+        params.severity
+        && params.severity !== 'all'
+    ) {
+        query.set(
+            'severity',
+            params.severity,
+        )
+    }
+
+    if (
+        params.status
+        && params.status !== 'all'
+    ) {
+        query.set(
+            'status',
+            params.status,
+        )
+    }
+
+    if (params.focusId) {
+        query.set(
+            'focus_id',
+            String(params.focusId),
+        )
+    }
+
+    return request<IncidentPage>(
+        `/incidents?${query.toString()}`,
+    )
+}
+
+
+export const getIncidentSummary = () =>
+    request<IncidentSummary>(
+        '/incidents/summary',
+    )
+
+
+export const reportProblem = (
     payload: {
         id_machine: number
+        id_etat: number
         problem: string
-        severity:
-        IncidentSeverity
+        severity: IncidentSeverity
     },
 ) =>
-    request<Incident>(
-        '/incidents',
-
+    request<ProblemReport>(
+        '/incidents/report',
         {
             method: 'POST',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const updateIncident = (
     id: number,
-
     payload: {
-        problem?: string
-
-        severity?:
-        IncidentSeverity
-
-        confirmed_cause?:
-        string | null
-
-        applied_solution?:
-        string | null
+        severity?: IncidentSeverity
+        severity_note?: string | null
+        confirmed_cause?: string | null
+        applied_solution?: string | null
     },
 ) =>
     request<Incident>(
         `/incidents/${id}`,
-
         {
             method: 'PATCH',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const updateIncidentStatus = (
     id: number,
-
-    status:
-        IncidentStatus,
+    status: IncidentStatus,
+    note?: string,
 ) =>
     request<Incident>(
         `/incidents/${id}/status`,
-
         {
             method: 'PATCH',
-
-            body:
-                JSON.stringify({
-                    status,
-                }),
+            body: JSON.stringify({
+                status,
+                note,
+            }),
         },
     )
 
@@ -451,47 +499,40 @@ export const updateIncidentStatus = (
 export const getIncidentHistory = (
     id: number,
 ) =>
-    request<
-        IncidentHistory[]
-    >(
+    request<IncidentHistory[]>(
         `/incidents/${id}/history`,
+    )
+
+
+export const getIncidentSeverityHistory = (
+    id: number,
+) =>
+    request<IncidentSeverityHistory[]>(
+        `/incidents/${id}/severity-history`,
     )
 
 
 export const getIncidentContacts = (
     id: number,
 ) =>
-    request<
-        IncidentContact[]
-    >(
+    request<IncidentContact[]>(
         `/incidents/${id}/contacts`,
     )
 
 
 export const createIncidentContact = (
     id: number,
-
     payload: {
-        contact_type:
-        ContactType
-
-        id_util?:
-        number | null
-
-        external_contact_name?:
-        string | null
+        contact_type: ContactType
+        id_util?: number | null
+        external_contact_name?: string | null
     },
 ) =>
     request<IncidentContact>(
         `/incidents/${id}/contacts`,
-
         {
             method: 'POST',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
@@ -501,10 +542,10 @@ export const getTechnicians = () =>
         '/technicians',
     )
 
-
-/* =========================================================
-   USERS / ROLES / SESSIONS
-   ========================================================= */
+export const getIncidentActors = () =>
+    request<IncidentActor[]>(
+        '/incident-actors',
+    )
 
 export const getRoles = () =>
     request<Role[]>(
@@ -512,9 +553,13 @@ export const getRoles = () =>
     )
 
 
-export const getUsers = () =>
+export const getUsers = (
+    includeInactive = false,
+) =>
     request<User[]>(
-        '/utilisateurs',
+        includeInactive
+            ? '/utilisateurs?include_inactive=true'
+            : '/utilisateurs',
     )
 
 
@@ -529,50 +574,60 @@ export const createUser = (
 ) =>
     request<User>(
         '/utilisateurs',
-
         {
             method: 'POST',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const patchUser = (
     id: number,
-
-    payload:
-        Partial<{
-            nom: string
-            prenom: string
-            email: string
-            id_role: number
-            mot_de_passe: string
-        }>,
+    payload: Partial<{
+        nom: string
+        prenom: string
+        email: string
+        id_role: number
+        mot_de_passe: string
+    }>,
 ) =>
     request<User>(
         `/utilisateurs/${id}`,
-
         {
             method: 'PATCH',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
+export const deactivateUser = (
+    id: number,
+) =>
+    request<User>(
+        `/utilisateurs/${id}/deactivate`,
+        {
+            method: 'PATCH',
+        },
+    )
+
+
+export const activateUser = (
+    id: number,
+) =>
+    request<User>(
+        `/utilisateurs/${id}/activate`,
+        {
+            method: 'PATCH',
+        },
+    )
+
+
+// User deletion requests deactivate access while preserving historical references.
 export const deleteUser = (
     id: number,
 ) =>
     request<void>(
         `/utilisateurs/${id}`,
-
         {
             method: 'DELETE',
         },
@@ -580,9 +635,7 @@ export const deleteUser = (
 
 
 export const getSessions = () =>
-    request<
-        SessionRecord[]
-    >(
+    request<SessionRecord[]>(
         '/sessions',
     )
 
@@ -598,25 +651,33 @@ export const revokeSession = (
     )
 
 
-/* =========================================================
-   FACTORY ORGANISATION
-   ========================================================= */
-
-export const getDepartements = () =>
+export const getDepartements = (
+    includeInactive = false,
+) =>
     request<Departement[]>(
-        '/departements',
+        includeInactive
+            ? '/departements?include_inactive=true'
+            : '/departements',
     )
 
 
-export const getUnites = () =>
+export const getUnites = (
+    includeInactive = false,
+) =>
     request<Unite[]>(
-        '/unites',
+        includeInactive
+            ? '/unites?include_inactive=true'
+            : '/unites',
     )
 
 
-export const getPoteaux = () =>
+export const getPoteaux = (
+    includeInactive = false,
+) =>
     request<Poteau[]>(
-        '/poteaux',
+        includeInactive
+            ? '/poteaux?include_inactive=true'
+            : '/poteaux',
     )
 
 
@@ -627,10 +688,14 @@ export const getEtats = () =>
 
 
 export const getStatuts = () =>
-    request<
-        StatutHistorique[]
-    >(
+    request<StatutHistorique[]>(
         '/statuts',
+    )
+
+
+export const getEtatUsine = () =>
+    request<EtatUsine>(
+        '/etat-usine',
     )
 
 
@@ -642,64 +707,44 @@ type OrganisationKind =
 
 
 export const createOrganisationResource = (
-    kind:
-        OrganisationKind,
-
-    payload:
-        Record<
-            string,
-            string | number
-        >,
+    kind: OrganisationKind,
+    payload: Record<
+        string,
+        string | number
+    >,
 ) =>
     request<unknown>(
         `/${kind}`,
-
         {
             method: 'POST',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const patchOrganisationResource = (
-    kind:
-        OrganisationKind,
-
+    kind: OrganisationKind,
     id: number,
-
-    payload:
-        Record<
-            string,
-            string | number
-        >,
+    payload: Record<
+        string,
+        string | number
+    >,
 ) =>
     request<unknown>(
         `/${kind}/${id}`,
-
         {
             method: 'PATCH',
-
-            body:
-                JSON.stringify(
-                    payload,
-                ),
+            body: JSON.stringify(payload),
         },
     )
 
 
 export const deleteOrganisationResource = (
-    kind:
-        OrganisationKind,
-
+    kind: OrganisationKind,
     id: number,
 ) =>
     request<void>(
         `/${kind}/${id}`,
-
         {
             method: 'DELETE',
         },

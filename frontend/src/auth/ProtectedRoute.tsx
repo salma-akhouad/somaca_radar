@@ -7,10 +7,6 @@ import type {
 } from 'react'
 
 import {
-  AppLoading,
-} from '../components/common/AppLoading'
-
-import {
   useAuth,
 } from './AuthContext'
 
@@ -26,11 +22,14 @@ export function ProtectedRoute({
   } =
     useAuth()
 
-
+  /*
+   * While the existing session is being restored, keep the
+   * application shell mounted. AppLayout is responsible for
+   * withholding protected route content until auth is resolved.
+   */
   if (loading) {
-    return <AppLoading />
+    return children
   }
-
 
   if (!user) {
     return (
@@ -40,7 +39,6 @@ export function ProtectedRoute({
       />
     )
   }
-
 
   return children
 }

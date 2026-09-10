@@ -23,16 +23,16 @@ button {
 
 .app-shell {
   display: flex;
-  width: 100vw;
-  height: 100dvh;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
-/* Sidebar */
 .sidebar {
-  width: clamp(230px, 18vw, 272px);
-  flex: 0 0 clamp(230px, 18vw, 272px);
+  width: 230px;
+  flex: 0 0 230px;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -251,11 +251,33 @@ button {
 }
 
 .nav-item:hover {
-  background: #f1efe9;
+  background:
+    #f1efe9;
 }
 
-.nav-item--active {
-  background: linear-gradient(100deg, #fff0bc, #ffedb3);
+
+.nav-item--active,
+.nav-item--active:hover {
+  background:
+    linear-gradient(100deg,
+      #fff0bc,
+      #ffedb3);
+
+  color: #272a27;
+}
+
+
+.nav-item--active .icon,
+.nav-item--active:hover .icon {
+  color: #625a40;
+}
+
+
+.nav-item:focus-visible {
+  outline:
+    2px solid #b99626;
+
+  outline-offset: -2px;
 }
 
 .nav-item .icon {
@@ -291,66 +313,155 @@ button {
   letter-spacing: .035em;
 }
 
-/* Workspace header */
 .workspace {
   min-width: 0;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .top-header {
   position: relative;
   z-index: 100;
-  height: clamp(76px, 9.4vh, 88px);
-  flex: 0 0 auto;
+
+  height: 84px;
+  flex: 0 0 84px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  padding: 11px clamp(20px, 2.3vw, 34px);
+
+  gap: 24px;
+
+  padding:
+    12px clamp(24px, 2.5vw, 36px) 10px;
+
   overflow: visible;
-  background: rgba(255, 254, 250, .83);
-  border-bottom: 1px solid var(--border);
+
+  border-bottom:
+    1px solid var(--border);
+
+  background:
+    rgba(243, 243, 238, .97);
 }
+
 
 .page-heading {
-  min-width: 0;
-}
-
-.page-heading h1 {
-  margin: 0;
-  font-size: clamp(24px, 2vw, 29px);
-  line-height: 1;
-  letter-spacing: .015em;
-}
-
-.page-heading p {
   display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 6px 0 0;
-  color: var(--text-muted);
-  font-size: clamp(12px, 1.12vw, 16px);
-  letter-spacing: .04em;
+
+  min-width: 0;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+}
+
+
+.page-heading__eyebrow {
+  color: #7f8781;
+
+  font-family:
+    "Arial Narrow",
+    "Roboto Condensed",
+    Arial,
+    sans-serif;
+
+  font-size:
+    clamp(8px,
+      .67vw,
+      10px);
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  letter-spacing: .22em;
+
   white-space: nowrap;
 }
 
-.page-heading p i {
-  display: inline-block;
-  flex: 0 0 auto;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--yellow);
+
+.page-heading__title {
+  display: flex;
+
+  position: relative;
+
+  align-items: flex-end;
+
+  margin-top: 4px;
+
+  padding-bottom: 6px;
+}
+
+
+.page-heading__title h1 {
+  margin: 0;
+
+  color: #272c29;
+
+  font-family:
+    "Arial Narrow",
+    "Roboto Condensed",
+    Arial,
+    sans-serif;
+
+  font-size:
+    clamp(24px,
+      1.8vw,
+      29px);
+
+  font-weight: 900;
+
+  line-height: .96;
+
+  letter-spacing: .015em;
+}
+
+
+.page-heading__title i {
+  position: absolute;
+
+  bottom: 0;
+  left: 0;
+
+  width: 30px;
+  height: 3px;
+
+  background:
+    var(--yellow);
+}
+
+
+.page-heading p {
+  margin:
+    5px 0 0;
+
+  color: #747b76;
+
+  font-size:
+    clamp(10px,
+      .9vw,
+      12px);
+
+  font-weight: 400;
+
+  line-height: 1.25;
+
+  letter-spacing: .015em;
+
+  white-space: nowrap;
 }
 
 .top-header__actions {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: clamp(10px, 1.5vw, 22px);
+  gap:
+    clamp(9px,
+      1.2vw,
+      18px);
 }
 
 .system-status {
@@ -435,13 +546,30 @@ button {
   font-weight: 700;
 }
 
-/* Cartography stage */
 .main-content {
+  min-width: 0;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
-  padding: clamp(12px, 1.35vw, 18px);
+  background: #eceee9;
+}
+
+.main-content--map {
+  padding: 14px;
   overflow: hidden;
+}
+
+.main-content--page {
+  padding: 0;
+  align-items: flex-start;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.main-content--page>* {
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .map-stage {
@@ -570,16 +698,48 @@ button {
 
 .legend-flow {
   position: relative;
-  background: linear-gradient(90deg, transparent 0 8%, var(--yellow) 8% 80%, transparent 80%);
+
+  height: 14px !important;
+
+  background: transparent;
 }
+
+
+.legend-flow::before {
+  position: absolute;
+
+  top: 6px;
+  left: 2px;
+
+  width: 14px;
+  height: 2px;
+
+  content: "";
+
+  background:
+    var(--yellow);
+}
+
 
 .legend-flow::after {
   position: absolute;
-  top: -5px;
-  right: 0;
-  content: '›';
-  color: var(--yellow);
-  font-size: 20px;
+
+  top: 3px;
+  right: 1px;
+
+  width: 6px;
+  height: 6px;
+
+  content: "";
+
+  border-top:
+    2px solid var(--yellow);
+
+  border-right:
+    2px solid var(--yellow);
+
+  transform:
+    rotate(45deg);
 }
 
 .legend-pedestrian {
@@ -739,7 +899,9 @@ button {
   cursor: pointer;
 }
 
-.pole-details__tab:hover { color: #343733; }
+.pole-details__tab:hover {
+  color: #343733;
+}
 
 .pole-details__tab--active {
   border-bottom-color: var(--yellow);
@@ -752,7 +914,9 @@ button {
   overflow: auto;
 }
 
-.pole-details__machines { padding: 8px; }
+.pole-details__machines {
+  padding: 8px;
+}
 
 .pole-machine {
   min-height: 60px;
@@ -763,9 +927,17 @@ button {
   padding: 9px 10px;
 }
 
-.pole-machine + .pole-machine { border-top: 1px solid #ebe9e2; }
-.pole-machine__identity { min-width: 0; }
-.pole-machine__identity div { min-width: 0; }
+.pole-machine+.pole-machine {
+  border-top: 1px solid #ebe9e2;
+}
+
+.pole-machine__identity {
+  min-width: 0;
+}
+
+.pole-machine__identity div {
+  min-width: 0;
+}
 
 .pole-machine__identity strong {
   display: block;
@@ -793,14 +965,33 @@ button {
   text-align: right;
 }
 
-.pole-machine__state--online { color: #5b8d66; }
-.pole-machine__state--warning { color: #a2761e; }
-.pole-machine__state--fault { color: #a7473f; }
-.pole-machine__state--offline { color: #626863; }
+.pole-machine__state--online {
+  color: #5b8d66;
+}
 
-.pole-details__details { padding: 0 14px 14px; }
-.pole-details__section { padding: 15px 0; }
-.pole-details__section + .pole-details__section { border-top: 1px solid #e6e4dd; }
+.pole-machine__state--warning {
+  color: #a2761e;
+}
+
+.pole-machine__state--fault {
+  color: #a7473f;
+}
+
+.pole-machine__state--offline {
+  color: #626863;
+}
+
+.pole-details__details {
+  padding: 0 14px 14px;
+}
+
+.pole-details__section {
+  padding: 15px 0;
+}
+
+.pole-details__section+.pole-details__section {
+  border-top: 1px solid #e6e4dd;
+}
 
 .pole-details__section h3 {
   margin: 0 0 10px;
@@ -817,7 +1008,11 @@ button {
   padding: 2px 0;
 }
 
-.pole-details__healthy strong { color: #53775b; font-size: 11px; }
+.pole-details__healthy strong {
+  color: #53775b;
+  font-size: 11px;
+}
+
 .pole-details__healthy span,
 .pole-details__empty-text {
   margin: 0;
@@ -847,11 +1042,16 @@ button {
   gap: 12px;
 }
 
-.pole-current-issue__header > div { min-width: 0; }
-.pole-current-issue__header > div strong,
-.pole-current-issue__header > div small { display: block; }
+.pole-current-issue__header>div {
+  min-width: 0;
+}
 
-.pole-current-issue__header > div strong {
+.pole-current-issue__header>div strong,
+.pole-current-issue__header>div small {
+  display: block;
+}
+
+.pole-current-issue__header>div strong {
   overflow: hidden;
   color: #3d403c;
   font-size: 11px;
@@ -859,14 +1059,17 @@ button {
   white-space: nowrap;
 }
 
-.pole-current-issue__header > div small {
+.pole-current-issue__header>div small {
   margin-top: 3px;
   color: #8a8e89;
   font-size: 9px;
 }
 
-.pole-current-issue__field { margin-top: 10px; }
-.pole-current-issue__field > span {
+.pole-current-issue__field {
+  margin-top: 10px;
+}
+
+.pole-current-issue__field>span {
   display: block;
   margin-bottom: 4px;
   color: #858983;
@@ -918,8 +1121,16 @@ button {
   margin-bottom: 6px;
 }
 
-.pole-active-incident__meta strong { color: #3f433f; font-size: 10px; }
-.pole-active-incident__meta span { color: #777d78; font-size: 9px; font-weight: 700; }
+.pole-active-incident__meta strong {
+  color: #3f433f;
+  font-size: 10px;
+}
+
+.pole-active-incident__meta span {
+  color: #777d78;
+  font-size: 9px;
+  font-weight: 700;
+}
 
 .pole-details__incident-link {
   margin-top: 8px;
@@ -1114,9 +1325,12 @@ button {
     display: none;
   }
 
-  .main-content {
-    min-height: calc(100dvh - 76px);
+  .main-content--map {
     padding: 10px;
+  }
+
+  .main-content--page {
+    padding: 0;
   }
 
   .map-stage {
@@ -1246,20 +1460,6 @@ button {
 
 .somaca-signature .radar-mark {
   color: var(--yellow);
-}
-
-.top-header {
-  height: clamp(72px, 8.8vh, 82px);
-  flex-basis: clamp(72px, 8.8vh, 82px);
-}
-
-.page-heading h1 {
-  font-size: clamp(22px, 1.8vw, 26px);
-}
-
-.page-heading p {
-  margin-top: 4px;
-  font-size: clamp(11px, 1.02vw, 14px);
 }
 
 .system-status {
@@ -1514,41 +1714,29 @@ button {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-
   line-height: 1;
 }
 
 .live-clock__time {
   white-space: nowrap;
-
-  font-size:
-    clamp(17px,
-      1.65vw,
-      21px);
-
+  font-size: 18px;
   letter-spacing: 0.03em;
-
   font-variant-numeric:
     tabular-nums;
 }
 
 .live-clock__time small {
   color: var(--text-muted);
-
   font-size: 11px;
   font-weight: 600;
 }
 
 .live-clock__date {
   margin-top: 5px;
-
   color: var(--text-muted);
-
   font-size: 8px;
   font-weight: 600;
-
   letter-spacing: 0.06em;
-
   text-transform: uppercase;
 }
 
@@ -1557,9 +1745,7 @@ button {
    actual white painted stripes */
 .legend-pedestrian {
   height: 14px !important;
-
   border: 1px solid #b7b8b2;
-
   background:
     repeating-linear-gradient(90deg,
       #f5f3eb 0 3px,
@@ -1652,15 +1838,15 @@ button {
   font-size: 11px;
 }
 
-.pole-current-issue__header > div strong {
+.pole-current-issue__header>div strong {
   font-size: 12px;
 }
 
-.pole-current-issue__header > div small {
+.pole-current-issue__header>div small {
   font-size: 10px;
 }
 
-.pole-current-issue__field > span {
+.pole-current-issue__field>span {
   font-size: 9px;
 }
 
@@ -1688,13 +1874,18 @@ button {
 .route-loading {
   min-width: 0;
   min-height: 100%;
+
   flex: 1 1 auto;
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
+
   gap: 14px;
+
+  background: var(--somaca-page, #eceee9);
 
   color: #4f5651;
 
@@ -1704,7 +1895,7 @@ button {
     Arial,
     sans-serif;
 
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 
   letter-spacing: .075em;

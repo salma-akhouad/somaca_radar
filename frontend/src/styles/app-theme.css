@@ -1,0 +1,86 @@
+:root {
+  --somaca-sidebar:
+    #f2eddc;
+
+  --somaca-sidebar-soft:
+    #f7f3e6;
+
+  --somaca-header:
+    #f3f3ee;
+
+  --somaca-page:
+    #eceee9;
+
+  --somaca-page-deep:
+    #e8eae5;
+
+  --somaca-shell-divider:
+    #d5d7d0;
+
+  --somaca-sidebar-divider:
+    #d8d2c3;
+}
+
+
+/*
+ * The sidebar is intentionally the warmest part
+ * of the application shell.
+ */
+.sidebar {
+  background:
+    linear-gradient(
+      180deg,
+      var(--somaca-sidebar-soft),
+      var(--somaca-sidebar)
+    );
+
+  border-right:
+    1px solid
+    var(--somaca-sidebar-divider);
+}
+
+
+/*
+ * Header and page canvas belong to the same
+ * neutral family while remaining separated
+ * by a thin structural divider.
+ */
+.workspace {
+  background:
+    var(--somaca-page);
+}
+
+
+.top-header {
+  border-bottom-color:
+    var(--somaca-shell-divider);
+
+  background:
+    rgba(
+      243,
+      243,
+      238,
+      .97
+    );
+}
+
+
+.main-content--page {
+  background:
+    var(--somaca-page);
+}
+
+
+/*
+ * Operational pages keep the cooler grey canvas
+ * that works well with the warm navigation rail.
+ */
+.operations-page,
+.incident-console {
+  background:
+    linear-gradient(
+      180deg,
+      #eef0eb,
+      #e9ebe6
+    );
+}

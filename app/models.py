@@ -1,11 +1,28 @@
-from sqlalchemy import UUID, Column, Integer, String, Date, DateTime, ForeignKey, Text, Index, Enum as SQLEnum, func
-from .database import Base
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
-from enum import Enum
 
-# SQLAlchemy model : describes how data is stored in the database,
-# It does not directly interface with frontend JSON. 
+
+from datetime import date, datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID as PyUUID
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    Enum as SQLEnum,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .database import Base
+
 
 class IncidentStatus(str, Enum):
     OUVERT = "ouvert"
@@ -15,10 +32,12 @@ class IncidentStatus(str, Enum):
     FERME = "ferme"
     ANNULE = "annule"
 
+
 class IncidentSeverity(str, Enum):
     MINEUR = "mineur"
     MAJEUR = "majeur"
     CRITIQUE = "critique"
+
 
 class ContactType(str, Enum):
     TECHNICIEN = "technicien"
@@ -28,54 +47,56 @@ class ContactType(str, Enum):
 
 class Incident(Base):
     __tablename__ = "incident"
-    id_incident = Column(Integer, primary_key=True)
-    id_machine = Column(
+
+    id_incident: Mapped[int] = mapped_column(
         Integer,
+        primary_key=True,
+    )
+    id_machine: Mapped[int] = mapped_column(
         ForeignKey("machine.id_machine"),
         nullable=False,
         index=True,
     )
-    problem = Column(
+    problem: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    severity = Column(
+    severity: Mapped[IncidentSeverity] = mapped_column(
         SQLEnum(
             IncidentSeverity,
             name="incident_severity",
-            # This Python enum maps to the PostgreSQL enum type 
-            # that already exists under the name incident_status.
             values_callable=lambda enum_class: [
-            member.value for member in enum_class
-        ], # this line converts the enum members to their string values for storage in the database
+                member.value
+                for member in enum_class
+            ],
         ),
         nullable=False,
     )
-    status = Column(
+    status: Mapped[IncidentStatus] = mapped_column(
         SQLEnum(
             IncidentStatus,
             name="incident_status",
             values_callable=lambda enum_class: [
-            member.value for member in enum_class
-        ],
+                member.value
+                for member in enum_class
+            ],
         ),
         nullable=False,
     )
-    confirmed_cause = Column(
+    confirmed_cause: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )
-    applied_solution = Column(
+    applied_solution: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
     )
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
-    created_by_user_id = Column(
-        Integer,
+    created_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("utilisateur.id_util"),
         nullable=False,
         index=True,
@@ -84,155 +105,398 @@ class Incident(Base):
 
 class IncidentStatusHistory(Base):
     __tablename__ = "incident_status_history"
-    id_status_change = Column(
+
+    id_status_change: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
     )
-    id_incident = Column(
-        Integer,
+    id_incident: Mapped[int] = mapped_column(
         ForeignKey("incident.id_incident"),
         nullable=False,
         index=True,
     )
-    status = Column(
+    status: Mapped[IncidentStatus] = mapped_column(
         SQLEnum(
             IncidentStatus,
             name="incident_status",
-            create_type=False, # do not create a new enum type in the database, use the existing one
+            create_type=False,
             values_callable=lambda enum_class: [
-            member.value for member in enum_class
-        ],
+                member.value
+                for member in enum_class
+            ],
         ),
         nullable=False,
     )
-    changed_at = Column(
+    changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
-    changed_by_user_id = Column(
-        Integer,
+    changed_by_user_id: Mapped[int] = mapped_column(
         ForeignKey("utilisateur.id_util"),
         nullable=False,
         index=True,
+    )
+    note: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+
+class IncidentSeverityHistory(Base):
+    __tablename__ = "incident_severity_history"
+
+    id_severity_change: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    id_incident: Mapped[int] = mapped_column(
+        ForeignKey("incident.id_incident"),
+        nullable=False,
+        index=True,
+    )
+    old_severity: Mapped[IncidentSeverity] = mapped_column(
+        SQLEnum(
+            IncidentSeverity,
+            name="incident_severity",
+            create_type=False,
+            values_callable=lambda enum_class: [
+                member.value
+                for member in enum_class
+            ],
+        ),
+        nullable=False,
+    )
+    new_severity: Mapped[IncidentSeverity] = mapped_column(
+        SQLEnum(
+            IncidentSeverity,
+            name="incident_severity",
+            create_type=False,
+            values_callable=lambda enum_class: [
+                member.value
+                for member in enum_class
+            ],
+        ),
+        nullable=False,
+    )
+    changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+    changed_by_user_id: Mapped[int] = mapped_column(
+        ForeignKey("utilisateur.id_util"),
+        nullable=False,
+        index=True,
+    )
+    note: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
 
 class IncidentContact(Base):
     __tablename__ = "incident_contact"
-    id_contact = Column(
+
+    id_contact: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
     )
-    id_incident = Column(
-        Integer,
+    id_incident: Mapped[int] = mapped_column(
         ForeignKey("incident.id_incident"),
         nullable=False,
         index=True,
     )
-    contact_type = Column(
+    contact_type: Mapped[ContactType] = mapped_column(
         SQLEnum(
             ContactType,
             name="incident_contact_type",
             values_callable=lambda enum_class: [
-            member.value for member in enum_class
-        ],
+                member.value
+                for member in enum_class
+            ],
         ),
         nullable=False,
     )
-    id_util = Column(
-        Integer,
+    id_util: Mapped[int | None] = mapped_column(
         ForeignKey("utilisateur.id_util"),
         nullable=True,
         index=True,
     )
-    external_contact_name = Column(
+    external_contact_name: Mapped[str | None] = mapped_column(
         String(150),
         nullable=True,
     )
-    contacted_at = Column(
+    contacted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        server_default=func.now(), 
+        server_default=func.now(),
     )
 
-    
+
 class Role(Base):
     __tablename__ = "role"
-    id_role = Column(Integer, primary_key=True)
-    nom_role = Column(String)
 
-class Utilisateur(Base): # Base means that this class is a SQLAlchemy model, and it will be mapped to a table in the database.
+    id_role: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom_role: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        unique=True,
+    )
+
+    utilisateurs: Mapped[list["Utilisateur"]] = relationship(
+        back_populates="role",
+    )
+
+class Utilisateur(Base):
     __tablename__ = "utilisateur"
-    id_util = Column(Integer, primary_key=True)
-    nom = Column(String)
-    prenom = Column(String)
-    email = Column(String, unique=True)
-    mot_de_passe = Column(String)
-    id_role = Column(Integer, ForeignKey("role.id_role"))
-    role = relationship("Role")
-    notifications_read_at = Column(DateTime(timezone=True),nullable=True)
+
+    id_util: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    prenom: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    email: Mapped[str] = mapped_column(
+        String(150),
+        unique=True,
+        nullable=False,
+    )
+    mot_de_passe: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    id_role: Mapped[int] = mapped_column(
+        ForeignKey("role.id_role"),
+        nullable=False,
+    )
+    notifications_read_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    actif: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+    date_desactivation: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    role: Mapped[Role] = relationship(
+        back_populates="utilisateurs",
+    )
+
 
 class Session(Base):
     __tablename__ = "session"
-    id_session = Column(Integer, primary_key=True)
-    token = Column(
+
+    id_session: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    token: Mapped[str] = mapped_column(
         String(64),
         unique=True,
         index=True,
         nullable=False,
     )
-    date_creation = Column(DateTime)
-    date_expiration = Column(DateTime)
-    date_revocation = Column(DateTime, nullable=True)
-    id_util = Column(Integer, ForeignKey("utilisateur.id_util"), index=True)
+    date_creation: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+    date_expiration: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+    date_revocation: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+    id_util: Mapped[int] = mapped_column(
+        ForeignKey("utilisateur.id_util"),
+        nullable=False,
+        index=True,
+    )
+
 
 class Departement(Base):
     __tablename__ = "departement"
-    id_dep = Column(Integer, primary_key=True)
-    nom_dep = Column(String)
+
+    id_dep: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom_dep: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    actif: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+
 
 class Unite(Base):
     __tablename__ = "unite"
-    id_unite = Column(Integer, primary_key=True)
-    nom_unite = Column(String)
-    id_dep = Column(Integer, ForeignKey("departement.id_dep"))
+
+    id_unite: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom_unite: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    id_dep: Mapped[int] = mapped_column(
+        ForeignKey("departement.id_dep"),
+        nullable=False,
+    )
+    actif: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+
 
 class Poteau(Base):
     __tablename__ = "poteau"
-    id_poteau = Column(Integer, primary_key=True)
-    nom_poteau = Column(String)
-    id_unite = Column(Integer, ForeignKey("unite.id_unite"))
+
+    id_poteau: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom_poteau: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    id_unite: Mapped[int] = mapped_column(
+        ForeignKey("unite.id_unite"),
+        nullable=False,
+    )
+    actif: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+
 
 class Etat(Base):
     __tablename__ = "etat"
-    id_etat = Column(Integer, primary_key=True)
-    libelle_etat = Column(String)
-    couleur = Column(String)
 
-# It records machine health-state changes (not full incident management).
+    id_etat: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    libelle_etat: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        unique=True,
+    )
+    couleur: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+
 class StatutHistorique(Base):
     __tablename__ = "statut_historique"
-    id_statut = Column(Integer, primary_key=True)
-    date_changement = Column(DateTime)
-    description_probleme = Column(Text, nullable=True)
-    id_machine = Column(Integer, ForeignKey("machine.id_machine"), index=True)
-    id_etat = Column(Integer, ForeignKey("etat.id_etat"))
-    id_util = Column(Integer, ForeignKey("utilisateur.id_util"), nullable=True, index=True)
-    date_suppression = Column(DateTime, nullable=True)  # soft delete marker
+
+    # The current machine state is derived from the latest active history row.
+    id_statut: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    date_changement: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+    )
+    id_machine: Mapped[int] = mapped_column(
+        ForeignKey("machine.id_machine"),
+        nullable=False,
+        index=True,
+    )
+    id_etat: Mapped[int] = mapped_column(
+        ForeignKey("etat.id_etat"),
+        nullable=False,
+    )
+    id_util: Mapped[int | None] = mapped_column(
+        ForeignKey("utilisateur.id_util"),
+        nullable=True,
+        index=True,
+    )
+    id_incident: Mapped[int | None] = mapped_column(
+        ForeignKey("incident.id_incident"),
+        nullable=True,
+        index=True,
+    )
+    date_suppression: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
 
 class SomacaHelperMessage(Base):
     __tablename__ = "somaca_helper_message"
-    id_message = Column(Integer, primary_key=True) # identifies one message
-    conversation_id = Column(UUID(as_uuid=True), nullable=False)# groups several messages into one conversation 
-    id_util = Column(Integer, ForeignKey("utilisateur.id_util"), nullable=False)
-    role = Column( String(10), nullable=False) # USER or ASSISTANT.
-    content = Column(Text, nullable=False) # Text means a large amount of text
-    id_machine = Column(Integer, ForeignKey("machine.id_machine"), index=True)
-    intent = Column(String(60)) # Intent means the purpose or goal of the message
-    facts = Column(JSONB) # JSONB means a JSON object that can be queried and indexed in PostgreSQL
-    model_name = Column(String(100))
-    date_creation = Column(DateTime(timezone=True), nullable=False,  server_default=func.now())
+
+    id_message: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    conversation_id: Mapped[PyUUID] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=False,
+    )
+    id_util: Mapped[int] = mapped_column(
+        ForeignKey("utilisateur.id_util"),
+        nullable=False,
+    )
+    role: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False,
+    )
+    content: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+    id_machine: Mapped[int | None] = mapped_column(
+        ForeignKey("machine.id_machine"),
+        nullable=True,
+        index=True,
+    )
+    intent: Mapped[str | None] = mapped_column(
+        String(60),
+        nullable=True,
+    )
+    facts: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+    model_name: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    date_creation: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
 
     __table_args__ = (
         Index(
@@ -242,18 +506,49 @@ class SomacaHelperMessage(Base):
             "date_creation",
         ),
         Index(
-        "idx_helper_user_conversation_date",
-        "id_util",
-        "conversation_id",
-        "date_creation",
-    ),
+            "idx_helper_user_conversation_date",
+            "id_util",
+            "conversation_id",
+            "date_creation",
+        ),
     )
+
+
 class Machine(Base):
     __tablename__ = "machine"
-    id_machine = Column(Integer, primary_key=True)
-    nom_machine = Column(String)
-    ip_address = Column(String, unique=True) 
-    mac_address = Column(String)
-    date_installation = Column(Date)
-    id_poteau = Column(Integer, ForeignKey("poteau.id_poteau"))
 
+    id_machine: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+    )
+    nom_machine: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False,
+    )
+    ip_address: Mapped[str | None] = mapped_column(
+        String(45),
+        unique=True,
+        nullable=True,
+    )
+    mac_address: Mapped[str | None] = mapped_column(
+        String(17),
+        nullable=True,
+    )
+    date_installation: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+    )
+    id_poteau: Mapped[int] = mapped_column(
+        ForeignKey("poteau.id_poteau"),
+        nullable=False,
+    )
+    actif: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+    date_decommissionnement: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
