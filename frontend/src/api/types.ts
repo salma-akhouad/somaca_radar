@@ -23,12 +23,21 @@ export interface LoginResponse {
 export interface Machine {
     id_machine: number
     nom_machine: string
+    type_machine: string
     ip_address: string
     mac_address: string | null
     date_installation: string
     id_poteau: number
-    actif?: boolean
-    date_decommissionnement?: string | null
+    actif: boolean
+    date_decommissionnement: string | null
+}
+
+export interface MachinePage {
+    items: Machine[]
+    total: number
+    page: number
+    page_size: number
+    total_pages: number
 }
 
 export interface Role {
@@ -42,20 +51,43 @@ export interface User {
     prenom: string
     email: string
     id_role: number
-    actif?: boolean
-    date_desactivation?: string | null
+    actif: boolean
+    date_desactivation: string | null
+}
+
+export interface UserPage {
+    items: User[]
+    total: number
+    page: number
+    page_size: number
+    total_pages: number
 }
 
 export interface NotificationReadResponse {
     read_at: string
 }
 
+export type SessionStatus =
+    | 'active'
+    | 'expired'
+    | 'revoked'
+
 export interface SessionRecord {
     id_session: number
     date_creation: string
     date_expiration: string
-    id_util: number
     date_revocation: string | null
+    id_util: number
+    user_email: string
+    user_nom: string
+    user_prenom: string
+    status: SessionStatus
+}
+
+export interface SessionPage {
+    items: SessionRecord[]
+    next_cursor: string | null
+    page_size: number
 }
 
 export interface Departement {
@@ -68,14 +100,18 @@ export interface Unite {
     id_unite: number
     nom_unite: string
     id_dep: number
-    actif?: boolean
+    actif: boolean
+    represente_carte: boolean
+    date_creation: string
 }
 
 export interface Poteau {
     id_poteau: number
     nom_poteau: string
     id_unite: number
-    actif?: boolean
+    actif: boolean
+    represente_carte: boolean
+    date_creation: string
 }
 
 export interface Etat {
@@ -91,6 +127,8 @@ export interface StatutHistorique {
     id_etat: number
     id_util: number | null
     id_incident: number | null
+    date_suppression: string | null
+    id_util_suppression: number | null
 }
 
 export type IncidentSeverity = 'mineur' | 'majeur' | 'critique'

@@ -227,11 +227,10 @@ function TrendTooltip({
         {point.active_incidents} incidents actifs
         {
           point.critical_active_incidents > 0
-            ? ` · ${point.critical_active_incidents} critique${
-                point.critical_active_incidents === 1
-                  ? ''
-                  : 's'
-              }`
+            ? ` · ${point.critical_active_incidents} critique${point.critical_active_incidents === 1
+              ? ''
+              : 's'
+            }`
             : ''
         }
       </small>
@@ -284,9 +283,9 @@ export function SupervisionPage() {
             requestError instanceof ApiError
               ? requestError.message
               : (
-                  'L’état du Montage '
-                  + 'n’a pas pu être chargé.'
-                ),
+                'L’état du Montage '
+                + 'n’a pas pu être chargé.'
+              ),
           )
         } finally {
           setLoading(false)
@@ -321,8 +320,8 @@ export function SupervisionPage() {
       () =>
         dashboard
           ? healthPoints(
-              dashboard.trend,
-            )
+            dashboard.trend,
+          )
           : [],
       [dashboard],
     )
@@ -410,35 +409,35 @@ export function SupervisionPage() {
     activeTrendIndex === null
       ? null
       : dashboard.trend[
-          activeTrendIndex
-        ]
+      activeTrendIndex
+      ]
 
   const stateComposition: Array<{
     key: MachineStateKey
     label: string
     value: number
   }> = [
-    {
-      key: 'operational',
-      label: 'Opérationnel',
-      value: summary.operational,
-    },
-    {
-      key: 'attention',
-      label: 'Attention',
-      value: summary.attention,
-    },
-    {
-      key: 'critical',
-      label: 'Critique',
-      value: summary.critical,
-    },
-    {
-      key: 'unknown',
-      label: 'Inconnu',
-      value: summary.unknown,
-    },
-  ]
+      {
+        key: 'operational',
+        label: 'Opérationnel',
+        value: summary.operational,
+      },
+      {
+        key: 'attention',
+        label: 'Attention',
+        value: summary.attention,
+      },
+      {
+        key: 'critical',
+        label: 'Critique',
+        value: summary.critical,
+      },
+      {
+        key: 'unknown',
+        label: 'Inconnu',
+        value: summary.unknown,
+      },
+    ]
 
   const maximumStateCount =
     Math.max(
@@ -459,12 +458,10 @@ export function SupervisionPage() {
         )
       }
 
-      <article className="etat-summary-panel">
+            <article className="etat-summary-panel">
         <header className="etat-summary-panel__heading">
           <div>
-            <strong>
-              SYNTHÈSE MONTAGE
-            </strong>
+            <strong>SYNTHÈSE MONTAGE</strong>
             <small>
               Vue instantanée de la santé opérationnelle du Montage
             </small>
@@ -473,108 +470,91 @@ export function SupervisionPage() {
 
         <div className="etat-summary-layout">
           <div className="etat-summary-health">
-            <span>
-              SANTÉ OPÉRATIONNELLE
-            </span>
+            <div className="etat-health-heading">
+              <svg
+                className="etat-health-signal"
+                viewBox="0 0 64 40"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  className="etat-health-signal__track"
+                  pathLength="100"
+                  d="M3 21 H16 L23 7 L32 34 L40 14 L46 21 H61"
+                />
+                <path
+                  className="etat-health-signal__flow"
+                  pathLength="100"
+                  d="M3 21 H16 L23 7 L32 34 L40 14 L46 21 H61"
+                />
+              </svg>
+
+              <span>SANTÉ OPÉRATIONNELLE</span>
+            </div>
+
             <strong>
               {summary.operational_health.toFixed(1)} %
             </strong>
           </div>
 
           <div className="etat-summary-machines">
-            <span>
-              MACHINES SUIVIES
-            </span>
-            <strong>
-              {summary.total_machines}
-            </strong>
-            <small>
-              équipements du Montage
-            </small>
+            <span>MACHINES SUIVIES</span>
+            <strong>{summary.total_machines}</strong>
+            <small>équipements du Montage</small>
           </div>
 
           <div className="etat-state-composition">
             <div className="etat-state-composition__heading">
-              <span>
-                ÉTAT DES MACHINES
-              </span>
-              <small>
-                Répartition actuelle
-              </small>
+              <span>ÉTAT DES MACHINES</span>
+              <small>Répartition actuelle</small>
             </div>
 
             <div className="etat-state-composition__columns">
-              {
-                stateComposition.map(
-                  (state) => {
-                    const pillarHeight =
-                      Math.max(
-                        13,
-                        (
-                          state.value
-                          / maximumStateCount
-                        )
-                        * 52,
-                      )
-
-                    return (
-                      <div
-                        key={state.key}
-                        className="etat-state-composition__item"
-                        title={`${state.label} : ${state.value}`}
-                      >
-                        <strong>
-                          {state.value}
-                        </strong>
-
-                        <span
-                          className={
-                            `etat-state-pillar etat-state-pillar--${state.key}`
-                          }
-                          style={{
-                            height: `${pillarHeight}px`,
-                          }}
-                          aria-hidden="true"
-                        />
-
-                        <small>
-                          {state.label}
-                        </small>
-                      </div>
-                    )
-                  },
+              {stateComposition.map((state) => {
+                const pillarHeight = Math.max(
+                  13,
+                  (state.value / maximumStateCount) * 52,
                 )
-              }
+
+                return (
+                  <div
+                    key={state.key}
+                    className="etat-state-composition__item"
+                    title={`${state.label} : ${state.value}`}
+                  >
+                    <strong>{state.value}</strong>
+
+                    <span
+                      className={
+                        `etat-state-pillar etat-state-pillar--${state.key}`
+                      }
+                      style={{ height: `${pillarHeight}px` }}
+                      aria-hidden="true"
+                    />
+
+                    <small>{state.label}</small>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
           <button
             type="button"
             className="etat-summary-incidents"
-            onClick={
-              () => navigate('/incidents')
-            }
+            onClick={() => navigate('/incidents')}
           >
-            <span>
-              INCIDENTS ACTIFS
-            </span>
-            <strong>
-              {summary.active_incidents}
-            </strong>
+            <span>INCIDENTS ACTIFS</span>
+            <strong>{summary.active_incidents}</strong>
             <small>
               {summary.critical_active_incidents} critique{
-                summary.critical_active_incidents === 1
-                  ? ''
-                  : 's'
+                summary.critical_active_incidents === 1 ? '' : 's'
               }
             </small>
-            <em>
-              Voir les incidents
-            </em>
+            <em>Voir les incidents</em>
           </button>
         </div>
       </article>
-
 
       <div className="etat-usine__main-grid">
         <article className="etat-panel etat-trend-panel">
@@ -705,9 +685,9 @@ export function SupervisionPage() {
                         className={
                           activeTrendIndex === index
                             ? (
-                                'etat-trend-chart__point '
-                                + 'etat-trend-chart__point--active'
-                              )
+                              'etat-trend-chart__point '
+                              + 'etat-trend-chart__point--active'
+                            )
                             : 'etat-trend-chart__point'
                         }
                       />
@@ -747,12 +727,11 @@ export function SupervisionPage() {
               && (
                 <div
                   className={
-                    `etat-trend-chart__tooltip-wrap ${
-                      activeTrendIndex === 0
-                        ? 'etat-trend-chart__tooltip-wrap--start'
-                        : activeTrendIndex === dashboard.trend.length - 1
-                          ? 'etat-trend-chart__tooltip-wrap--end'
-                          : ''
+                    `etat-trend-chart__tooltip-wrap ${activeTrendIndex === 0
+                      ? 'etat-trend-chart__tooltip-wrap--start'
+                      : activeTrendIndex === dashboard.trend.length - 1
+                        ? 'etat-trend-chart__tooltip-wrap--end'
+                        : ''
                     }`
                   }
                   style={{
@@ -810,102 +789,100 @@ export function SupervisionPage() {
             {
               dashboard.watched_poles.length === 0
                 ? (
-                    <div className="etat-empty-state">
-                      Aucun poteau ne nécessite de surveillance actuellement.
-                    </div>
-                  )
+                  <div className="etat-empty-state">
+                    Aucun poteau ne nécessite de surveillance actuellement.
+                  </div>
+                )
                 : dashboard.watched_poles.map(
-                    (pole) => (
-                      <button
-                        type="button"
-                        key={pole.id_poteau}
-                        className="etat-watch-row"
-                        onClick={
-                          () => navigate(
-                            '/cartography',
-                            {
-                              state: {
-                                focusPoleId:
-                                  pole.id_poteau,
-                              },
-                            },
-                          )
-                        }
-                      >
-                        <span className="etat-watch-row__identity">
-                          <strong>
-                            {pole.nom_poteau}
-                          </strong>
-                          <small>
-                            {pole.nom_unite}
-                          </small>
-                        </span>
-
-                        <span className="etat-watch-row__reason">
+                  (pole) => (
+                    <button
+                      type="button"
+                      key={pole.id_poteau}
+                      className="etat-watch-row"
+                      onClick={
+                        () => navigate(
+                          '/cartography',
                           {
-                            pole.critical_machines > 0
-                              ? `${pole.critical_machines} ${plural(
-                                  pole.critical_machines,
-                                  'machine critique',
-                                  'machines critiques',
-                                )}`
-                              : pole.attention_machines > 0
-                                ? `${pole.attention_machines} ${plural(
-                                    pole.attention_machines,
-                                    'machine en attention',
-                                    'machines en attention',
-                                  )}`
-                                : pole.unknown_machines > 0
-                                  ? `${pole.unknown_machines} état${
-                                      pole.unknown_machines === 1
-                                        ? ''
-                                        : 's'
-                                    } inconnu${
-                                      pole.unknown_machines === 1
-                                        ? ''
-                                        : 's'
-                                    }`
-                                  : 'État machine stable'
+                            state: {
+                              focusPoleId:
+                                pole.id_poteau,
+                            },
+                          },
+                        )
+                      }
+                    >
+                      <span className="etat-watch-row__identity">
+                        <strong>
+                          {pole.nom_poteau}
+                        </strong>
+                        <small>
+                          {pole.nom_unite}
+                        </small>
+                      </span>
+
+                      <span className="etat-watch-row__reason">
+                        {
+                          pole.critical_machines > 0
+                            ? `${pole.critical_machines} ${plural(
+                              pole.critical_machines,
+                              'machine critique',
+                              'machines critiques',
+                            )}`
+                            : pole.attention_machines > 0
+                              ? `${pole.attention_machines} ${plural(
+                                pole.attention_machines,
+                                'machine en attention',
+                                'machines en attention',
+                              )}`
+                              : pole.unknown_machines > 0
+                                ? `${pole.unknown_machines} état${pole.unknown_machines === 1
+                                  ? ''
+                                  : 's'
+                                } inconnu${pole.unknown_machines === 1
+                                  ? ''
+                                  : 's'
+                                }`
+                                : 'État machine stable'
+                        }
+                        <small>
+                          {pole.active_incidents} incident{
+                            pole.active_incidents === 1
+                              ? ''
+                              : 's'
+                          } actif{
+                            pole.active_incidents === 1
+                              ? ''
+                              : 's'
                           }
-                          <small>
-                            {pole.active_incidents} incident{
-                              pole.active_incidents === 1
-                                ? ''
-                                : 's'
-                            } actif{
-                              pole.active_incidents === 1
-                                ? ''
-                                : 's'
-                            }
-                          </small>
-                        </span>
+                        </small>
+                      </span>
 
-                        <span className="etat-watch-row__severity">
-                          <small>
-                            SÉVÉRITÉ MAX.
-                          </small>
-                          <strong
-                            className={
-                              pole.highest_severity
-                                ? `etat-severity etat-severity--${pole.highest_severity}`
-                                : 'etat-severity'
-                            }
-                          >
-                            {severityLabel(
-                              pole.highest_severity,
-                            )}
-                          </strong>
-                        </span>
-
-                        <svg
-                          viewBox="0 0 20 20"
-                          aria-hidden="true"
+                      <span className="etat-watch-row__severity">
+                        <small>
+                          SÉVÉRITÉ MAX.
+                        </small>
+                        <strong
+                          className={
+                            pole.highest_severity
+                              ? `etat-severity etat-severity--${pole.highest_severity}`
+                              : 'etat-severity'
+                          }
                         >
-                          <path d="M7 4l6 6-6 6" />
-                        </svg>
-                      </button>
-                    ),
-                  )
+                          {severityLabel(
+                            pole.highest_severity,
+                          )}
+                        </strong>
+                      </span>
+
+                      <svg
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 4l6 6-6 6" />
+                      </svg>
+                    </button>
+                  ),
+                )
             }
           </div>
         </article>
@@ -940,116 +917,116 @@ export function SupervisionPage() {
           {
             dashboard.recent_changes.length === 0
               ? (
-                  <div className="etat-empty-state">
-                    Aucun changement d’état récent.
-                  </div>
-                )
+                <div className="etat-empty-state">
+                  Aucun changement d’état récent.
+                </div>
+              )
               : dashboard.recent_changes.map(
-                  (event) => {
-                    const currentLevel =
-                      stateClassName(
-                        event.current_state,
-                      )
+                (event) => {
+                  const currentLevel =
+                    stateClassName(
+                      event.current_state,
+                    )
 
-                    return (
-                      <article
-                        key={event.id_statut}
-                        className="etat-event-row"
+                  return (
+                    <article
+                      key={event.id_statut}
+                      className="etat-event-row"
+                    >
+                      <time
+                        dateTime={event.changed_at}
                       >
-                        <time
-                          dateTime={event.changed_at}
-                        >
+                        {
+                          new Intl.DateTimeFormat(
+                            'fr-FR',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            },
+                          ).format(
+                            new Date(
+                              event.changed_at,
+                            ),
+                          )
+                        }
+                      </time>
+
+                      <span className="etat-event-row__machine">
+                        <strong>
+                          {event.pole_name} · {event.machine_name}
+                        </strong>
+                        <small>
+                          {event.unite_name}
+                        </small>
+                      </span>
+
+                      <span className="etat-event-row__transition">
+                        <em>
                           {
-                            new Intl.DateTimeFormat(
-                              'fr-FR',
+                            event.previous_state
+                            ?? 'État initial'
+                          }
+                        </em>
+
+                        <svg
+                          viewBox="0 0 24 16"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 8h16M15 4l4 4-4 4" />
+                        </svg>
+
+                        <strong
+                          className={
+                            `etat-state etat-state--${currentLevel}`
+                          }
+                        >
+                          {event.current_state}
+                        </strong>
+                      </span>
+
+                      <span className="etat-event-row__tail">
+                        {
+                          event.id_incident !== null
+                          && (
+                            <small className="etat-event-row__incident">
+                              Incident #{String(
+                                event.id_incident,
+                              ).padStart(4, '0')}
+                            </small>
+                          )
+                        }
+
+                        <button
+                          type="button"
+                          className="etat-map-link"
+                          onClick={
+                            () => navigate(
+                              '/cartography',
                               {
-                                hour: '2-digit',
-                                minute: '2-digit',
+                                state: {
+                                  focusPoleId:
+                                    event.id_poteau,
+                                  incidentId:
+                                    event.id_incident,
+                                },
                               },
-                            ).format(
-                              new Date(
-                                event.changed_at,
-                              ),
                             )
                           }
-                        </time>
-
-                        <span className="etat-event-row__machine">
-                          <strong>
-                            {event.pole_name} · {event.machine_name}
-                          </strong>
-                          <small>
-                            {event.unite_name}
-                          </small>
-                        </span>
-
-                        <span className="etat-event-row__transition">
-                          <em>
-                            {
-                              event.previous_state
-                              ?? 'État initial'
-                            }
-                          </em>
-
+                        >
                           <svg
-                            viewBox="0 0 24 16"
+                            viewBox="0 0 20 20"
                             aria-hidden="true"
                           >
-                            <path d="M3 8h16M15 4l4 4-4 4" />
+                            <path d="M10 18s5-5.1 5-9a5 5 0 10-10 0c0 3.9 5 9 5 9z" />
+                            <circle cx="10" cy="9" r="1.8" />
                           </svg>
-
-                          <strong
-                            className={
-                              `etat-state etat-state--${currentLevel}`
-                            }
-                          >
-                            {event.current_state}
-                          </strong>
-                        </span>
-
-                        <span className="etat-event-row__tail">
-                          {
-                            event.id_incident !== null
-                            && (
-                              <small className="etat-event-row__incident">
-                                Incident #{String(
-                                  event.id_incident,
-                                ).padStart(4, '0')}
-                              </small>
-                            )
-                          }
-
-                          <button
-                            type="button"
-                            className="etat-map-link"
-                            onClick={
-                              () => navigate(
-                                '/cartography',
-                                {
-                                  state: {
-                                    focusPoleId:
-                                      event.id_poteau,
-                                    incidentId:
-                                      event.id_incident,
-                                  },
-                                },
-                              )
-                            }
-                          >
-                            <svg
-                              viewBox="0 0 20 20"
-                              aria-hidden="true"
-                            >
-                              <path d="M10 18s5-5.1 5-9a5 5 0 10-10 0c0 3.9 5 9 5 9z" />
-                              <circle cx="10" cy="9" r="1.8" />
-                            </svg>
-                            Voir sur la carte
-                          </button>
-                        </span>
-                      </article>
-                    )
-                  },
-                )
+                          Voir sur la carte
+                        </button>
+                      </span>
+                    </article>
+                  )
+                },
+              )
           }
         </div>
       </article>

@@ -37,8 +37,8 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: linear-gradient(135deg, #fcfbf7, #f4f2ed);
-  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, #f7f3e6, #f2eddc);
+  border-right: 1px solid #d8d2c3;
   z-index: 2;
 }
 
@@ -555,8 +555,15 @@ button {
 }
 
 .main-content--map {
+  position: relative;
+  isolation: isolate;
   padding: 14px;
   overflow: hidden;
+}
+
+/* Map initialization must not cover the persistent application shell. */
+.main-content--map > .app-loading {
+  position: absolute;
 }
 
 .main-content--page {

@@ -1,7 +1,9 @@
+import base64
+import json
 import asyncio
 import logging
 from datetime import datetime, time, timedelta, timezone
-from typing import cast
+from typing import cast, Literal
 from uuid import UUID
 
 from fastapi import (
@@ -22,6 +24,7 @@ from passlib.context import CryptContext
 from sqlalchemy import and_, func, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, aliased
+from .rate_limiter import rate_limiter
 
 from .auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -103,6 +106,10 @@ from .schemas import (
     UtilisateurCreate,
     UtilisateurOut,
     UtilisateurUpdate,
+    StatutHistoriquePageOut,
+    MachinePageOut,
+    SessionPageOut,
+    UtilisateurPageOut,
 )
 from .somaca_helper_service import (
     SomacaHelperClarificationError,
@@ -174,6 +181,36 @@ ADMIN_TRANSITIONS = {
     (IncidentStatus.EN_ATTENTE, IncidentStatus.ANNULE),
     (IncidentStatus.RESOLU, IncidentStatus.ANNULE),
 }
+
+LOGIN_ACCOUNT_LIMIT = 5
+LOGIN_ACCOUNT_WINDOW_SECONDS = 60
+
+LOGIN_IP_LIMIT = 25
+LOGIN_IP_WINDOW_SECONDS = 60
+
+READ_LIMIT_CAPACITY = 120
+READ_LIMIT_REFILL_TOKENS = 120
+READ_LIMIT_REFILL_SECONDS = 60
+
+ADMIN_WRITE_LIMIT_CAPACITY = 30
+ADMIN_WRITE_LIMIT_REFILL_TOKENS = 30
+ADMIN_WRITE_LIMIT_REFILL_SECONDS = 60
+
+OPERATIONAL_WRITE_LIMIT_CAPACITY = 60
+OPERATIONAL_WRITE_REFILL_TOKENS = 60
+OPERATIONAL_WRITE_REFILL_SECONDS = 60
+
+HELPER_LIMIT_CAPACITY = 10
+HELPER_LIMIT_REFILL_TOKENS = 10
+HELPER_LIMIT_REFILL_SECONDS = 60
+
+WEBSOCKET_CONNECT_CAPACITY = 12
+WEBSOCKET_CONNECT_REFILL_TOKENS = 12
+WEBSOCKET_CONNECT_REFILL_SECONDS = 60
+
+WEBSOCKET_MESSAGE_CAPACITY = 20
+WEBSOCKET_MESSAGE_REFILL_TOKENS = 20
+WEBSOCKET_MESSAGE_REFILL_SECONDS = 60
 
 
 def commit_or_409(
@@ -314,6 +351,168 @@ def validate_incident_transition(
 
     return normalized_note
 
+def encode_session_cursor(
+    date_creation: datetime,
+    id_session: int,
+) -> str:
+    payload = json.dumps(
+        {
+            "date_creation": date_creation.isoformat(),
+            "id_session": id_session,
+        },
+        separators=(",", ":"),
+    ).encode()
+
+    return base64.urlsafe_b64encode(payload).decode().rstrip("=")
+
+
+def decode_session_cursor(cursor: str) -> tuple[datetime, int]:
+    try:
+        padding = "=" * (-len(cursor) % 4)
+        payload = json.loads(
+            base64.urlsafe_b64decode(cursor + padding).decode()
+        )
+
+        if set(payload) != {"date_creation", "id_session"}:
+            raise ValueError
+
+        date_creation = datetime.fromisoformat(payload["date_creation"])
+        id_session = int(payload["id_session"])
+
+        if id_session <= 0:
+            raise ValueError
+
+        return date_creation, id_session
+
+    except (ValueError, TypeError, KeyError, json.JSONDecodeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Curseur de session invalide.",
+        )
+
+
+def session_status(
+    session: SessionModel,
+    now: datetime,
+) -> Literal["active", "expired", "revoked"]:
+    if session.date_revocation is not None:
+        return "revoked"
+
+    expiration = session.date_expiration
+    comparison_now = now.replace(tzinfo=None) if expiration.tzinfo is None else now
+
+    if expiration <= comparison_now:
+        return "expired"
+
+    return "active"
+
+
+def build_session_out(
+    session: SessionModel,
+    user: Utilisateur,
+    now: datetime,
+) -> SessionOut:
+    return SessionOut(
+        id_session=session.id_session,
+        date_creation=session.date_creation,
+        date_expiration=session.date_expiration,
+        date_revocation=session.date_revocation,
+        id_util=session.id_util,
+        user_email=user.email,
+        user_nom=user.nom,
+        user_prenom=user.prenom,
+        status=session_status(session, now),
+    )
+
+
+def client_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def raise_rate_limit(retry_after: int) -> None:
+    raise HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail="Trop de requêtes. Veuillez réessayer dans quelques instants.",
+        headers={"Retry-After": str(retry_after)},
+    )
+
+
+def enforce_token_bucket(
+    key: str,
+    capacity: int,
+    refill_tokens: int,
+    refill_seconds: int,
+) -> None:
+    result = rate_limiter.token_bucket(
+        key=key,
+        capacity=capacity,
+        refill_tokens=refill_tokens,
+        refill_period_seconds=refill_seconds,
+    )
+
+    if not result.allowed:
+        raise_rate_limit(result.retry_after)
+
+
+def enforce_read_limit(
+    current_user: Utilisateur = Depends(get_current_user),
+) -> Utilisateur:
+    enforce_token_bucket(
+        key=f"read:user:{current_user.id_util}",
+        capacity=READ_LIMIT_CAPACITY,
+        refill_tokens=READ_LIMIT_REFILL_TOKENS,
+        refill_seconds=READ_LIMIT_REFILL_SECONDS,
+    )
+    return current_user
+
+
+def enforce_admin_read_limit(
+    current_user: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR)
+    ),
+) -> Utilisateur:
+    # Admin reads keep the admin permission check but share the normal read bucket.
+    enforce_read_limit(current_user)
+    return current_user
+
+
+def enforce_admin_write_limit(
+    current_user: Utilisateur = Depends(
+        require_role(RoleName.ADMINISTRATEUR)
+    ),
+) -> Utilisateur:
+    enforce_token_bucket(
+        key=f"admin-write:user:{current_user.id_util}",
+        capacity=ADMIN_WRITE_LIMIT_CAPACITY,
+        refill_tokens=ADMIN_WRITE_LIMIT_REFILL_TOKENS,
+        refill_seconds=ADMIN_WRITE_LIMIT_REFILL_SECONDS,
+    )
+    return current_user
+
+
+def enforce_operational_write_limit(
+    current_user: Utilisateur = Depends(get_current_user),
+) -> Utilisateur:
+    enforce_token_bucket(
+        key=f"operational-write:user:{current_user.id_util}",
+        capacity=OPERATIONAL_WRITE_LIMIT_CAPACITY,
+        refill_tokens=OPERATIONAL_WRITE_REFILL_TOKENS,
+        refill_seconds=OPERATIONAL_WRITE_REFILL_SECONDS,
+    )
+    return current_user
+
+
+def enforce_helper_limit(
+    current_user: Utilisateur = Depends(get_current_user),
+) -> Utilisateur:
+    enforce_token_bucket(
+        key=f"helper:user:{current_user.id_util}",
+        capacity=HELPER_LIMIT_CAPACITY,
+        refill_tokens=HELPER_LIMIT_REFILL_TOKENS,
+        refill_seconds=HELPER_LIMIT_REFILL_SECONDS,
+    )
+    return current_user
+
 
 class ConnectionManager:
     MAX_CONNECTIONS = 120
@@ -348,7 +547,7 @@ incident_manager = ConnectionManager()
 def get_machines(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     query = db.query(Machine)
 
@@ -362,7 +561,7 @@ def get_machines(
 def get_machine(
     id_machine: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     machine = (
         db.query(Machine)
@@ -405,7 +604,7 @@ def get_machine(
 def create_machine(
     machine: MachineCreate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     pole = (
         db.query(Poteau)
@@ -438,7 +637,7 @@ def update_machine(
     id_machine: int,
     machine: MachineUpdate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Machine)
@@ -485,7 +684,7 @@ def update_machine(
 def decommission_machine(
     id_machine: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     machine = (
         db.query(Machine)
@@ -535,7 +734,7 @@ def decommission_machine(
 def reactivate_machine(
     id_machine: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     machine = (
         db.query(Machine)
@@ -575,7 +774,7 @@ def reactivate_machine(
 def delete_unused_machine(
     id_machine: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     machine = (
         db.query(Machine)
@@ -635,6 +834,8 @@ def change_machine_state(
         require_role(RoleName.TECHNICIEN)
     ),
 ):
+    enforce_operational_write_limit(current_user)
+
     machine = (
         db.query(Machine)
         .filter(Machine.id_machine == id_machine)
@@ -723,11 +924,71 @@ def change_machine_state(
     )
     return new_status
 
+@app.get(
+    "/admin/machines",
+    response_model=MachinePageOut,
+)
+def get_admin_machines(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: str | None = Query(default=None, max_length=150),
+    type_machine: str | None = Query(default=None, max_length=50),
+    active: bool | None = Query(default=None),
+    id_poteau: int | None = Query(default=None, ge=1),
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(enforce_admin_read_limit),
+):
+    query = db.query(Machine)
+
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Machine.nom_machine.ilike(pattern),
+                Machine.ip_address.ilike(pattern),
+                Machine.mac_address.ilike(pattern),
+                Machine.type_machine.ilike(pattern),
+            )
+        )
+
+    if type_machine and type_machine.strip():
+        query = query.filter(
+            func.lower(Machine.type_machine)
+            == type_machine.strip().lower()
+        )
+
+    if active is not None:
+        query = query.filter(Machine.actif.is_(active))
+
+    if id_poteau is not None:
+        query = query.filter(Machine.id_poteau == id_poteau)
+
+    total = query.count()
+    total_pages = (total + page_size - 1) // page_size
+
+    items = (
+        query
+        .order_by(Machine.id_machine.asc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return MachinePageOut(
+        items=[
+    MachineOut.model_validate(item)
+    for item in items
+],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 @app.get("/roles", response_model=list[RoleOut])
 def get_roles(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_read_limit),
 ):
     return (
         db.query(Role)
@@ -741,7 +1002,7 @@ def get_roles(
 def get_utilisateurs(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_read_limit),
 ):
     query = db.query(Utilisateur)
 
@@ -763,7 +1024,7 @@ def get_utilisateurs(
 def create_utilisateur(
     utilisateur: UtilisateurCreate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     get_role_or_404(db, utilisateur.id_role)
 
@@ -785,9 +1046,7 @@ def update_utilisateur(
     id_util: int,
     utilisateur: UtilisateurUpdate,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(
-        require_role(RoleName.ADMINISTRATEUR)
-    ),
+    current_user: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Utilisateur)
@@ -844,9 +1103,7 @@ def update_utilisateur(
 def deactivate_utilisateur(
     id_util: int,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(
-        require_role(RoleName.ADMINISTRATEUR)
-    ),
+    current_user: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     if id_util == current_user.id_util:
         raise HTTPException(
@@ -885,9 +1142,7 @@ def deactivate_utilisateur(
 def deactivate_utilisateur_via_delete(
     id_util: int,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(
-        require_role(RoleName.ADMINISTRATEUR)
-    ),
+    current_user: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     if id_util == current_user.id_util:
         raise HTTPException(
@@ -924,7 +1179,7 @@ def deactivate_utilisateur_via_delete(
 def activate_utilisateur(
     id_util: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Utilisateur)
@@ -950,11 +1205,79 @@ def activate_utilisateur(
     db.refresh(existing)
     return existing
 
+@app.get(
+    "/admin/utilisateurs",
+    response_model=UtilisateurPageOut,
+)
+def get_admin_utilisateurs(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: str | None = Query(default=None, max_length=150),
+    role: str | None = Query(default=None),
+    active: bool | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _: Utilisateur = Depends(enforce_admin_read_limit),
+):
+    query = db.query(Utilisateur)
+
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Utilisateur.nom.ilike(pattern),
+                Utilisateur.prenom.ilike(pattern),
+                Utilisateur.email.ilike(pattern),
+            )
+        )
+
+    if role is not None:
+        normalized_role = role.strip().lower()
+
+        if normalized_role not in FIXED_ROLES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Rôle de filtrage invalide.",
+            )
+
+        query = (
+            query
+            .join(Role, Utilisateur.id_role == Role.id_role)
+            .filter(func.lower(Role.nom_role) == normalized_role)
+        )
+
+    if active is not None:
+        query = query.filter(Utilisateur.actif.is_(active))
+
+    total = query.count()
+    total_pages = (total + page_size - 1) // page_size
+
+    items = (
+        query
+        .order_by(
+            Utilisateur.nom.asc(),
+            Utilisateur.prenom.asc(),
+            Utilisateur.id_util.asc(),
+        )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return UtilisateurPageOut(
+        items=[
+            UtilisateurOut.model_validate(item)
+            for item in items
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 @app.get("/technicians", response_model=list[TechnicianOut])
 def get_technicians(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     return (
         db.query(Utilisateur)
@@ -971,7 +1294,7 @@ def get_technicians(
 @app.get("/incident-actors")
 def get_incident_actors(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     users = (
         db.query(Utilisateur)
@@ -992,34 +1315,128 @@ def get_incident_actors(
     ]
 
 
-@app.get("/sessions", response_model=list[SessionOut])
+@app.get(
+    "/sessions",
+    response_model=SessionPageOut,
+)
 def get_sessions(
+    cursor: str | None = Query(default=None),
+    page_size: int = Query(default=20, ge=1, le=100),
+    search: str | None = Query(default=None, max_length=150),
+    session_status_filter: Literal[
+        "active",
+        "expired",
+        "revoked",
+    ] | None = Query(default=None, alias="status"),
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_read_limit),
 ):
-    return (
-        db.query(SessionModel)
-        .order_by(SessionModel.date_creation.desc())
+    now = datetime.now(timezone.utc)
+
+    query = (
+        db.query(SessionModel, Utilisateur)
+        .join(
+            Utilisateur,
+            Utilisateur.id_util == SessionModel.id_util,
+        )
+    )
+
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Utilisateur.email.ilike(pattern),
+                Utilisateur.nom.ilike(pattern),
+                Utilisateur.prenom.ilike(pattern),
+            )
+        )
+
+    if session_status_filter == "active":
+        query = query.filter(
+            SessionModel.date_revocation.is_(None),
+            SessionModel.date_expiration > now.replace(tzinfo=None),
+        )
+
+    elif session_status_filter == "expired":
+        query = query.filter(
+            SessionModel.date_revocation.is_(None),
+            SessionModel.date_expiration <= now.replace(tzinfo=None),
+        )
+
+    elif session_status_filter == "revoked":
+        query = query.filter(
+            SessionModel.date_revocation.is_not(None)
+        )
+
+    if cursor is not None:
+        cursor_date, cursor_id = decode_session_cursor(cursor)
+
+        query = query.filter(
+            or_(
+                SessionModel.date_creation < cursor_date,
+                and_(
+                    SessionModel.date_creation == cursor_date,
+                    SessionModel.id_session < cursor_id,
+                ),
+            )
+        )
+
+    rows = (
+        query
+        .order_by(
+            SessionModel.date_creation.desc(),
+            SessionModel.id_session.desc(),
+        )
+        .limit(page_size + 1)
         .all()
     )
 
+    has_more = len(rows) > page_size
+    visible_rows = rows[:page_size]
+
+    items = [
+        build_session_out(session, user, now)
+        for session, user in visible_rows
+    ]
+
+    next_cursor = None
+
+    if has_more and visible_rows:
+        last_session = visible_rows[-1][0]
+        next_cursor = encode_session_cursor(
+            last_session.date_creation,
+            last_session.id_session,
+        )
+
+    return SessionPageOut(
+        items=items,
+        next_cursor=next_cursor,
+        page_size=page_size,
+    )
 
 @app.patch("/sessions/{id_session}/revoke", response_model=SessionOut)
 def revoke_session(
     id_session: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
-    existing = (
-        db.query(SessionModel)
+    row = (
+        db.query(SessionModel, Utilisateur)
+        .join(
+            Utilisateur,
+            Utilisateur.id_util == SessionModel.id_util,
+        )
         .filter(SessionModel.id_session == id_session)
         .first()
     )
-    if existing is None:
+    if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Session introuvable.",
         )
+
+    existing, user = row
+
     if existing.date_revocation is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1043,14 +1460,15 @@ def revoke_session(
     existing.date_revocation = comparison_now
     commit_or_409(db, "La session n'a pas pu être révoquée.")
     db.refresh(existing)
-    return existing
+
+    return build_session_out(existing, user, now)
 
 
 @app.get("/departements", response_model=list[DepartementOut])
 def get_departements(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     query = db.query(Departement)
 
@@ -1068,7 +1486,7 @@ def get_departements(
 def create_departement(
     departement: DepartementCreate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     new_department = Departement(**departement.model_dump())
     db.add(new_department)
@@ -1082,7 +1500,7 @@ def update_departement(
     id_dep: int,
     departement: DepartementUpdate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Departement)
@@ -1107,7 +1525,7 @@ def update_departement(
 def archive_departement(
     id_dep: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Departement)
@@ -1150,7 +1568,7 @@ def archive_departement(
 def restore_departement(
     id_dep: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Departement)
@@ -1178,7 +1596,7 @@ def restore_departement(
 def delete_unused_departement(
     id_dep: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Departement)
@@ -1215,7 +1633,7 @@ def delete_unused_departement(
 def get_unites(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     query = db.query(Unite)
 
@@ -1233,7 +1651,7 @@ def get_unites(
 def create_unite(
     unite: UniteCreate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     department = (
         db.query(Departement)
@@ -1263,7 +1681,7 @@ def update_unite(
     id_unite: int,
     unite: UniteUpdate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Unite)
@@ -1306,7 +1724,7 @@ def update_unite(
 def archive_unite(
     id_unite: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Unite)
@@ -1349,7 +1767,7 @@ def archive_unite(
 def restore_unite(
     id_unite: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Unite)
@@ -1388,7 +1806,7 @@ def restore_unite(
 def delete_unused_unite(
     id_unite: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Unite)
@@ -1422,7 +1840,7 @@ def delete_unused_unite(
 def get_poteaux(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     query = db.query(Poteau)
 
@@ -1440,7 +1858,7 @@ def get_poteaux(
 def create_poteau(
     poteau: PoteauCreate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     unit = (
         db.query(Unite)
@@ -1470,7 +1888,7 @@ def update_poteau(
     id_poteau: int,
     poteau: PoteauUpdate,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Poteau)
@@ -1513,7 +1931,7 @@ def update_poteau(
 def archive_poteau(
     id_poteau: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Poteau)
@@ -1556,7 +1974,7 @@ def archive_poteau(
 def restore_poteau(
     id_poteau: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Poteau)
@@ -1595,7 +2013,7 @@ def restore_poteau(
 def delete_unused_poteau(
     id_poteau: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(require_role(RoleName.ADMINISTRATEUR)),
+    _: Utilisateur = Depends(enforce_admin_write_limit),
 ):
     existing = (
         db.query(Poteau)
@@ -1628,7 +2046,7 @@ def delete_unused_poteau(
 @app.get("/etats", response_model=list[EtatOut])
 def get_etats(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     # Machine states are a controlled system referential, not administrator CRUD.
     return (
@@ -1638,23 +2056,154 @@ def get_etats(
         .all()
     )
 
-
 @app.get("/statuts", response_model=list[StatutHistoriqueOut])
-def get_statuts(
+def get_current_machine_statuses(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
-    return (
-        db.query(StatutHistorique)
-        .filter(StatutHistorique.date_suppression.is_(None))
+    rows = (
+        latest_statut_query(db)
+        .join(
+            Machine,
+            Machine.id_machine == StatutHistorique.id_machine,
+        )
+        .filter(Machine.actif.is_(True))
+        .all()
+    )
+
+    return [
+        StatutHistoriqueOut.model_validate(statut)
+        for statut, _etat in rows
+    ]
+
+@app.get(
+    "/machines/{id_machine}/statuts",
+    response_model=StatutHistoriquePageOut,
+)
+def get_machine_status_history(
+    id_machine: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(
+        require_role(
+            RoleName.TECHNICIEN,
+            RoleName.SUPERVISEUR,
+            RoleName.ADMINISTRATEUR,
+        )
+    ),
+):
+    enforce_read_limit(current_user)
+
+    machine_exists = (
+        db.query(Machine.id_machine)
+        .filter(Machine.id_machine == id_machine)
+        .first()
+    )
+    if machine_exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Machine introuvable.",
+        )
+
+    query = db.query(StatutHistorique).filter(
+        StatutHistorique.id_machine == id_machine
+    )
+
+    if current_user.role.nom_role.lower() != RoleName.ADMINISTRATEUR:
+        query = query.filter(
+            StatutHistorique.date_suppression.is_(None)
+        )
+
+    total = query.count()
+    total_pages = (total + page_size - 1) // page_size
+
+    items = (
+        query
         .order_by(
             StatutHistorique.date_changement.desc(),
             StatutHistorique.id_statut.desc(),
         )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
         .all()
     )
 
+    return StatutHistoriquePageOut(
+        items=[
+    StatutHistoriqueOut.model_validate(item)
+    for item in items
+],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
+@app.patch(
+    "/machines/{id_machine}/statuts/{id_statut}/invalidate",
+    response_model=StatutHistoriqueOut,
+)
+def invalidate_machine_status(
+    id_machine: int,
+    id_statut: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(enforce_admin_write_limit),
+):
+    machine = (
+        db.query(Machine)
+        .filter(Machine.id_machine == id_machine)
+        .first()
+    )
+    if machine is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Machine introuvable.",
+        )
+
+    history_row = (
+        db.query(StatutHistorique)
+        .filter(
+            StatutHistorique.id_statut == id_statut,
+            StatutHistorique.id_machine == id_machine,
+        )
+        .first()
+    )
+    if history_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Historique d'état introuvable.",
+        )
+
+    if history_row.date_suppression is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cet historique d'état est déjà invalidé.",
+        )
+
+    history_row.date_suppression = datetime.now(timezone.utc)
+    history_row.id_util_suppression = current_user.id_util
+
+    commit_or_409(
+        db,
+        "L'historique d'état n'a pas pu être invalidé.",
+    )
+    db.refresh(history_row)
+
+    current_row = (
+        latest_statut_query(db)
+        .filter(StatutHistorique.id_machine == id_machine)
+        .first()
+    )
+
+    if current_row is not None:
+        background_tasks.add_task(
+            manager.broadcast,
+            build_status_event(current_row[0]),
+        )
+
+    return history_row
 
 
 def normalize_machine_state_label(label: str | None) -> str:
@@ -2041,7 +2590,7 @@ def build_montage_trend(
 @app.get("/etat-usine", response_model=EtatUsineOut)
 def get_etat_usine(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     now_aware = datetime.now(timezone.utc)
     scope_rows = montage_scope_rows(db)
@@ -2256,7 +2805,7 @@ def get_etat_usine(
 )
 def get_helper_conversations(
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(enforce_read_limit),
 ):
     FirstMessage = aliased(SomacaHelperMessage)
 
@@ -2308,7 +2857,7 @@ def get_helper_conversations(
 def get_helper_conversation(
     conversation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(enforce_read_limit),
 ):
     messages = (
         db.query(SomacaHelperMessage)
@@ -2336,7 +2885,7 @@ def get_helper_conversation(
 def ask_helper(
     request: HelperAskRequest,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(enforce_helper_limit),
 ):
     recent_messages = (
         db.query(SomacaHelperMessage)
@@ -2496,6 +3045,8 @@ def report_problem(
         )
     ),
 ):
+    enforce_operational_write_limit(current_user)
+
     machine = (
         db.query(Machine)
         .filter(Machine.id_machine == report.id_machine)
@@ -2675,7 +3226,7 @@ def filtered_incident_query(
 @app.get("/incidents/active", response_model=list[IncidentOut])
 def get_active_incidents(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     # Operational consumers need only incidents that have not been closed or cancelled.
     return (
@@ -2696,7 +3247,7 @@ def get_active_incidents(
 @app.get("/incidents/summary", response_model=IncidentSummaryOut)
 def get_incident_summary(
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     active_filter = Incident.status.in_(
         ACTIVE_INCIDENT_STATUSES
@@ -2757,7 +3308,7 @@ def get_incidents(
     ),
     focus_id: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     query = filtered_incident_query(
         db,
@@ -2829,7 +3380,7 @@ def get_incidents(
 def get_incident(
     id_incident: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     incident = (
         db.query(Incident)
@@ -2854,6 +3405,8 @@ def update_incident(
         require_role(RoleName.TECHNICIEN)
     ),
 ):
+    enforce_operational_write_limit(current_user)
+
     existing = (
         db.query(Incident)
         .filter(Incident.id_incident == id_incident)
@@ -2947,6 +3500,8 @@ def update_incident_status(
         )
     ),
 ):
+    enforce_operational_write_limit(current_user)
+
     existing = (
         db.query(Incident)
         .filter(Incident.id_incident == id_incident)
@@ -3013,7 +3568,7 @@ def update_incident_status(
 def get_incident_history(
     id_incident: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     incident = (
         db.query(Incident)
@@ -3044,7 +3599,7 @@ def get_incident_history(
 def get_incident_severity_history(
     id_incident: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     incident = (
         db.query(Incident)
@@ -3077,13 +3632,15 @@ def create_incident_contact(
     id_incident: int,
     contact: IncidentContactCreate,
     db: Session = Depends(get_db),
-        _: Utilisateur = Depends(
+    current_user: Utilisateur = Depends(
         require_role(
             RoleName.TECHNICIEN,
             RoleName.ADMINISTRATEUR,
         )
     ),
 ):
+    enforce_operational_write_limit(current_user)
+
     incident = (
         db.query(Incident)
         .filter(Incident.id_incident == id_incident)
@@ -3148,7 +3705,7 @@ def create_incident_contact(
 def get_incident_contacts(
     id_incident: int,
     db: Session = Depends(get_db),
-    _: Utilisateur = Depends(get_current_user),
+    _: Utilisateur = Depends(enforce_read_limit),
 ):
     incident = (
         db.query(Incident)
@@ -3175,12 +3732,34 @@ def get_incident_contacts(
 @app.post("/login", response_model=LoginResponse)
 def login(
     credentials: LoginRequest,
+    request: Request,
     response: Response,
     db: Session = Depends(get_db),
 ):
+    normalized_email = credentials.email.strip().casefold()
+    source_ip = client_ip(request)
+
+    account_result = rate_limiter.sliding_window(
+        key=f"login:account:{source_ip}:{normalized_email}",
+        limit=LOGIN_ACCOUNT_LIMIT,
+        window_seconds=LOGIN_ACCOUNT_WINDOW_SECONDS,
+    )
+
+    if not account_result.allowed:
+        raise_rate_limit(account_result.retry_after)
+
+    ip_result = rate_limiter.sliding_window(
+        key=f"login:ip:{source_ip}",
+        limit=LOGIN_IP_LIMIT,
+        window_seconds=LOGIN_IP_WINDOW_SECONDS,
+    )
+
+    if not ip_result.allowed:
+        raise_rate_limit(ip_result.retry_after)
+
     user = (
         db.query(Utilisateur)
-        .filter(Utilisateur.email == credentials.email)
+        .filter(func.lower(Utilisateur.email) == normalized_email)
         .first()
     )
 
@@ -3245,7 +3824,7 @@ def logout(
 
 @app.get("/me", response_model=CurrentUserOut)
 def get_me(
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(enforce_read_limit),
 ):
     return {
         "id_util": current_user.id_util,
@@ -3264,7 +3843,7 @@ def get_me(
 def mark_notifications_read(
     payload: NotificationReadRequest | None = None,
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(enforce_operational_write_limit),
 ):
     now = datetime.now(timezone.utc)
     requested_read_at = (
@@ -3301,6 +3880,17 @@ def mark_notifications_read(
 
 @app.websocket("/ws/statuts")
 async def websocket_statuts(websocket: WebSocket):
+    source_ip = websocket.client.host if websocket.client else "unknown"
+    connect_result = rate_limiter.token_bucket(
+        key=f"ws-connect:{source_ip}",
+        capacity=WEBSOCKET_CONNECT_CAPACITY,
+        refill_tokens=WEBSOCKET_CONNECT_REFILL_TOKENS,
+        refill_period_seconds=WEBSOCKET_CONNECT_REFILL_SECONDS,
+    )
+    if not connect_result.allowed:
+        await websocket.close(code=1013)
+        return
+
     if len(manager.active_connections) >= manager.MAX_CONNECTIONS:
         await websocket.close(code=1013)
         return
@@ -3331,6 +3921,16 @@ async def websocket_statuts(websocket: WebSocket):
                 )
             except asyncio.TimeoutError:
                 pass
+            else:
+                message_result = rate_limiter.token_bucket(
+                    key=f"ws-message:{source_ip}",
+                    capacity=WEBSOCKET_MESSAGE_CAPACITY,
+                    refill_tokens=WEBSOCKET_MESSAGE_REFILL_TOKENS,
+                    refill_period_seconds=WEBSOCKET_MESSAGE_REFILL_SECONDS,
+                )
+                if not message_result.allowed:
+                    await websocket.close(code=1008)
+                    return
 
             db = SessionLocal()
             try:
@@ -3349,6 +3949,17 @@ async def websocket_statuts(websocket: WebSocket):
 
 @app.websocket("/ws/incidents")
 async def websocket_incidents(websocket: WebSocket):
+    source_ip = websocket.client.host if websocket.client else "unknown"
+    connect_result = rate_limiter.token_bucket(
+        key=f"ws-connect:{source_ip}",
+        capacity=WEBSOCKET_CONNECT_CAPACITY,
+        refill_tokens=WEBSOCKET_CONNECT_REFILL_TOKENS,
+        refill_period_seconds=WEBSOCKET_CONNECT_REFILL_SECONDS,
+    )
+    if not connect_result.allowed:
+        await websocket.close(code=1013)
+        return
+
     if len(incident_manager.active_connections) >= incident_manager.MAX_CONNECTIONS:
         await websocket.close(code=1013)
         return
@@ -3379,6 +3990,16 @@ async def websocket_incidents(websocket: WebSocket):
                 )
             except asyncio.TimeoutError:
                 pass
+            else:
+                message_result = rate_limiter.token_bucket(
+                    key=f"ws-message:{source_ip}",
+                    capacity=WEBSOCKET_MESSAGE_CAPACITY,
+                    refill_tokens=WEBSOCKET_MESSAGE_REFILL_TOKENS,
+                    refill_period_seconds=WEBSOCKET_MESSAGE_REFILL_SECONDS,
+                )
+                if not message_result.allowed:
+                    await websocket.close(code=1008)
+                    return
 
             db = SessionLocal()
             try:

@@ -93,7 +93,7 @@
   margin-bottom: 10px;
   overflow: hidden;
   border-color: rgba(116, 85, 61, .42);
-  border-top: 2px solid var(--etat-yellow);
+  border-top: 2px solid #dfcc88;
 }
 
 .etat-summary-panel__heading {
@@ -833,5 +833,69 @@
 
   .etat-event-row__tail {
     justify-content: flex-start;
+  }
+}
+
+.etat-summary-health {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.etat-health-heading {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.etat-health-heading > span {
+  min-width: 0;
+}
+
+.etat-health-signal {
+  display: block;
+  width: 48px;
+  height: 34px;
+  flex: 0 0 48px;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A permanent dark track keeps the heartbeat recognizable. */
+.etat-health-signal__track {
+  stroke: #80613f;
+  stroke-width: 4.5;
+}
+
+/* The illuminated segment travels inside the heartbeat's outline. */
+.etat-health-signal__flow {
+  stroke: #fff1ad;
+  stroke-width: 3;
+  stroke-dasharray: 24 76;
+  filter:
+    drop-shadow(0 0 2px #e5bc53)
+    drop-shadow(0 0 4px rgba(229, 188, 83, .65));
+  animation: etat-heartbeat-flow 2.2s linear infinite;
+}
+
+@keyframes etat-heartbeat-flow {
+  from {
+    stroke-dashoffset: 24;
+  }
+
+  to {
+    stroke-dashoffset: -76;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .etat-health-signal__flow {
+    animation: none;
+    stroke-dasharray: none;
   }
 }

@@ -31,22 +31,27 @@ CREATE TABLE departement (
 );
 
 CREATE TABLE unite (
-    id_unite    SERIAL PRIMARY KEY,
-    nom_unite   VARCHAR(100) NOT NULL,
-    id_dep      INTEGER NOT NULL REFERENCES departement(id_dep),
-    actif       BOOLEAN NOT NULL DEFAULT TRUE
+    id_unite             SERIAL PRIMARY KEY,
+    nom_unite            VARCHAR(100) NOT NULL,
+    id_dep               INTEGER NOT NULL REFERENCES departement(id_dep),
+    actif                BOOLEAN NOT NULL DEFAULT TRUE,
+    represente_carte     BOOLEAN NOT NULL DEFAULT FALSE,
+    date_creation        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE poteau (
-    id_poteau   SERIAL PRIMARY KEY,
-    nom_poteau  VARCHAR(100) NOT NULL,
-    id_unite    INTEGER NOT NULL REFERENCES unite(id_unite),
-    actif       BOOLEAN NOT NULL DEFAULT TRUE
+    id_poteau            SERIAL PRIMARY KEY,
+    nom_poteau           VARCHAR(100) NOT NULL,
+    id_unite             INTEGER NOT NULL REFERENCES unite(id_unite),
+    actif                BOOLEAN NOT NULL DEFAULT TRUE,
+    represente_carte     BOOLEAN NOT NULL DEFAULT FALSE,
+    date_creation        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE machine (
     id_machine               SERIAL PRIMARY KEY,
     nom_machine              VARCHAR(150) NOT NULL,
+    type_machine             VARCHAR(50) NOT NULL,
     ip_address               VARCHAR(45) UNIQUE,
     mac_address              VARCHAR(17),
     date_installation        DATE NOT NULL,
@@ -95,13 +100,14 @@ CREATE TABLE incident (
 );
 
 CREATE TABLE statut_historique (
-    id_statut         SERIAL PRIMARY KEY,
-    date_changement   TIMESTAMP NOT NULL DEFAULT NOW(),
-    date_suppression  TIMESTAMP NULL,
-    id_machine        INTEGER NOT NULL REFERENCES machine(id_machine),
-    id_etat           INTEGER NOT NULL REFERENCES etat(id_etat),
-    id_util           INTEGER NULL REFERENCES utilisateur(id_util),
-    id_incident       INTEGER NULL REFERENCES incident(id_incident)
+    id_statut             SERIAL PRIMARY KEY,
+    date_changement       TIMESTAMP NOT NULL DEFAULT NOW(),
+    date_suppression      TIMESTAMP NULL,
+    id_machine            INTEGER NOT NULL REFERENCES machine(id_machine),
+    id_etat               INTEGER NOT NULL REFERENCES etat(id_etat),
+    id_util               INTEGER NULL REFERENCES utilisateur(id_util),
+    id_incident           INTEGER NULL REFERENCES incident(id_incident),
+    id_util_suppression   INTEGER NULL REFERENCES utilisateur(id_util)
 );
 
 CREATE TABLE incident_status_history (
@@ -147,34 +153,63 @@ CREATE TABLE somaca_helper_message (
 
 CREATE INDEX idx_incident_machine
     ON incident(id_machine);
+
 CREATE INDEX idx_incident_creator
     ON incident(created_by_user_id);
+
 CREATE INDEX idx_incident_status_history_incident
     ON incident_status_history(id_incident);
+
 CREATE INDEX idx_incident_status_history_user
     ON incident_status_history(changed_by_user_id);
+
 CREATE INDEX idx_incident_severity_history_incident
     ON incident_severity_history(id_incident);
+
 CREATE INDEX idx_incident_severity_history_user
     ON incident_severity_history(changed_by_user_id);
+
 CREATE INDEX idx_incident_contact_incident
     ON incident_contact(id_incident);
+
 CREATE INDEX idx_incident_contact_user
     ON incident_contact(id_util);
-CREATE INDEX idx_statut_machine
-    ON statut_historique(id_machine);
-CREATE INDEX idx_statut_date
-    ON statut_historique(date_changement);
+
+CREATE INDEX idx_statut_machine_date_id
+    ON statut_historique(
+        id_machine,
+        date_changement DESC,
+        id_statut DESC
+    );
+
 CREATE INDEX idx_statut_incident
     ON statut_historique(id_incident);
+
 CREATE INDEX idx_helper_machine
     ON somaca_helper_message(id_machine);
+
 CREATE INDEX idx_helper_conversation_user_date
-    ON somaca_helper_message(conversation_id, id_util, date_creation);
+    ON somaca_helper_message(
+        conversation_id,
+        id_util,
+        date_creation
+    );
+
 CREATE INDEX idx_helper_user_conversation_date
-    ON somaca_helper_message(id_util, conversation_id, date_creation);
+    ON somaca_helper_message(
+        id_util,
+        conversation_id,
+        date_creation
+    );
+
 CREATE INDEX idx_session_id_util
     ON session(id_util);
+
+CREATE INDEX idx_session_creation_id
+    ON session(
+        date_creation DESC,
+        id_session DESC
+    );
 
 INSERT INTO role (nom_role) VALUES
     ('operateur_de_production'),

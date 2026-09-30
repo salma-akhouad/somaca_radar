@@ -1,5 +1,3 @@
-
-
 from datetime import date, datetime
 from enum import Enum
 from typing import Any
@@ -251,6 +249,7 @@ class Role(Base):
         back_populates="role",
     )
 
+
 class Utilisateur(Base):
     __tablename__ = "utilisateur"
 
@@ -330,6 +329,14 @@ class Session(Base):
         index=True,
     )
 
+    __table_args__ = (
+        Index(
+            "idx_session_creation_id",
+            date_creation.desc(),
+            id_session.desc(),
+        ),
+    )
+
 
 class Departement(Base):
     __tablename__ = "departement"
@@ -371,6 +378,17 @@ class Unite(Base):
         default=True,
         server_default="true",
     )
+    represente_carte: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    date_creation: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
 
 
 class Poteau(Base):
@@ -393,6 +411,17 @@ class Poteau(Base):
         nullable=False,
         default=True,
         server_default="true",
+    )
+    represente_carte: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    date_creation: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )
 
 
@@ -430,7 +459,6 @@ class StatutHistorique(Base):
     id_machine: Mapped[int] = mapped_column(
         ForeignKey("machine.id_machine"),
         nullable=False,
-        index=True,
     )
     id_etat: Mapped[int] = mapped_column(
         ForeignKey("etat.id_etat"),
@@ -439,7 +467,6 @@ class StatutHistorique(Base):
     id_util: Mapped[int | None] = mapped_column(
         ForeignKey("utilisateur.id_util"),
         nullable=True,
-        index=True,
     )
     id_incident: Mapped[int | None] = mapped_column(
         ForeignKey("incident.id_incident"),
@@ -449,6 +476,19 @@ class StatutHistorique(Base):
     date_suppression: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
+    )
+    id_util_suppression: Mapped[int | None] = mapped_column(
+        ForeignKey("utilisateur.id_util"),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        Index(
+            "idx_statut_machine_date_id",
+            id_machine,
+            date_changement.desc(),
+            id_statut.desc(),
+        ),
     )
 
 
@@ -523,6 +563,10 @@ class Machine(Base):
     )
     nom_machine: Mapped[str] = mapped_column(
         String(150),
+        nullable=False,
+    )
+    type_machine: Mapped[str] = mapped_column(
+        String(50),
         nullable=False,
     )
     ip_address: Mapped[str | None] = mapped_column(

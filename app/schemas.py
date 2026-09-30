@@ -14,6 +14,7 @@ from .models import ContactType, IncidentSeverity, IncidentStatus
 
 class MachineBase(BaseModel):
     nom_machine: str = Field(min_length=1, max_length=150)
+    type_machine: str = Field(min_length=1, max_length=50)
     ip_address: str
     mac_address: str | None = None
     date_installation: date
@@ -26,6 +27,7 @@ class MachineCreate(MachineBase):
 
 class MachineUpdate(BaseModel):
     nom_machine: str | None = Field(default=None, min_length=1, max_length=150)
+    type_machine: str | None = Field(default=None, min_length=1, max_length=50)
     ip_address: str | None = None
     mac_address: str | None = None
     date_installation: date | None = None
@@ -38,6 +40,14 @@ class MachineOut(MachineBase):
     id_machine: int
     actif: bool
     date_decommissionnement: datetime | None = None
+
+
+class MachinePageOut(BaseModel):
+    items: list[MachineOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
 class RoleOut(BaseModel):
@@ -74,6 +84,13 @@ class UtilisateurOut(UtilisateurBase):
     date_desactivation: datetime | None = None
 
 
+class UtilisateurPageOut(BaseModel):
+    items: list[UtilisateurOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
 class CurrentUserOut(UtilisateurOut):
     role: str
     notifications_read_at: datetime | None = None
@@ -88,14 +105,22 @@ class NotificationReadOut(BaseModel):
 
 
 class SessionOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id_session: int
     date_creation: datetime
     date_expiration: datetime
     date_revocation: datetime | None = None
     id_util: int
+    user_email: str
+    user_nom: str
+    user_prenom: str
+    status: Literal["active", "expired", "revoked"]
 
+
+class SessionPageOut(BaseModel):
+    items: list[SessionOut]
+    next_cursor: str | None = None
+    page_size: int
+    
 
 class DepartementBase(BaseModel):
     nom_dep: str = Field(min_length=1, max_length=100)
@@ -129,13 +154,13 @@ class UniteUpdate(BaseModel):
     nom_unite: str | None = Field(default=None, min_length=1, max_length=100)
     id_dep: int | None = None
 
-
 class UniteOut(UniteBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_unite: int
     actif: bool
-
+    represente_carte: bool
+    date_creation: datetime
 
 class PoteauBase(BaseModel):
     nom_poteau: str = Field(min_length=1, max_length=100)
@@ -150,13 +175,13 @@ class PoteauUpdate(BaseModel):
     nom_poteau: str | None = Field(default=None, min_length=1, max_length=100)
     id_unite: int | None = None
 
-
 class PoteauOut(PoteauBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_poteau: int
     actif: bool
-
+    represente_carte: bool
+    date_creation: datetime
 
 class EtatOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -164,7 +189,6 @@ class EtatOut(BaseModel):
     id_etat: int
     libelle_etat: str
     couleur: str
-
 
 class StatutHistoriqueOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -175,8 +199,18 @@ class StatutHistoriqueOut(BaseModel):
     id_etat: int
     id_util: int | None = None
     id_incident: int | None = None
+    date_suppression: datetime | None = None
+    id_util_suppression: int | None = None
 
 
+class StatutHistoriquePageOut(BaseModel):
+    items: list[StatutHistoriqueOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+      
 class CurrentStatusOut(BaseModel):
     id_statut: int
     date_changement: datetime

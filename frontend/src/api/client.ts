@@ -14,15 +14,19 @@ import type {
     IncidentStatus,
     LoginResponse,
     Machine,
+    MachinePage,
     NotificationReadResponse,
     Poteau,
     ProblemReport,
     Role,
+    SessionPage,
     SessionRecord,
+    SessionStatus,
     StatutHistorique,
     Technician,
     Unite,
     User,
+    UserPage,
     IncidentActor,
 } from './types'
 
@@ -301,6 +305,61 @@ export const getMachines = (
     )
 
 
+export const getAdminMachines = (
+    params: {
+        page?: number
+        pageSize?: number
+        search?: string
+        typeMachine?: string
+        active?: boolean
+        poleId?: number
+    } = {},
+) => {
+    const query = new URLSearchParams()
+
+    query.set(
+        'page',
+        String(params.page ?? 1),
+    )
+    query.set(
+        'page_size',
+        String(params.pageSize ?? 20),
+    )
+
+    if (params.search?.trim()) {
+        query.set(
+            'search',
+            params.search.trim(),
+        )
+    }
+
+    if (params.typeMachine?.trim()) {
+        query.set(
+            'type_machine',
+            params.typeMachine.trim(),
+        )
+    }
+
+    if (params.active !== undefined) {
+        query.set(
+            'active',
+            String(params.active),
+        )
+    }
+
+    if (params.poleId !== undefined) {
+        query.set(
+            'id_poteau',
+            String(params.poleId),
+        )
+    }
+
+    return request<MachinePage>(
+        `/admin/machines?${query.toString()}`,
+    )
+}
+
+
 export const createMachine = (
     payload: Omit<
         Machine,
@@ -563,6 +622,53 @@ export const getUsers = (
     )
 
 
+export const getAdminUsers = (
+    params: {
+        page?: number
+        pageSize?: number
+        search?: string
+        role?: string
+        active?: boolean
+    } = {},
+) => {
+    const query = new URLSearchParams()
+
+    query.set(
+        'page',
+        String(params.page ?? 1),
+    )
+    query.set(
+        'page_size',
+        String(params.pageSize ?? 20),
+    )
+
+    if (params.search?.trim()) {
+        query.set(
+            'search',
+            params.search.trim(),
+        )
+    }
+
+    if (params.role?.trim()) {
+        query.set(
+            'role',
+            params.role.trim(),
+        )
+    }
+
+    if (params.active !== undefined) {
+        query.set(
+            'active',
+            String(params.active),
+        )
+    }
+
+    return request<UserPage>(
+        `/admin/utilisateurs?${query.toString()}`,
+    )
+}
+
+
 export const createUser = (
     payload: {
         nom: string
@@ -634,10 +740,46 @@ export const deleteUser = (
     )
 
 
-export const getSessions = () =>
-    request<SessionRecord[]>(
-        '/sessions',
+export const getSessions = (
+    params: {
+        cursor?: string | null
+        pageSize?: number
+        search?: string
+        status?: SessionStatus
+    } = {},
+) => {
+    const query = new URLSearchParams()
+
+    query.set(
+        'page_size',
+        String(params.pageSize ?? 20),
     )
+
+    if (params.cursor) {
+        query.set(
+            'cursor',
+            params.cursor,
+        )
+    }
+
+    if (params.search?.trim()) {
+        query.set(
+            'search',
+            params.search.trim(),
+        )
+    }
+
+    if (params.status) {
+        query.set(
+            'status',
+            params.status,
+        )
+    }
+
+    return request<SessionPage>(
+        `/sessions?${query.toString()}`,
+    )
+}
 
 
 export const revokeSession = (
