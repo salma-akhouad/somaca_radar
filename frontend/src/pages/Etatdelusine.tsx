@@ -439,14 +439,6 @@ export function SupervisionPage() {
       },
     ]
 
-  const maximumStateCount =
-    Math.max(
-      1,
-      ...stateComposition.map(
-        (state) => state.value,
-      ),
-    )
-
   return (
     <section className="etat-usine">
       {
@@ -511,28 +503,41 @@ export function SupervisionPage() {
 
             <div className="etat-state-composition__columns">
               {stateComposition.map((state) => {
-                const pillarHeight = Math.max(
-                  13,
-                  (state.value / maximumStateCount) * 52,
-                )
+                const percentage =
+                  summary.total_machines > 0
+                    ? (
+                      state.value
+                      / summary.total_machines
+                    ) * 100
+                    : 0
+
+                const percentageLabel =
+                  percentage === 0
+                    ? '0 %'
+                    : `${percentage
+                      .toFixed(1)
+                      .replace('.', ',')} %`
 
                 return (
                   <div
                     key={state.key}
-                    className="etat-state-composition__item"
-                    title={`${state.label} : ${state.value}`}
+                    className={
+                      `etat-state-metric etat-state-metric--${state.key}`
+                    }
+                    aria-label={
+                      `${state.label} : ${state.value}, ${percentageLabel}`
+                    }
                   >
-                    <strong>{state.value}</strong>
+                    <strong className="etat-state-metric__count">
+                      {state.value}
+                    </strong>
 
-                    <span
-                      className={
-                        `etat-state-pillar etat-state-pillar--${state.key}`
-                      }
-                      style={{ height: `${pillarHeight}px` }}
-                      aria-hidden="true"
-                    />
+                    <span className="etat-state-metric__label">
+                      <i aria-hidden="true" />
+                      {state.label}
+                    </span>
 
-                    <small>{state.label}</small>
+                    <small>{percentageLabel}</small>
                   </div>
                 )
               })}
@@ -567,7 +572,7 @@ export function SupervisionPage() {
                 Santé opérationnelle du Montage
               </strong>
               <small>
-                Part des machines en état opérationnel
+                Pourcentage de machines opérationnelles parmi les machines suivies
               </small>
             </div>
           </header>
@@ -578,6 +583,10 @@ export function SupervisionPage() {
               () => setActiveTrendIndex(null)
             }
           >
+            <span className="etat-trend-chart__metric-label">
+              Machines opérationnelles (%)
+            </span>
+
             <svg
               viewBox="0 0 736 232"
               role="img"
@@ -720,6 +729,10 @@ export function SupervisionPage() {
                 )
               }
             </div>
+
+            <span className="etat-trend-chart__date-label">
+              Date
+            </span>
 
             {
               activePoint
@@ -921,7 +934,28 @@ export function SupervisionPage() {
                   Aucun changement d’état récent.
                 </div>
               )
-              : dashboard.recent_changes.map(
+              : (
+                <>
+                  <div
+                    className="etat-events-columns"
+                    aria-hidden="true"
+                  >
+                    <span>DATE / HEURE</span>
+                    <span>MACHINE / LOCALISATION</span>
+
+                    <span className="etat-events-columns__transition">
+                      <span>ÉTAT PRÉCÉDENT</span>
+                      <i />
+                      <span>NOUVEL ÉTAT</span>
+                    </span>
+
+                    <span className="etat-events-columns__action">
+                      ACTION
+                    </span>
+                  </div>
+
+                  {
+                    dashboard.recent_changes.map(
                 (event) => {
                   const currentLevel =
                     stateClassName(
@@ -936,27 +970,50 @@ export function SupervisionPage() {
                       <time
                         dateTime={event.changed_at}
                       >
-                        {
-                          new Intl.DateTimeFormat(
-                            'fr-FR',
-                            {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            },
-                          ).format(
-                            new Date(
-                              event.changed_at,
-                            ),
-                          )
-                        }
+                        <small>
+                          {
+                            new Intl.DateTimeFormat(
+                              'fr-FR',
+                              {
+                                timeZone:
+                                  'Africa/Casablanca',
+                                day: '2-digit',
+                                month: 'short',
+                              },
+                            ).format(
+                              new Date(
+                                event.changed_at,
+                              ),
+                            )
+                          }
+                        </small>
+
+                        <strong>
+                          {
+                            new Intl.DateTimeFormat(
+                              'fr-FR',
+                              {
+                                timeZone:
+                                  'Africa/Casablanca',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false,
+                              },
+                            ).format(
+                              new Date(
+                                event.changed_at,
+                              ),
+                            )
+                          }
+                        </strong>
                       </time>
 
                       <span className="etat-event-row__machine">
                         <strong>
-                          {event.pole_name} · {event.machine_name}
+                          {event.machine_name}
                         </strong>
                         <small>
-                          {event.unite_name}
+                          {event.pole_name} · {event.unite_name} · {event.machine_type}
                         </small>
                       </span>
 
@@ -1026,6 +1083,9 @@ export function SupervisionPage() {
                     </article>
                   )
                 },
+              )
+                  }
+                </>
               )
           }
         </div>

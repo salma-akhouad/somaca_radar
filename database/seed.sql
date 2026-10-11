@@ -108,52 +108,333 @@ FROM machine m CROSS JOIN etat e CROSS JOIN utilisateur u
 WHERE e.libelle_etat = 'Opérationnel'
   AND u.email = 'mehdi.elkettani@somaca.local';
 
--- HISTORIQUE RÉCENT : CAS RÉSOLUS + ÉTATS ACTUELS VARIÉS
-INSERT INTO statut_historique (date_changement, id_machine, id_etat, id_util) VALUES
-    ('2026-09-16 08:15:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-01'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-16 08:42:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-01'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Opérationnel'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-18 10:05:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Scanner industriel P-02'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-18 10:31:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Scanner industriel P-02'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Opérationnel'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-19 13:20:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Banc de contrôle P-04'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Critique'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-19 14:02:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Banc de contrôle P-04'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Opérationnel'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-24 07:50:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-05'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-24 09:10:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-07'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-25 11:35:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Terminal opérateur P-09'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-25 14:20:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Capteur de présence P-11'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-26 08:45:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Scanner industriel P-14'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-26 12:10:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Armoire de commande P-16'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Attention requise'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-24 15:05:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de contrôle P-06'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Critique'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-25 06:40:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Robot de manutention P-08'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Critique'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local')),
-    ('2026-09-26 09:25:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Banc de contrôle P-10'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Critique'), (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')),
-    ('2026-09-27 07:15:00', (SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-13'), (SELECT id_etat FROM etat WHERE libelle_etat = 'Critique'), (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local'));
-
 -- INCIDENTS DE DÉMONSTRATION
-INSERT INTO incident (id_machine, problem, severity, status, confirmed_cause, applied_solution, created_at, created_by_user_id) VALUES
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-05'), 'Bruit anormal détecté au niveau du moteur du convoyeur.', 'mineur', 'ouvert', NULL, NULL, '2026-09-24 07:55:00+00', (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')),
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-07'), 'Couple de serrage irrégulier sur plusieurs cycles.', 'majeur', 'en_cours', 'Dérive du capteur de couple.', NULL, '2026-09-24 09:15:00+00', (SELECT id_util FROM utilisateur WHERE email = 'lina.bouziane@somaca.local')),
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Poste de contrôle P-06'), 'Arrêt du poste après perte intermittente du signal de sécurité.', 'critique', 'en_cours', 'Connecteur de sécurité mal fixé.', NULL, '2026-09-24 15:10:00+00', (SELECT id_util FROM utilisateur WHERE email = 'younes.chraibi@somaca.local')),
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Robot de manutention P-08'), 'Le convoyeur ne redémarre pas après acquittement de l''alarme.', 'critique', 'en_attente', NULL, NULL, '2026-09-25 06:45:00+00', (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')),
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Terminal opérateur P-09'), 'L''écran tactile répond de manière intermittente.', 'mineur', 'ouvert', NULL, NULL, '2026-09-25 11:40:00+00', (SELECT id_util FROM utilisateur WHERE email = 'lina.bouziane@somaca.local')),
-    ((SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-13'), 'Mesure hors tolérance détectée sur le banc de contrôle.', 'critique', 'en_cours', 'Capteur de mesure instable.', NULL, '2026-09-27 07:20:00+00', (SELECT id_util FROM utilisateur WHERE email = 'younes.chraibi@somaca.local'));
+-- Les signalements actifs ont toujours un état machine cohérent et lié par id_incident.
+-- Les incidents résolus/fermés possèdent aussi un retour de la machine à l'état Opérationnel.
 
--- HISTORIQUE DES INCIDENTS
-INSERT INTO incident_status_history (id_incident, status, changed_at, changed_by_user_id, note)
-SELECT i.id_incident, 'ouvert', i.created_at, i.created_by_user_id,
-       'Incident déclaré depuis le poste de production.'
-FROM incident i;
+INSERT INTO incident (
+    id_machine,
+    problem,
+    severity,
+    status,
+    confirmed_cause,
+    applied_solution,
+    created_at,
+    created_by_user_id
+) VALUES
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-05'),
+        'Bruit anormal détecté au niveau du moteur du convoyeur.',
+        'mineur',
+        'ouvert',
+        NULL,
+        NULL,
+        '2026-10-07 07:40:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-07'),
+        'Couple de serrage irrégulier observé sur plusieurs cycles.',
+        'majeur',
+        'en_cours',
+        'Dérive du capteur de couple.',
+        NULL,
+        '2026-10-07 08:20:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'lina.bouziane@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de contrôle P-06'),
+        'Perte intermittente du signal de sécurité provoquant l''arrêt du poste.',
+        'critique',
+        'en_cours',
+        'Connecteur du circuit de sécurité mal fixé.',
+        NULL,
+        '2026-10-07 09:05:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'younes.chraibi@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Robot de manutention P-08'),
+        'Le robot ne reprend pas son cycle après acquittement de l''alarme.',
+        'critique',
+        'en_attente',
+        'Défaut intermittent du module de commande moteur.',
+        NULL,
+        '2026-10-07 10:15:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Terminal opérateur P-09'),
+        'L''écran tactile répond de manière intermittente.',
+        'mineur',
+        'ouvert',
+        NULL,
+        NULL,
+        '2026-10-07 11:30:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'lina.bouziane@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Convoyeur P-13'),
+        'Valeurs de mesure instables détectées pendant le contrôle de production.',
+        'critique',
+        'en_cours',
+        'Capteur de mesure instable.',
+        NULL,
+        '2026-10-07 12:10:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'younes.chraibi@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Capteur de présence P-11'),
+        'Absence de réponse du capteur empêchant de confirmer son état.',
+        'majeur',
+        'ouvert',
+        NULL,
+        NULL,
+        '2026-10-07 13:05:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Scanner industriel P-02'),
+        'Lectures intermittentes du code de traçabilité.',
+        'majeur',
+        'resolu',
+        'Connecteur du lecteur légèrement desserré.',
+        'Reconnexion et fixation du connecteur puis validation de plusieurs lectures.',
+        '2026-10-06 09:20:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'lina.bouziane@somaca.local')
+    ),
+    (
+        (SELECT id_machine FROM machine WHERE nom_machine = 'Poste de vissage P-01'),
+        'Vibration anormale constatée pendant le cycle de vissage.',
+        'mineur',
+        'ferme',
+        'Fixation du support moteur légèrement desserrée.',
+        'Resserrage du support et validation sur plusieurs cycles.',
+        '2026-10-05 08:10:00+00',
+        (SELECT id_util FROM utilisateur WHERE email = 'amine.elbaroudi@somaca.local')
+    );
 
-INSERT INTO incident_status_history (id_incident, status, changed_at, changed_by_user_id, note)
-SELECT i.id_incident, i.status, i.created_at + INTERVAL '15 minutes',
-       (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local'),
-       'Prise en charge de l''incident.'
+
+-- ÉTAT MACHINE AU MOMENT DU SIGNALEMENT
+-- Cette insertion reproduit le lien créé normalement par POST /incidents/report.
+INSERT INTO statut_historique (
+    date_changement,
+    id_machine,
+    id_etat,
+    id_util,
+    id_incident
+)
+SELECT
+    i.created_at,
+    i.id_machine,
+    e.id_etat,
+    i.created_by_user_id,
+    i.id_incident
 FROM incident i
-WHERE i.status IN ('en_cours', 'en_attente');
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN etat e
+    ON e.libelle_etat =
+        CASE
+            WHEN m.nom_machine IN (
+                'Poste de contrôle P-06',
+                'Robot de manutention P-08',
+                'Convoyeur P-13'
+            )
+                THEN 'Critique'
+            WHEN m.nom_machine = 'Capteur de présence P-11'
+                THEN 'Inconnu'
+            ELSE 'Attention requise'
+        END;
 
--- CONTACTS INCIDENTS
-INSERT INTO incident_contact (id_incident, contact_type, id_util, contacted_at)
-SELECT i.id_incident, 'technicien',
-       CASE WHEN i.id_incident % 2 = 0
-            THEN (SELECT id_util FROM utilisateur WHERE email = 'rim.benjelloun@somaca.local')
-            ELSE (SELECT id_util FROM utilisateur WHERE email = 'nassim.alaoui@somaca.local') END,
-       i.created_at + INTERVAL '5 minutes'
+
+-- HISTORIQUE DE STATUT DES INCIDENTS : TOUS COMMENCENT PAR OUVERT
+INSERT INTO incident_status_history (
+    id_incident,
+    status,
+    changed_at,
+    changed_by_user_id,
+    note
+)
+SELECT
+    i.id_incident,
+    'ouvert',
+    i.created_at,
+    i.created_by_user_id,
+    'Incident signalé depuis le poste de production.'
 FROM incident i;
+
+
+-- PRISE EN CHARGE TECHNIQUE
+INSERT INTO incident_status_history (
+    id_incident,
+    status,
+    changed_at,
+    changed_by_user_id,
+    note
+)
+SELECT
+    i.id_incident,
+    'en_cours',
+    i.created_at + INTERVAL '10 minutes',
+    tech.id_util,
+    'Prise en charge technique.'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN utilisateur tech
+    ON tech.email =
+        CASE
+            WHEN m.nom_machine IN (
+                'Poste de vissage P-07',
+                'Robot de manutention P-08',
+                'Scanner industriel P-02'
+            )
+                THEN 'nassim.alaoui@somaca.local'
+            ELSE 'rim.benjelloun@somaca.local'
+        END
+WHERE i.status IN ('en_cours', 'en_attente', 'resolu', 'ferme');
+
+
+-- P-08 : APRÈS PRISE EN CHARGE, L'INTERVENTION PASSE EN ATTENTE
+INSERT INTO incident_status_history (
+    id_incident,
+    status,
+    changed_at,
+    changed_by_user_id,
+    note
+)
+SELECT
+    i.id_incident,
+    'en_attente',
+    i.created_at + INTERVAL '40 minutes',
+    tech.id_util,
+    'Intervention suspendue en attente du contrôle du module de commande.'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN utilisateur tech
+    ON tech.email = 'nassim.alaoui@somaca.local'
+WHERE m.nom_machine = 'Robot de manutention P-08';
+
+
+-- P-01 ET P-02 : INTERVENTIONS TECHNIQUEMENT RÉSOLUES
+INSERT INTO incident_status_history (
+    id_incident,
+    status,
+    changed_at,
+    changed_by_user_id,
+    note
+)
+SELECT
+    i.id_incident,
+    'resolu',
+    i.created_at + INTERVAL '2 hours',
+    tech.id_util,
+    'Intervention terminée et fonctionnement vérifié.'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN utilisateur tech
+    ON tech.email = 'nassim.alaoui@somaca.local'
+WHERE m.nom_machine IN (
+    'Scanner industriel P-02',
+    'Poste de vissage P-01'
+);
+
+
+-- AU MOMENT DE LA RÉSOLUTION, LE TECHNICIEN CONFIRME LE RETOUR À OPÉRATIONNEL
+INSERT INTO statut_historique (
+    date_changement,
+    id_machine,
+    id_etat,
+    id_util,
+    id_incident
+)
+SELECT
+    i.created_at + INTERVAL '2 hours',
+    i.id_machine,
+    e.id_etat,
+    tech.id_util,
+    i.id_incident
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN etat e
+    ON e.libelle_etat = 'Opérationnel'
+JOIN utilisateur tech
+    ON tech.email = 'nassim.alaoui@somaca.local'
+WHERE m.nom_machine IN (
+    'Scanner industriel P-02',
+    'Poste de vissage P-01'
+);
+
+
+-- P-01 : APRÈS RÉSOLUTION TECHNIQUE, L'ADMINISTRATEUR CLÔT L'INCIDENT
+INSERT INTO incident_status_history (
+    id_incident,
+    status,
+    changed_at,
+    changed_by_user_id,
+    note
+)
+SELECT
+    i.id_incident,
+    'ferme',
+    i.created_at + INTERVAL '3 hours',
+    admin.id_util,
+    'Incident clôturé après validation de l''intervention.'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN utilisateur admin
+    ON admin.email = 'ines.zerouali@somaca.local'
+WHERE m.nom_machine = 'Poste de vissage P-01';
+
+
+-- CONTACTS : UNIQUEMENT LORSQU'UNE PRISE EN CHARGE A RÉELLEMENT EU LIEU
+INSERT INTO incident_contact (
+    id_incident,
+    contact_type,
+    id_util,
+    contacted_at
+)
+SELECT
+    i.id_incident,
+    'technicien',
+    tech.id_util,
+    i.created_at + INTERVAL '5 minutes'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+JOIN utilisateur tech
+    ON tech.email =
+        CASE
+            WHEN m.nom_machine IN (
+                'Poste de vissage P-07',
+                'Robot de manutention P-08',
+                'Scanner industriel P-02'
+            )
+                THEN 'nassim.alaoui@somaca.local'
+            ELSE 'rim.benjelloun@somaca.local'
+        END
+WHERE i.status IN ('en_cours', 'en_attente', 'resolu', 'ferme');
+
+
+-- EXEMPLE DE SUPPORT EXTERNE POUR UN INCIDENT CRITIQUE
+INSERT INTO incident_contact (
+    id_incident,
+    contact_type,
+    id_util,
+    external_contact_name,
+    contacted_at
+)
+SELECT
+    i.id_incident,
+    'renault',
+    NULL,
+    'Support technique Renault',
+    i.created_at + INTERVAL '35 minutes'
+FROM incident i
+JOIN machine m
+    ON m.id_machine = i.id_machine
+WHERE m.nom_machine = 'Poste de contrôle P-06';

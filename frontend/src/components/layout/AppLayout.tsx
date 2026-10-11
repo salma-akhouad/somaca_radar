@@ -12,6 +12,11 @@ import {
 } from '../../auth/AuthContext'
 
 import {
+  SomacaHelperContextProvider,
+  useSomacaHelperContext,
+} from '../../helper/SomacaHelperContext'
+
+import {
   SomacaHelperLauncher,
 } from '../helper/SomacaHelperLauncher'
 
@@ -24,7 +29,7 @@ import {
 } from './TopHeader'
 
 
-export function AppLayout() {
+function AppShell() {
   const location =
     useLocation()
 
@@ -32,6 +37,11 @@ export function AppLayout() {
     loading: authLoading,
   } =
     useAuth()
+
+  const {
+    displayState,
+  } =
+    useSomacaHelperContext()
 
   const [
     sidebarCollapsed,
@@ -43,8 +53,17 @@ export function AppLayout() {
     location.pathname
     === '/cartography'
 
+  const helperOpen =
+    displayState === 'open'
+
   return (
-    <div className="app-shell">
+    <div
+      className={
+        helperOpen
+          ? 'app-shell app-shell--helper-open'
+          : 'app-shell'
+      }
+    >
       <Sidebar
         collapsed={
           sidebarCollapsed
@@ -110,5 +129,14 @@ export function AppLayout() {
         )
       }
     </div>
+  )
+}
+
+
+export function AppLayout() {
+  return (
+    <SomacaHelperContextProvider>
+      <AppShell />
+    </SomacaHelperContextProvider>
   )
 }

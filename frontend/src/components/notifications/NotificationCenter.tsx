@@ -28,8 +28,7 @@ function relativeTime(
       Math.round(
         (
           Date.now()
-          -
-          new Date(
+          - new Date(
             value,
           ).getTime()
         )
@@ -136,15 +135,13 @@ export function NotificationCenter() {
           notification,
         )
       } catch {
-        /*
-         * Navigation remains available even if acknowledgement
-         * cannot be persisted. Authentication failures are already
-         * handled centrally by the shared API client.
-         */
+        // Navigation remains available if acknowledgement fails.
       }
     }
 
-    setOpen(false)
+    setOpen(
+      false,
+    )
 
     navigate(
       '/cartography',
@@ -161,19 +158,32 @@ export function NotificationCenter() {
   }
 
 
+  function openIncidents() {
+    setOpen(
+      false,
+    )
+
+    navigate(
+      '/incidents',
+    )
+  }
+
+
   return (
     <div className="notification-center">
       <button
         className="header-icon-button notification-trigger"
         type="button"
         aria-label="Notifications opérationnelles"
-        aria-expanded={open}
-
-        onClick={() =>
-          setOpen(
-            (current) =>
-              !current,
-          )
+        aria-expanded={
+          open
+        }
+        onClick={
+          () =>
+            setOpen(
+              (current) =>
+                !current,
+            )
         }
       >
         <Icon
@@ -181,159 +191,193 @@ export function NotificationCenter() {
           size={21}
         />
 
-        {unreadCount > 0 && (
-          <span className="notification-trigger__badge">
-            {
-              unreadCount > 9
-                ? '9+'
-                : unreadCount
-            }
-          </span>
-        )}
+        {
+          unreadCount > 0
+          && (
+            <span className="notification-trigger__badge">
+              {
+                unreadCount > 9
+                  ? '9+'
+                  : unreadCount
+              }
+            </span>
+          )
+        }
       </button>
 
 
-      {open && (
-        <div className="notification-panel">
-          <div className="notification-panel__header">
-            <div>
-              <strong>
-                ALERTES EN COURS
-              </strong>
+      {
+        open
+        && (
+          <div className="notification-panel">
+            <header className="notification-panel__header">
+              <div className="notification-panel__heading">
+                <strong>
+                  Notifications
+                </strong>
 
-              <span>
-                {notifications.length}
-                {' '}
-                événement
-                {
-                  notifications.length
-                    !== 1
-                    ? 's'
-                    : ''
-                }
-              </span>
-            </div>
-
-
-            <div className="notification-panel__actions">
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  className="text-button"
-                  disabled={
-                    acknowledging
-                  }
-
-                  onClick={() =>
-                    void acknowledgeAll()
-                  }
-                >
+                <span>
+                  {notifications.length}
+                  {' '}
+                  événement
                   {
-                    acknowledging
-                      ? 'Mise à jour…'
-                      : 'Tout marquer comme lu'
+                    notifications.length
+                      !== 1
+                      ? 's'
+                      : ''
                   }
-                </button>
-              )}
 
-              <button
-                type="button"
-                className="text-button"
-
-                onClick={() => {
-                  setOpen(false)
-
-                  navigate(
-                    '/incidents',
-                  )
-                }}
-              >
-                Voir les incidents
-              </button>
-            </div>
-          </div>
-
-
-          <div className="notification-panel__list">
-            {
-              notifications.length
-                === 0
-                ? (
-                  <div className="notification-empty">
-                    <span className="status-dot status-dot--operational" />
-
-                    Aucun incident actif
-                  </div>
-                )
-                : (
-                  notifications.map(
-                    (
-                      notification,
-                    ) => (
-                      <button
-                        type="button"
-
-                        className={
-                          `notification-item ${notification.isUnread
-                            ? 'notification-item--unread'
+                  {
+                    unreadCount > 0
+                    && (
+                      <>
+                        {' · '}
+                        {unreadCount}
+                        {' '}
+                        non lu
+                        {
+                          unreadCount
+                            !== 1
+                            ? 's'
                             : ''
-                          }`
                         }
+                      </>
+                    )
+                  }
+                </span>
+              </div>
 
-                        key={
-                          notification.id
-                        }
-
-                        onClick={() =>
-                          void openNotification(
-                            notification,
-                          )
-                        }
-                      >
-                        <span
-                          className={
-                            `notification-item__severity notification-item__severity--${notification.severity}`
-                          }
-                        />
-
-                        <span className="notification-item__content">
-                          {
-                            notification.isUnread
-                            && (
-                              <small className="notification-item__new">
-                                NOUVEAU
-                              </small>
-                            )
-                          }
-
-                          <strong>
-                            {
-                              notification.title
-                            }
-                          </strong>
-
-                          <span>
-                            {
-                              notification.description
-                            }
-                          </span>
-
-                          <small>
-                            {
-                              relativeTime(
-                                notification.timestamp,
-                              )
-                            }
-                          </small>
-                        </span>
-                      </button>
-                    ),
-                  )
+              {
+                unreadCount > 0
+                && (
+                  <button
+                    type="button"
+                    className="notification-panel__read-all"
+                    disabled={
+                      acknowledging
+                    }
+                    onClick={
+                      () =>
+                        void acknowledgeAll()
+                    }
+                  >
+                    {
+                      acknowledging
+                        ? 'Mise à jour…'
+                        : 'Tout lire'
+                    }
+                  </button>
                 )
+              }
+            </header>
+
+
+            <div className="notification-panel__list">
+              {
+                notifications.length
+                  === 0
+                  ? (
+                    <div className="notification-empty">
+                      <span className="notification-empty__icon">
+                        <Icon
+                          name="bell"
+                          size={19}
+                        />
+                      </span>
+
+                      <strong>
+                        Aucune notification
+                      </strong>
+
+                      <span>
+                        Aucun incident actif à signaler.
+                      </span>
+                    </div>
+                  )
+                  : (
+                    notifications.map(
+                      (
+                        notification,
+                      ) => (
+                        <button
+                          type="button"
+                          className={
+                            notification.isUnread
+                              ? (
+                                'notification-item '
+                                + 'notification-item--unread'
+                              )
+                              : 'notification-item'
+                          }
+                          key={
+                            notification.id
+                          }
+                          onClick={
+                            () =>
+                              void openNotification(
+                                notification,
+                              )
+                          }
+                        >
+                          <span
+                            className={
+                              `notification-item__severity notification-item__severity--${notification.severity}`
+                            }
+                            aria-hidden="true"
+                          />
+
+                          <span className="notification-item__content">
+                            <span className="notification-item__top">
+                              <strong>
+                                {
+                                  notification.title
+                                }
+                              </strong>
+
+                              <small>
+                                {
+                                  relativeTime(
+                                    notification.timestamp,
+                                  )
+                                }
+                              </small>
+                            </span>
+
+                            <span className="notification-item__description">
+                              {
+                                notification.description
+                              }
+                            </span>
+                          </span>
+                        </button>
+                      ),
+                    )
+                  )
+              }
+            </div>
+
+
+            {
+              notifications.length > 0
+              && (
+                <footer className="notification-panel__footer">
+                  <button
+                    type="button"
+                    onClick={
+                      openIncidents
+                    }
+                  >
+                    Voir tous les incidents
+                    <span aria-hidden="true">
+                      →
+                    </span>
+                  </button>
+                </footer>
+              )
             }
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   )
 }

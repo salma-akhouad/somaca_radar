@@ -22,6 +22,9 @@ import {
 import {
   useOperations,
 } from '../../operations/OperationsContext'
+import {
+  useSomacaHelperContext,
+} from '../../helper/SomacaHelperContext'
 
 import type {
   PolePanelTab,
@@ -37,6 +40,9 @@ import type {
   PoleConfig,
 } from './scene/factory/data/montageLayoutData'
 
+import {
+  createPortal,
+} from 'react-dom'
 
 interface PoleDetailsPanelProps {
   pole: PoleConfig
@@ -98,14 +104,6 @@ const INCIDENT_STATUS_LABELS:
   annule:
     'Annulé',
 }
-
-
-const ACTIVE_INCIDENT_STATUSES =
-  new Set<IncidentStatus>([
-    'ouvert',
-    'en_cours',
-    'en_attente',
-  ])
 
 
 function CloseIcon() {
@@ -221,6 +219,11 @@ export function PoleDetailsPanel({
     refresh,
   } =
     useOperations()
+
+  const {
+    setCurrentMachineId,
+  } =
+    useSomacaHelperContext()
 
   const [
     selectedMachineId,
@@ -462,10 +465,7 @@ export function PoleDetailsPanel({
           .filter(
             (incident) =>
               incident.id_machine
-              === selectedMachineId
-              && ACTIVE_INCIDENT_STATUSES.has(
-                incident.status,
-              ),
+              === selectedMachineId,
           )
           .sort(
             (
@@ -584,6 +584,18 @@ export function PoleDetailsPanel({
     focusedIncidentId,
     incidents,
     selectedMachineId,
+  ])
+
+  useEffect(() => {
+    setCurrentMachineId(
+      activeTab === 'details'
+        ? selectedMachineId
+        : null,
+    )
+  }, [
+    activeTab,
+    selectedMachineId,
+    setCurrentMachineId,
   ])
 
   useEffect(() => {
@@ -1402,7 +1414,6 @@ export function PoleDetailsPanel({
                                       <textarea
                                         rows={4}
                                         maxLength={500}
-                                        required
                                         value={
                                           reportProblemText
                                         }
@@ -1475,39 +1486,41 @@ export function PoleDetailsPanel({
 
       {
         reportSuccess
-        && (
+        && createPortal(
           <div
             className="report-feedback-toast report-feedback-toast--success"
             role="status"
             aria-live="polite"
           >
+            <span className="report-feedback-toast__icon">
+              ✓
+            </span>
+
             <strong>
               {reportSuccess}
             </strong>
-
-            <span>
-              Merci pour votre signalement.
-            </span>
-          </div>
+          </div>,
+          document.body,
         )
       }
 
       {
         reportError
-        && (
+        && createPortal(
           <div
             className="report-feedback-toast report-feedback-toast--error"
             role="alert"
             aria-live="assertive"
           >
-            <strong>
-              Le signalement n’a pas pu être enregistré.
-            </strong>
-
-            <span>
-              {reportError}
+            <span className="report-feedback-toast__icon">
+              !
             </span>
-          </div>
+
+            <strong>
+              {reportError}
+            </strong>
+          </div>,
+          document.body,
         )
       }
     </aside>

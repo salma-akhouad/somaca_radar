@@ -2,6 +2,7 @@ import base64
 import json
 import asyncio
 import logging
+import re
 from datetime import datetime, time, timedelta, timezone
 from typing import cast, Literal
 from uuid import UUID
@@ -61,6 +62,9 @@ from .models import (
     Utilisateur,
 )
 from .schemas import (
+    HelperConversationPageOut,
+    HelperMessagePageOut,
+    AnalysisIntent,
     CurrentStatusOut,
     CurrentUserOut,
     DepartementCreate,
@@ -71,6 +75,7 @@ from .schemas import (
     HelperAskRequest,
     HelperAskResponse,
     HelperConversationSummaryOut,
+    HelperErrorCode,
     HelperResponseStatus,
     IncidentContactCreate,
     IncidentContactOut,
@@ -112,12 +117,16 @@ from .schemas import (
     UtilisateurPageOut,
 )
 from .somaca_helper_service import (
+    InvalidRoutingResultError,
     SomacaHelperClarificationError,
     SomacaHelperServiceError,
+    SomacaHelperUnavailableError,
     analyze_routing,
     detect_intent,
     generate_clarification_answer,
+    generate_conversational_answer,
     generate_final_answer,
+    resolve_routing_machine_id,
 )
 
 
@@ -2756,6 +2765,7 @@ def get_etat_usine(
                     "changed_at": statut.date_changement,
                     "id_machine": machine.id_machine,
                     "machine_name": machine.nom_machine,
+                    "machine_type": machine.type_machine,
                     "id_poteau": pole.id_poteau,
                     "pole_name": pole.nom_poteau,
                     "id_unite": unit.id_unite,
@@ -2799,87 +2809,298 @@ def get_etat_usine(
     }
 
 
+
+def _save_helper_exchange(
+    db: Session,
+    *,
+    request: HelperAskRequest,
+    current_user: Utilisateur,
+    answer: str,
+    facts: dict,
+    intent: str | None = None,
+    id_machine: int | None = None,
+    model_name: str | None = None,
+) -> bool:
+    user_message = SomacaHelperMessage(
+        conversation_id=request.conversation_id,
+        id_util=current_user.id_util,
+        role="USER",
+        content=request.question,
+        id_machine=id_machine,
+        intent=intent,
+        facts=None,
+        model_name=None,
+    )
+    assistant_message = SomacaHelperMessage(
+        conversation_id=request.conversation_id,
+        id_util=current_user.id_util,
+        role="ASSISTANT",
+        content=answer,
+        id_machine=id_machine,
+        intent=intent,
+        facts=facts,
+        model_name=model_name,
+    )
+
+    db.add_all([user_message, assistant_message])
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return False
+
+    return True
+
 @app.get(
     "/helper/conversations",
-    response_model=list[HelperConversationSummaryOut],
+    response_model=HelperConversationPageOut,
 )
 def get_helper_conversations(
+    limit: int = Query(
+        default=20,
+        ge=1,
+        le=50,
+    ),
+    before_activity: datetime | None = Query(
+        default=None,
+    ),
+    before_conversation_id: UUID | None = Query(
+        default=None,
+    ),
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(enforce_read_limit),
+    current_user: Utilisateur = Depends(
+        enforce_read_limit
+    ),
 ):
-    FirstMessage = aliased(SomacaHelperMessage)
+    if (
+        (before_activity is None)
+        != (
+            before_conversation_id
+            is None
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Le curseur de conversation est incomplet."
+            ),
+        )
+
+    FirstMessage = aliased(
+        SomacaHelperMessage
+    )
 
     first_user_message = (
-        db.query(FirstMessage.content)
+        db.query(
+            FirstMessage.content
+        )
         .filter(
-            FirstMessage.conversation_id == SomacaHelperMessage.conversation_id,
-            FirstMessage.id_util == current_user.id_util,
-            FirstMessage.role == "USER",
+            FirstMessage.conversation_id
+            == SomacaHelperMessage.conversation_id,
+            FirstMessage.id_util
+            == current_user.id_util,
+            FirstMessage.role
+            == "USER",
         )
         .order_by(
             FirstMessage.date_creation.asc(),
             FirstMessage.id_message.asc(),
         )
         .limit(1)
-        .correlate(SomacaHelperMessage)
+        .correlate(
+            SomacaHelperMessage
+        )
         .scalar_subquery()
     )
 
-    rows = (
+    summary_query = (
         db.query(
-            SomacaHelperMessage.conversation_id.label("conversation_id"),
-            first_user_message.label("preview"),
-            func.count(SomacaHelperMessage.id_message).label("message_count"),
-            func.max(SomacaHelperMessage.date_creation).label("last_activity"),
+            SomacaHelperMessage.conversation_id.label(
+                "conversation_id"
+            ),
+            first_user_message.label(
+                "preview"
+            ),
+            func.count(
+                SomacaHelperMessage.id_message
+            ).label(
+                "message_count"
+            ),
+            func.max(
+                SomacaHelperMessage.date_creation
+            ).label(
+                "last_activity"
+            ),
         )
-        .filter(SomacaHelperMessage.id_util == current_user.id_util)
-        .group_by(SomacaHelperMessage.conversation_id)
-        .order_by(func.max(SomacaHelperMessage.date_creation).desc())
+        .filter(
+            SomacaHelperMessage.id_util
+            == current_user.id_util
+        )
+        .group_by(
+            SomacaHelperMessage.conversation_id
+        )
+        .subquery()
+    )
+
+    query = db.query(
+        summary_query.c.conversation_id,
+        summary_query.c.preview,
+        summary_query.c.message_count,
+        summary_query.c.last_activity,
+    )
+
+    if (
+        before_activity is not None
+        and before_conversation_id
+        is not None
+    ):
+        query = query.filter(
+            or_(
+                summary_query.c.last_activity
+                < before_activity,
+                and_(
+                    summary_query.c.last_activity
+                    == before_activity,
+                    summary_query.c.conversation_id
+                    < before_conversation_id,
+                ),
+            )
+        )
+
+    rows = (
+        query
+        .order_by(
+            summary_query.c.last_activity.desc(),
+            summary_query.c.conversation_id.desc(),
+        )
+        .limit(limit + 1)
         .all()
     )
 
-    # This aggregate query has no SQLAlchemy entity, so its rows are mapped explicitly.
-    return [
+    has_more = len(rows) > limit
+
+    page_rows = rows[:limit]
+
+    items = [
         HelperConversationSummaryOut(
-            conversation_id=row.conversation_id,
-            preview=row.preview or "New conversation",
-            message_count=row.message_count,
-            last_activity=row.last_activity,
+            conversation_id=
+                row.conversation_id,
+            preview=(
+                row.preview
+                or "New conversation"
+            ),
+            message_count=
+                row.message_count,
+            last_activity=
+                row.last_activity,
         )
-        for row in rows
+        for row in page_rows
     ]
+
+    if (
+        has_more
+        and page_rows
+    ):
+        last_row = page_rows[-1]
+
+        next_before_activity = last_row.last_activity
+
+        next_before_conversation_id = last_row.conversation_id
+    else:
+        next_before_activity = None
+        next_before_conversation_id = None
+
+    return HelperConversationPageOut(
+        items=items,
+        next_before_activity=
+            next_before_activity,
+        next_before_conversation_id=
+            next_before_conversation_id,
+        has_more=has_more,
+    )
 
 
 @app.get(
     "/helper/conversations/{conversation_id}",
-    response_model=list[SomacaHelperMessageOut],
+    response_model=HelperMessagePageOut,
 )
 def get_helper_conversation(
     conversation_id: UUID,
+    limit: int = Query(
+        default=40,
+        ge=10,
+        le=100,
+    ),
+    before_id: int | None = Query(
+        default=None,
+        ge=1,
+    ),
     db: Session = Depends(get_db),
-    current_user: Utilisateur = Depends(enforce_read_limit),
+    current_user: Utilisateur = Depends(
+        enforce_read_limit
+    ),
 ):
-    messages = (
-        db.query(SomacaHelperMessage)
+    query = (
+        db.query(
+            SomacaHelperMessage
+        )
         .filter(
-            SomacaHelperMessage.conversation_id == conversation_id,
-            SomacaHelperMessage.id_util == current_user.id_util,
+            SomacaHelperMessage.conversation_id
+            == conversation_id,
+            SomacaHelperMessage.id_util
+            == current_user.id_util,
         )
+    )
+
+    if before_id is not None:
+        query = query.filter(
+            SomacaHelperMessage.id_message
+            < before_id
+        )
+
+    rows = (
+        query
         .order_by(
-            SomacaHelperMessage.date_creation.asc(),
-            SomacaHelperMessage.id_message.asc(),
+            SomacaHelperMessage.id_message.desc()
         )
+        .limit(limit + 1)
         .all()
     )
 
-    if not messages:
+    if (
+        not rows
+        and before_id is None
+    ):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conversation introuvable.",
+            status_code=
+                status.HTTP_404_NOT_FOUND,
+            detail=
+                "Conversation introuvable.",
         )
 
-    return messages
+    has_more = len(rows) > limit
 
+    page_rows = rows[:limit]
+    page_rows.reverse()
+
+    next_before_id = (
+        page_rows[0].id_message
+        if has_more and page_rows
+        else None
+    )
+
+    return HelperMessagePageOut(
+    items=[
+        SomacaHelperMessageOut.model_validate(
+            message
+        )
+        for message in page_rows
+    ],
+    next_before_id=
+        next_before_id,
+    has_more=has_more,
+)
 
 @app.post("/helper/ask", response_model=HelperAskResponse)
 def ask_helper(
@@ -2901,8 +3122,11 @@ def ask_helper(
         .all()
     )
 
-    # Gemini receives the saved context in chronological order.
     recent_messages.reverse()
+
+    resolved_message_machine_id = None
+    routing_result = None
+    facts: dict = {}
 
     try:
         routing_result = detect_intent(
@@ -2910,20 +3134,28 @@ def ask_helper(
             recent_messages,
         )
 
-        if routing_result.unsupported:
+        if routing_result.intent == AnalysisIntent.CONVERSATIONAL:
+            answer = generate_conversational_answer(
+                request=request,
+                recent_messages=recent_messages,
+            )
+            response_status = HelperResponseStatus.ANSWERED
+            facts = {}
+        elif routing_result.unsupported:
             answer = (
                 routing_result.unsupported_reason
-                or "This request is not supported by SomacaHelper."
+                or (
+                    "Cette demande ne fait pas partie du périmètre "
+                    "de SOMACA Helper."
+                )
             )
             response_status = HelperResponseStatus.UNSUPPORTED_REQUEST
-            facts = {}
         elif routing_result.needs_clarification:
             answer = (
                 routing_result.clarification_question
-                or "Please clarify your request."
+                or "Pouvez-vous préciser votre demande ?"
             )
             response_status = HelperResponseStatus.CLARIFICATION_REQUIRED
-            facts = {}
         else:
             try:
                 facts = analyze_routing(
@@ -2934,6 +3166,7 @@ def ask_helper(
                 answer = generate_clarification_answer(
                     request=request,
                     clarification=exc,
+                    recent_messages=recent_messages,
                 )
                 response_status = HelperResponseStatus.CLARIFICATION_REQUIRED
                 facts = {}
@@ -2946,57 +3179,99 @@ def ask_helper(
                 )
                 response_status = HelperResponseStatus.ANSWERED
 
-    except SomacaHelperServiceError:
+        if (
+            routing_result is not None
+            and not routing_result.unsupported
+            and not routing_result.needs_clarification
+            and response_status
+            != HelperResponseStatus.CLARIFICATION_REQUIRED
+            and routing_result.intent
+            != AnalysisIntent.CONVERSATIONAL
+        ):
+            resolved_message_machine_id = resolve_routing_machine_id(
+                db,
+                routing_result,
+                facts,
+            )
+
+    except SomacaHelperUnavailableError:
+        logger.exception(
+            "SOMACA Helper provider/service request failed"
+        )
         db.rollback()
         return HelperAskResponse(
             status=HelperResponseStatus.ERROR,
-            answer="SomacaHelper is temporarily unavailable. Please try again later.",
+            answer=(
+                "SOMACA Helper est temporairement indisponible. "
+                "Réessayez dans quelques instants."
+            ),
+            error_code=HelperErrorCode.PROVIDER_UNAVAILABLE,
+        )
+    except InvalidRoutingResultError:
+        logger.exception(
+            "SOMACA Helper routing output could not be parsed or validated"
+        )
+        db.rollback()
+        return HelperAskResponse(
+            status=HelperResponseStatus.ERROR,
+            answer=(
+                "L’analyse n’a pas pu aboutir. "
+                "Réessayez dans quelques instants."
+            ),
+            error_code=HelperErrorCode.ANALYSIS_ERROR,
+        )
+    except SomacaHelperServiceError:
+        logger.exception(
+            "SOMACA Helper analysis failed"
+        )
+        db.rollback()
+        return HelperAskResponse(
+            status=HelperResponseStatus.ERROR,
+            answer=(
+                "L’analyse n’a pas pu aboutir. "
+                "Réessayez dans quelques instants."
+            ),
+            error_code=HelperErrorCode.ANALYSIS_ERROR,
         )
 
-    user_message = SomacaHelperMessage(
-        conversation_id=request.conversation_id,
-        id_util=current_user.id_util,
-        role="USER",
-        content=request.question,
-        id_machine=request.context.current_machine_id,
-        intent=(
-            routing_result.intent.value
-            if routing_result.intent is not None
-            else None
-        ),
-        facts=None,
-        model_name=None,
+    intent_value = (
+        routing_result.intent.value
+        if (
+            routing_result is not None
+            and routing_result.intent is not None
+        )
+        else None
     )
-    assistant_message = SomacaHelperMessage(
-        conversation_id=request.conversation_id,
-        id_util=current_user.id_util,
-        role="ASSISTANT",
-        content=answer,
-        id_machine=request.context.current_machine_id,
-        intent=(
-            routing_result.intent.value
-            if routing_result.intent is not None
-            else None
-        ),
+
+    saved = _save_helper_exchange(
+        db,
+        request=request,
+        current_user=current_user,
+        answer=answer,
         facts=facts,
+        intent=intent_value,
+        id_machine=resolved_message_machine_id,
         model_name=GEMINI_MODEL,
     )
 
-    db.add_all([user_message, assistant_message])
-
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+    if not saved:
         return HelperAskResponse(
             status=HelperResponseStatus.ERROR,
-            answer="The conversation could not be saved. Please try again.",
+            answer=(
+                "La conversation n’a pas pu être enregistrée. "
+                "Réessayez dans quelques instants."
+            ),
+            error_code=HelperErrorCode.ANALYSIS_ERROR,
         )
 
     return HelperAskResponse(
         status=response_status,
         answer=answer,
-        intent=routing_result.intent,
+        intent=(
+            routing_result.intent
+            if routing_result is not None
+            else None
+        ),
         facts=facts,
     )
 
@@ -3482,8 +3757,6 @@ def update_incident(
         build_incident_event("incident_updated", existing),
     )
     return existing
-
-
 @app.patch(
     "/incidents/{id_incident}/status",
     response_model=IncidentOut,
@@ -3513,7 +3786,10 @@ def update_incident_status(
             detail="Incident introuvable.",
         )
 
-    current_status = cast(IncidentStatus, existing.status)
+    current_status = cast(
+        IncidentStatus,
+        existing.status,
+    )
     role_name = current_user.role.nom_role.lower()
 
     note = validate_incident_transition(
@@ -3523,42 +3799,180 @@ def update_incident_status(
         note=status_update.note,
     )
 
-    if (
+    is_technician_resolution = (
         role_name == RoleName.TECHNICIEN
-        and status_update.status == IncidentStatus.RESOLU
-        and (
-            not existing.confirmed_cause
-            or not existing.applied_solution
-        )
+        and status_update.status
+        == IncidentStatus.RESOLU
+    )
+
+    if (
+        status_update.id_etat_machine is not None
+        and not is_technician_resolution
     ):
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
-                "La cause confirmée et la solution appliquée doivent être "
-                "renseignées avant de marquer l'incident comme résolu."
+                "L'état de la machine ne peut être "
+                "renseigné que lors de la résolution."
             ),
         )
 
+    if is_technician_resolution:
+        if (
+            not existing.confirmed_cause
+            or not existing.applied_solution
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "La cause confirmée et la solution appliquée "
+                    "doivent être renseignées avant de marquer "
+                    "l'incident comme résolu."
+                ),
+            )
+
+        if status_update.id_etat_machine is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    "L'état actuel de la machine doit être "
+                    "confirmé avant de résoudre l'incident."
+                ),
+            )
+
+    machine_status = None
+    now = datetime.now(timezone.utc)
+
+    if is_technician_resolution:
+        machine = (
+            db.query(Machine)
+            .filter(
+                Machine.id_machine == existing.id_machine
+            )
+            .first()
+        )
+
+        if machine is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Machine introuvable.",
+            )
+
+        if not machine.actif:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "L'état d'une machine décommissionnée "
+                    "ne peut pas être modifié."
+                ),
+            )
+
+        etat = (
+            db.query(Etat)
+            .filter(
+                Etat.id_etat
+                == status_update.id_etat_machine
+            )
+            .first()
+        )
+
+        if etat is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="État machine introuvable.",
+            )
+
+        if (
+            etat.libelle_etat.strip().casefold()
+            not in FIXED_ETAT_LABELS
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "Cet état ne fait pas partie "
+                    "du référentiel système."
+                ),
+            )
+
+        current_row = (
+            latest_statut_query(db)
+            .filter(
+                StatutHistorique.id_machine
+                == existing.id_machine
+            )
+            .first()
+        )
+
+        current_machine_state_id = (
+            current_row[0].id_etat
+            if current_row is not None
+            else None
+        )
+
+        if (
+            current_machine_state_id
+            != status_update.id_etat_machine
+        ):
+            machine_status = StatutHistorique(
+                id_machine=existing.id_machine,
+                id_etat=status_update.id_etat_machine,
+                id_util=current_user.id_util,
+                id_incident=existing.id_incident,
+                date_changement=now,
+            )
+
     existing.status = status_update.status
+
     history_entry = IncidentStatusHistory(
         id_incident=existing.id_incident,
         status=status_update.status,
         changed_by_user_id=current_user.id_util,
+        changed_at=now,
         note=note,
     )
+
     db.add(history_entry)
 
-    commit_or_409(
-        db,
-        "Le statut de l'incident n'a pas pu être modifié.",
-    )
+    if machine_status is not None:
+        db.add(machine_status)
+
+    try:
+        db.commit()
+
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception(
+            "Incident status transaction failed"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(
+                "La mise à jour de l'incident "
+                "n'a pas pu être enregistrée. "
+                "Aucune modification n'a été appliquée."
+            ),
+        )
+
     db.refresh(existing)
+
+    if machine_status is not None:
+        db.refresh(machine_status)
+
+        background_tasks.add_task(
+            manager.broadcast,
+            build_status_event(machine_status),
+        )
 
     background_tasks.add_task(
         incident_manager.broadcast,
-        build_incident_event("incident_updated", existing),
+        build_incident_event(
+            "incident_updated",
+            existing,
+        ),
     )
+
     return existing
+
 
 
 @app.get(

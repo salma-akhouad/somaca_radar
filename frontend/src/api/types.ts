@@ -296,6 +296,7 @@ export interface EtatUsineRecentChange {
     changed_at: string
     id_machine: number
     machine_name: string
+    machine_type: string
     id_poteau: number
     pole_name: string
     id_unite: number
@@ -312,4 +313,89 @@ export interface EtatUsine {
     trend: EtatUsineTrendPoint[]
     watched_poles: EtatUsineWatchedPole[]
     recent_changes: EtatUsineRecentChange[]
+}
+
+export type AnalysisIntent =
+    | 'CONVERSATIONAL'
+    | 'MACHINE_STATE'
+    | 'SEARCH_INCIDENTS'
+    | 'INCIDENT_STATISTICS'
+    | 'RELEVANT_PREVIOUS_INCIDENTS'
+    | 'HISTORICAL_SUMMARY'
+    | 'EXTERNAL_SUPPORT_ANALYSIS'
+
+export type HelperResponseStatus =
+    | 'ANSWERED'
+    | 'CLARIFICATION_REQUIRED'
+    | 'UNSUPPORTED_REQUEST'
+    | 'ERROR'
+
+export type HelperConversationRole =
+    | 'USER'
+    | 'ASSISTANT'
+
+export type HelperLanguage =
+    | 'fr'
+    | 'en'
+    | 'ar'
+
+export type HelperErrorCode =
+    | 'PROVIDER_UNAVAILABLE'
+    | 'ANALYSIS_ERROR'
+    | 'NETWORK_ERROR'
+    | 'RATE_LIMIT'
+
+export interface HelperContext {
+    current_page: string | null
+    current_pole_id: number | null
+    current_machine_id: number | null
+    preferred_language: HelperLanguage | null
+}
+
+export interface HelperAskPayload {
+    question: string
+    conversation_id: string
+    context: HelperContext
+}
+
+export interface HelperAskResponse {
+    status: HelperResponseStatus
+    answer: string
+    intent: AnalysisIntent | null
+    facts: Record<string, unknown>
+    error_code: HelperErrorCode | null
+}
+
+export interface SomacaHelperMessage {
+    id_message: number
+    conversation_id: string
+    id_util: number
+    role: HelperConversationRole
+    content: string
+    id_machine: number | null
+    intent: AnalysisIntent | null
+    facts: Record<string, unknown> | null
+    model_name: string | null
+    date_creation: string
+}
+
+export interface HelperConversationSummary {
+    conversation_id: string
+    preview: string
+    message_count: number
+    last_activity: string
+}
+
+export interface HelperConversationPage {
+    items: HelperConversationSummary[]
+    next_before_activity: string | null
+    next_before_conversation_id: string | null
+    has_more: boolean
+}
+
+
+export interface HelperMessagePage {
+    items: SomacaHelperMessage[]
+    next_before_id: number | null
+    has_more: boolean
 }

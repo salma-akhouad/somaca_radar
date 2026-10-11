@@ -28,6 +28,10 @@ import type {
     User,
     UserPage,
     IncidentActor,
+    HelperAskPayload,
+    HelperAskResponse,
+    HelperConversationPage,
+    HelperMessagePage,
 } from './types'
 
 
@@ -537,11 +541,13 @@ export const updateIncident = (
         },
     )
 
-
 export const updateIncidentStatus = (
     id: number,
     status: IncidentStatus,
-    note?: string,
+    options: {
+        note?: string
+        id_etat_machine?: number
+    } = {},
 ) =>
     request<Incident>(
         `/incidents/${id}/status`,
@@ -549,7 +555,9 @@ export const updateIncidentStatus = (
             method: 'PATCH',
             body: JSON.stringify({
                 status,
-                note,
+                note: options.note,
+                id_etat_machine:
+                    options.id_etat_machine,
             }),
         },
     )
@@ -891,3 +899,103 @@ export const deleteOrganisationResource = (
             method: 'DELETE',
         },
     )
+
+export const askSomacaHelper = (
+    payload: HelperAskPayload,
+) =>
+    request<HelperAskResponse>(
+        '/helper/ask',
+        {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        },
+    )
+
+
+export const getHelperConversations = (
+    params: {
+        limit?: number
+        beforeActivity?: string | null
+        beforeConversationId?: string | null
+    } = {},
+) => {
+    const query =
+        new URLSearchParams()
+
+    query.set(
+        'limit',
+        String(
+            params.limit ?? 20,
+        ),
+    )
+
+    if (
+        params.beforeActivity
+        && params.beforeConversationId
+    ) {
+        query.set(
+            'before_activity',
+            params.beforeActivity,
+        )
+
+        query.set(
+            'before_conversation_id',
+            params.beforeConversationId,
+        )
+    }
+
+    return request<
+        HelperConversationPage
+    >(
+        `/helper/conversations?${query.toString()}`,
+    )
+}
+
+
+export const getHelperConversation = (
+    conversationId: string,
+    params: {
+        limit?: number
+        beforeId?: number | null
+    } = {},
+) => {
+    const query =
+        new URLSearchParams()
+
+    query.set(
+        'limit',
+        String(
+            params.limit ?? 40,
+        ),
+    )
+
+    if (
+        params.beforeId !== null
+        && params.beforeId !== undefined
+    ) {
+        query.set(
+            'before_id',
+            String(
+                params.beforeId,
+            ),
+        )
+    }
+
+    return request<
+        HelperMessagePage
+    >(
+        `/helper/conversations/${conversationId}?${query.toString()}`,
+    )
+}
+
+
+export const deleteHelperConversation = (
+    conversationId: string,
+) =>
+    request<void>(
+        `/helper/conversations/${encodeURIComponent(conversationId)}`,
+        {
+            method: 'DELETE',
+        },
+    )
+

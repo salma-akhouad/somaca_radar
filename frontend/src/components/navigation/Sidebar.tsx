@@ -14,6 +14,8 @@ import {
 import {
   SomacaCompanyMark,
 } from './SomacaCompanyMark'
+import renaultBlackCar from '../../assets/Renault Kardian noir.png'
+import renaultGroupLogo from "../../assets/Black Renault Logo.png"
 
 
 const operationalNavigation = [
@@ -46,9 +48,9 @@ const operationalNavigation = [
 
 interface SidebarProps {
   collapsed:
-    boolean
+  boolean
   onToggle:
-    () => void
+  () => void
 }
 
 
@@ -64,25 +66,24 @@ export function Sidebar({
   const navigation =
     isAdmin
       ? [
-          ...operationalNavigation,
-          {
-            label:
-              'Administration',
-            icon:
-              'settings' as const,
-            to:
-              '/administration',
-          },
-        ]
+        ...operationalNavigation,
+        {
+          label:
+            'Administration',
+          icon:
+            'settings' as const,
+          to:
+            '/administration',
+        },
+      ]
       : operationalNavigation
 
   return (
     <aside
       className={
-        `sidebar ${
-          collapsed
-            ? 'sidebar--collapsed'
-            : ''
+        `sidebar ${collapsed
+          ? 'sidebar--collapsed'
+          : ''
         }`
       }
     >
@@ -123,29 +124,22 @@ export function Sidebar({
         />
       </button>
 
+
       <div
-        className="vehicle-placeholder"
+        className="sidebar-automotive"
         aria-hidden="true"
       >
-        <div className="vehicle-placeholder__car">
-          <span />
-          <i />
-          <b />
-        </div>
+        <img
+          className="sidebar-automotive__car"
+          src={renaultBlackCar}
+          alt=""
+        />
 
-        <p>
-          MONTAGE
-          <br />
-          TEMPS RÉEL
-        </p>
-      </div>
-
-      <div className="group-placeholder">
-        <span className="group-placeholder__diamond">
-          ◇
-        </span>
-
-        RENAULT GROUP
+        <img
+          className="sidebar-automotive__renault"
+          src={renaultGroupLogo}
+          alt=""
+        />
       </div>
 
       <nav
@@ -166,10 +160,9 @@ export function Sidebar({
                   ({
                     isActive,
                   }) =>
-                    `nav-item ${
-                      isActive
-                        ? 'nav-item--active'
-                        : ''
+                    `nav-item ${isActive
+                      ? 'nav-item--active'
+                      : ''
                     }`
                 }
                 title={

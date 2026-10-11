@@ -60,8 +60,8 @@ interface MachineStatusChangedEvent {
 
 interface IncidentEvent {
     type:
-        | 'incident_created'
-        | 'incident_updated'
+    | 'incident_created'
+    | 'incident_updated'
     incident: Incident
 }
 
@@ -80,10 +80,10 @@ interface OperationsContextValue {
     refresh: () => Promise<boolean>
     markNotificationsRead: () => Promise<void>
     markNotificationRead:
-        (
-            notification:
-                OperationsNotification,
-        ) => Promise<void>
+    (
+        notification:
+            OperationsNotification,
+    ) => Promise<void>
 }
 
 
@@ -111,25 +111,25 @@ function isMachineStatusChangedEvent(
 
     return (
         event.type
-            === 'machine_status_changed'
+        === 'machine_status_changed'
         && typeof event.id_statut
-            === 'number'
+        === 'number'
         && typeof event.id_machine
-            === 'number'
+        === 'number'
         && typeof event.id_etat
-            === 'number'
+        === 'number'
         && (
             event.id_util === null
             || typeof event.id_util
-                === 'number'
+            === 'number'
         )
         && (
             event.id_incident === null
             || typeof event.id_incident
-                === 'number'
+            === 'number'
         )
         && typeof event.date_changement
-            === 'string'
+        === 'string'
     )
 }
 
@@ -152,9 +152,9 @@ function isIncidentEvent(
 
     if (
         event.type
-            !== 'incident_created'
+        !== 'incident_created'
         && event.type
-            !== 'incident_updated'
+        !== 'incident_updated'
     ) {
         return false
     }
@@ -162,7 +162,7 @@ function isIncidentEvent(
     if (
         !event.incident
         || typeof event.incident
-            !== 'object'
+        !== 'object'
     ) {
         return false
     }
@@ -175,17 +175,17 @@ function isIncidentEvent(
 
     return (
         typeof incident.id_incident
-            === 'number'
+        === 'number'
         && typeof incident.id_machine
-            === 'number'
+        === 'number'
         && typeof incident.problem
-            === 'string'
+        === 'string'
         && typeof incident.severity
-            === 'string'
+        === 'string'
         && typeof incident.status
-            === 'string'
+        === 'string'
         && typeof incident.created_at
-            === 'string'
+        === 'string'
     )
 }
 
@@ -281,12 +281,12 @@ function latestStatuses(
             if (
                 !existing
                 || statusTime
-                    > existingTime
+                > existingTime
                 || (
                     statusTime
-                        === existingTime
+                    === existingTime
                     && status.id_statut
-                        > existing.id_statut
+                    > existing.id_statut
                 )
             ) {
                 result.set(
@@ -381,9 +381,9 @@ function buildPoleStates(
             if (
                 !existing
                 || priority(level)
-                    > priority(
-                        existing.level,
-                    )
+                > priority(
+                    existing.level,
+                )
             ) {
                 stateByPole.set(
                     machine.id_poteau,
@@ -393,13 +393,12 @@ function buildPoleStates(
                         poleName:
                             existing?.poleName
                             ?? (
-                                `P-${
-                                    String(
-                                        machine.id_poteau,
-                                    ).padStart(
-                                        2,
-                                        '0',
-                                    )
+                                `P-${String(
+                                    machine.id_poteau,
+                                ).padStart(
+                                    2,
+                                    '0',
+                                )
                                 }`
                             ),
                         level,
@@ -496,9 +495,8 @@ function buildNotifications(
                     title:
                         (
                             `Incident ${severityLabel}`
-                            + ` · ${
-                                pole?.nom_poteau
-                                ?? 'Poste'
+                            + ` · ${pole?.nom_poteau
+                            ?? 'Poste'
                             }`
                         ),
                     description:
@@ -540,31 +538,31 @@ function combineRealtimeStatus(
 ): RealtimeStatus {
     if (
         machineStatus
-            === 'connected'
+        === 'connected'
         && incidentStatus
-            === 'connected'
+        === 'connected'
     ) {
         return 'connected'
     }
 
     if (
         machineStatus
-            === 'unavailable'
+        === 'unavailable'
         && incidentStatus
-            === 'unavailable'
+        === 'unavailable'
     ) {
         return 'unavailable'
     }
 
     if (
         machineStatus
-            === 'fallback'
+        === 'fallback'
         || incidentStatus
-            === 'fallback'
+        === 'fallback'
         || machineStatus
-            === 'unavailable'
+        === 'unavailable'
         || incidentStatus
-            === 'unavailable'
+        === 'unavailable'
     ) {
         return 'fallback'
     }
@@ -884,9 +882,9 @@ export function OperationsProvider({
 
                 if (
                     error
-                        instanceof ApiError
+                    instanceof ApiError
                     && error.status
-                        === 401
+                    === 401
                 ) {
                     return
                 }
@@ -903,6 +901,13 @@ export function OperationsProvider({
                 await syncMachineState()
 
             if (disposed) return
+
+            if (
+                socket?.readyState
+                === WebSocket.OPEN
+            ) {
+                return
+            }
 
             setMachineRealtimeStatus(
                 httpWorks
@@ -929,7 +934,7 @@ export function OperationsProvider({
             if (
                 disposed
                 || reconnectTimer
-                    !== null
+                !== null
             ) {
                 return
             }
@@ -1044,19 +1049,23 @@ export function OperationsProvider({
 
                     const nextStatus:
                         StatutHistorique = {
-                            id_statut:
-                                event.id_statut,
-                            id_machine:
-                                event.id_machine,
-                            id_etat:
-                                event.id_etat,
-                            id_util:
-                                event.id_util,
-                            id_incident:
-                                event.id_incident,
-                            date_changement:
-                                event.date_changement,
-                        }
+                        id_statut:
+                            event.id_statut,
+                        id_machine:
+                            event.id_machine,
+                        id_etat:
+                            event.id_etat,
+                        id_util:
+                            event.id_util,
+                        id_incident:
+                            event.id_incident,
+                        date_changement:
+                            event.date_changement,
+                        date_suppression:
+                            null,
+                        id_util_suppression:
+                            null,
+                    }
 
                     setStatuts(
                         (current) => {
@@ -1208,9 +1217,9 @@ export function OperationsProvider({
 
                 if (
                     error
-                        instanceof ApiError
+                    instanceof ApiError
                     && error.status
-                        === 401
+                    === 401
                 ) {
                     return
                 }
@@ -1227,6 +1236,13 @@ export function OperationsProvider({
                 await syncIncidents()
 
             if (disposed) return
+
+            if (
+                socket?.readyState
+                === WebSocket.OPEN
+            ) {
+                return
+            }
 
             setIncidentRealtimeStatus(
                 httpWorks
@@ -1253,7 +1269,7 @@ export function OperationsProvider({
             if (
                 disposed
                 || reconnectTimer
-                    !== null
+                !== null
             ) {
                 return
             }

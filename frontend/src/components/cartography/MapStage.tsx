@@ -38,6 +38,10 @@ import {
   montagePoles,
 } from './scene/factory/data/montageLayoutData'
 
+import {
+  useSomacaHelperContext,
+} from '../../helper/SomacaHelperContext'
+
 import type {
   PoleConfig,
 } from './scene/factory/data/montageLayoutData'
@@ -93,6 +97,12 @@ export function MapStage() {
   const location =
     useLocation()
 
+  const {
+    setCurrentPoleId,
+    setCurrentMachineId,
+  } =
+    useSomacaHelperContext()
+
   const handledNavigationKey =
     useRef('')
 
@@ -141,7 +151,6 @@ export function MapStage() {
       null,
     )
 
-
   function sendCameraCommand(
     type: CameraAction,
     target?: [number, number],
@@ -157,6 +166,14 @@ export function MapStage() {
 
 
   function clearSelection() {
+    setCurrentPoleId(
+      null,
+    )
+
+    setCurrentMachineId(
+      null,
+    )
+
     setSelectedPole(
       null,
     )
@@ -174,6 +191,19 @@ export function MapStage() {
   function selectPole(
     pole: PoleConfig,
   ) {
+    setCurrentPoleId(
+      Number(
+        pole.id.replace(
+          'P-',
+          '',
+        ),
+      ),
+    )
+
+    setCurrentMachineId(
+      null,
+    )
+
     setSelectedPole(
       pole,
     )
@@ -249,6 +279,14 @@ export function MapStage() {
     const incidentId =
       state?.incidentId
       ?? null
+
+    setCurrentPoleId(
+      poleId,
+    )
+
+    setCurrentMachineId(
+      null,
+    )
 
     setSelectedPole(
       pole,

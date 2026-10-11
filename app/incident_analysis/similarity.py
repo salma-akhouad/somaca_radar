@@ -4,7 +4,7 @@ from sentence_transformers import (
     SentenceTransformer,
     SimilarityFunction,
 )
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from typing import cast
 from sqlalchemy.orm import Session
 from ..models import Incident, Machine, IncidentSeverity
@@ -345,3 +345,134 @@ def find_similar_incidents(
     )
 
     return matches[:limit]
+
+def find_similar_incidents_from_problem(
+    db: Session,
+    problem_query: str,
+    id_machine: int | None = None,
+    machine_type: str | None = None,
+    min_score: float = 30.0,
+    limit: int = 5,
+) -> list[SimilarIncidentMatch]:
+    """
+    Find historical incidents similar to a newly described problem.
+
+    Unlike find_similar_incidents(), there is no stored reference incident,
+    so only facts that really exist at question time are used: the problem
+    text and, when available, the selected/resolved machine location.
+    """
+    normalized_problem = problem_query.strip()
+    if not normalized_problem:
+        return []
+
+    reference_poteau_id = None
+    if id_machine is not None:
+        reference_poteau_id = (
+            db.query(Machine.id_poteau)
+            .filter(Machine.id_machine == id_machine)
+            .scalar()
+        )
+
+    candidate_query = (
+        db.query(
+            Incident,
+            Machine.id_poteau.label(
+                "candidate_id_poteau"
+            ),
+        )
+        .join(
+            Machine,
+            Incident.id_machine == Machine.id_machine,
+        )
+    )
+
+    if machine_type is not None:
+        candidate_query = candidate_query.filter(
+            func.lower(Machine.type_machine)
+            == machine_type.strip().lower()
+        )
+
+    candidate_rows = candidate_query.all()
+
+    if not candidate_rows:
+        return []
+
+    candidates = [
+        row.Incident
+        for row in candidate_rows
+    ]
+
+    problem_similarities = _semantic_similarities(
+        normalized_problem,
+        [
+            candidate.problem
+            for candidate in candidates
+        ],
+    )
+
+    matches: list[SimilarIncidentMatch] = []
+
+    for row, problem_similarity in zip(
+        candidate_rows,
+        problem_similarities,
+    ):
+        candidate = row.Incident
+        same_machine = (
+            id_machine is not None
+            and candidate.id_machine == id_machine
+        )
+        same_pole = (
+            not same_machine
+            and reference_poteau_id is not None
+            and row.candidate_id_poteau == reference_poteau_id
+        )
+
+        score = problem_similarity * PROBLEM_WEIGHT
+        available_weight = PROBLEM_WEIGHT
+        reasons: list[str] = []
+
+        if same_machine:
+            score += SAME_MACHINE_WEIGHT
+            available_weight += SAME_MACHINE_WEIGHT
+            reasons.append("same_machine")
+        elif same_pole:
+            score += SAME_POLE_WEIGHT
+            available_weight += SAME_POLE_WEIGHT
+            reasons.append("same_pole")
+
+        if problem_similarity >= SEMANTIC_REASON_THRESHOLD:
+            reasons.append("similar_problem")
+
+        normalized_score = (
+            score / available_weight
+        ) * 100
+
+        match = SimilarIncidentMatch(
+            incident=candidate,
+            score=round(normalized_score, 2),
+            reasons=reasons,
+            details={
+                "problem_similarity": round(
+                    problem_similarity,
+                    3,
+                ),
+                "same_machine": same_machine,
+                "same_pole": same_pole,
+                "raw_score": round(score, 2),
+                "available_weight": available_weight,
+            },
+        )
+
+        if match.score >= min_score:
+            matches.append(match)
+
+    matches.sort(
+        key=lambda match: (
+            match.score,
+            match.incident.created_at,
+        ),
+        reverse=True,
+    )
+
+    return matches[:limit]
+

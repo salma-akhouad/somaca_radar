@@ -33,42 +33,42 @@ interface PageMeta {
 
 const PAGE_META:
   Record<string, PageMeta> = {
-    '/cartography': {
-      eyebrow:
-        'ATELIER MONTAGE',
-      title:
-        'CARTOGRAPHIE',
-      subtitle:
-        'Visualisation 3D et suivi en temps réel.',
-    },
+  '/cartography': {
+    eyebrow:
+      'ATELIER MONTAGE',
+    title:
+      'CARTOGRAPHIE',
+    subtitle:
+      'Visualisation 3D et suivi en temps réel.',
+  },
 
-    '/incidents': {
-      eyebrow:
-        'SUIVI OPÉRATIONNEL',
-      title:
-        'INCIDENTS',
-      subtitle:
-        'Traitement et suivi des incidents.',
-    },
+  '/incidents': {
+    eyebrow:
+      'SUIVI OPÉRATIONNEL',
+    title:
+      'INCIDENTS',
+    subtitle:
+      'Traitement et suivi des incidents.',
+  },
 
-    '/supervision': {
-      eyebrow:
-        'TABLEAU DE BORD',
-      title:
-        'ÉTAT DE L’USINE',
-      subtitle:
-        'Vue consolidée de la santé opérationnelle.',
-    },
+  '/supervision': {
+    eyebrow:
+      'TABLEAU DE BORD',
+    title:
+      'ÉTAT DE L’USINE',
+    subtitle:
+      'Vue consolidée de la santé opérationnelle.',
+  },
 
-    '/administration': {
-      eyebrow:
-        'GESTION DU SYSTÈME',
-      title:
-        'ADMINISTRATION',
-      subtitle:
-        'Configuration et gouvernance du système.',
-    },
-  }
+  '/administration': {
+    eyebrow:
+      'GESTION DU SYSTÈME',
+    title:
+      'ADMINISTRATION',
+    subtitle:
+      'Configuration et gouvernance du système.',
+  },
+}
 
 
 const REALTIME_LABELS = {
@@ -85,15 +85,15 @@ const REALTIME_LABELS = {
 
 const ROLE_LABELS:
   Record<RoleName, string> = {
-    operateur_de_production:
-      'Opérateur de production',
-    superviseur:
-      'Superviseur',
-    technicien:
-      'Technicien',
-    administrateur:
-      'Administrateur',
-  }
+  operateur_de_production:
+    'Opérateur de production',
+  superviseur:
+    'Superviseur',
+  technicien:
+    'Technicien',
+  administrateur:
+    'Administrateur',
+}
 
 
 function LiveClock() {
@@ -159,6 +159,8 @@ function LiveClock() {
     new Intl.DateTimeFormat(
       'fr-FR',
       {
+        timeZone:
+          'Africa/Casablanca',
         hour:
           '2-digit',
         minute:
@@ -177,6 +179,8 @@ function LiveClock() {
     new Intl.DateTimeFormat(
       'fr-FR',
       {
+        timeZone:
+          'Africa/Casablanca',
         weekday:
           'short',
         day:
@@ -243,10 +247,10 @@ export function TopHeader() {
 
   const meta =
     PAGE_META[
-      location.pathname
+    location.pathname
     ]
     ?? PAGE_META[
-      '/cartography'
+    '/cartography'
     ]
 
 
@@ -261,8 +265,8 @@ export function TopHeader() {
   const roleLabel =
     user
       ? ROLE_LABELS[
-          user.role
-        ]
+      user.role
+      ]
       : ''
 
 
@@ -300,7 +304,7 @@ export function TopHeader() {
 
           {
             REALTIME_LABELS[
-              realtimeStatus
+            realtimeStatus
             ]
           }
         </div>

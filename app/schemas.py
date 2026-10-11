@@ -243,7 +243,9 @@ class ConversationRole(str, Enum):
 
 class HelperContext(BaseModel):
     current_page: str | None = None
+    current_pole_id: int | None = None
     current_machine_id: int | None = None
+    preferred_language: Literal["fr", "en", "ar"] | None = None
 
 
 class HelperAskRequest(BaseModel):
@@ -253,7 +255,9 @@ class HelperAskRequest(BaseModel):
 
 
 class AnalysisIntent(str, Enum):
+    CONVERSATIONAL = "CONVERSATIONAL"
     SEARCH_INCIDENTS = "SEARCH_INCIDENTS"
+    MACHINE_STATE = "MACHINE_STATE"
     INCIDENT_STATISTICS = "INCIDENT_STATISTICS"
     RELEVANT_PREVIOUS_INCIDENTS = "RELEVANT_PREVIOUS_INCIDENTS"
     HISTORICAL_SUMMARY = "HISTORICAL_SUMMARY"
@@ -267,6 +271,8 @@ class RoutingResult(BaseModel):
     machine_name: str | None = None
     machine_ip: str | None = None
     machine_mac: str | None = None
+    machine_type: str | None = None
+    id_poteau: int | None = None
     reference_incident_id: int | None = None
     status_filter: IncidentStatus | None = None
     severity_filter: IncidentSeverity | None = None
@@ -352,11 +358,19 @@ class HelperResponseStatus(str, Enum):
     ERROR = "ERROR"
 
 
+class HelperErrorCode(str, Enum):
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
+    ANALYSIS_ERROR = "ANALYSIS_ERROR"
+    NETWORK_ERROR = "NETWORK_ERROR"
+    RATE_LIMIT = "RATE_LIMIT"
+
+
 class HelperAskResponse(BaseModel):
     status: HelperResponseStatus
     answer: str
     intent: AnalysisIntent | None = None
     facts: dict[str, Any] = Field(default_factory=dict)
+    error_code: HelperErrorCode | None = None
 
 
 class SomacaHelperMessageOut(BaseModel):
@@ -380,6 +394,18 @@ class HelperConversationSummaryOut(BaseModel):
     message_count: int
     last_activity: datetime
 
+class HelperConversationPageOut(BaseModel):
+    items: list[HelperConversationSummaryOut]
+    next_before_activity: datetime | None = None
+    next_before_conversation_id: UUID | None = None
+    has_more: bool
+
+
+class HelperMessagePageOut(BaseModel):
+    items: list[SomacaHelperMessageOut]
+    next_before_id: int | None = None
+    has_more: bool
+
 
 class IncidentReportCreate(BaseModel):
     id_machine: int
@@ -398,6 +424,7 @@ class IncidentUpdate(BaseModel):
 class IncidentStatusUpdate(BaseModel):
     status: IncidentStatus
     note: str | None = Field(default=None, max_length=2000)
+    id_etat_machine: int | None = None
 
 
 class IncidentOut(BaseModel):
@@ -564,6 +591,7 @@ class EtatUsineRecentChangeOut(BaseModel):
     changed_at: datetime
     id_machine: int
     machine_name: str
+    machine_type: str
     id_poteau: int
     pole_name: str
     id_unite: int
@@ -571,6 +599,7 @@ class EtatUsineRecentChangeOut(BaseModel):
     previous_state: str | None = None
     current_state: str
     id_incident: int | None = None
+    
 
 
 class EtatUsineOut(BaseModel):

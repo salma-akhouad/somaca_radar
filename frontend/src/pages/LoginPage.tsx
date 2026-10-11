@@ -11,9 +11,14 @@ import {
 import {
   useAuth,
 } from '../auth/AuthContext'
+
 import {
   preloadCartographyPage,
 } from '../routes/pageLoaders'
+
+import loginFactoryBg from '../assets/login-factory-bg.png'
+
+import '../styles/login.css'
 
 
 function EyeIcon({
@@ -24,8 +29,8 @@ function EyeIcon({
   return (
     <svg
       viewBox="0 0 24 24"
-      width="20"
-      height="20"
+      width="18"
+      height="18"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -51,6 +56,57 @@ function EyeIcon({
 }
 
 
+function RadarMark() {
+  return (
+    <svg
+      className="login-radar-mark"
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M32 8a24 24 0 1 0 24 24" />
+      <path d="M32 17a15 15 0 1 0 15 15" />
+      <path d="M32 26a6 6 0 1 0 6 6" />
+      <path d="M32 32L49 17" />
+    </svg>
+  )
+}
+
+
+function RenaultGroupMark() {
+  return (
+    <div
+      className="login-renault-group"
+      aria-label="Renault Group"
+    >
+      <svg
+        className="login-renault-group__diamond"
+        viewBox="0 0 34 44"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M17 2L31 22L17 42L3 22L17 2Z"
+          stroke="currentColor"
+          strokeWidth="2.4"
+        />
+        <path
+          d="M17 8L26 22L17 36L8 22L17 8Z"
+          stroke="currentColor"
+          strokeWidth="2.4"
+        />
+      </svg>
+
+      <span>
+        RENAULT
+        <br />
+        GROUP
+      </span>
+    </div>
+  )
+}
+
+
 export function LoginPage() {
   const {
     user,
@@ -63,9 +119,11 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] =
+    useState(false)
   const [error, setError] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [submitting, setSubmitting] =
+    useState(false)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -97,7 +155,7 @@ export function LoginPage() {
 
     try {
       await login(
-        email,
+        email.trim(),
         password,
       )
 
@@ -113,7 +171,7 @@ export function LoginPage() {
       setError(
         currentError instanceof Error
           ? currentError.message
-          : 'Connexion impossible',
+          : 'Connexion impossible.',
       )
     } finally {
       setSubmitting(false)
@@ -121,129 +179,168 @@ export function LoginPage() {
   }
 
   return (
-    <main className="login-screen">
-      <section className="login-brand">
-        <div className="login-brand__radar">
-          <span />
-          <i />
-        </div>
+    <main
+      className="login-screen"
+      style={{
+        '--login-background':
+          `url(${loginFactoryBg})`,
+      } as React.CSSProperties}
+    >
 
-        <div className="login-brand__name">
-          <strong>SOMACA</strong>
-          <span>RADAR</span>
-        </div>
+      <section className="login-hero">
+        <div className="login-hero__content">
+          <div className="login-brand">
+            <RadarMark />
 
-        <p>
-          Supervision opérationnelle du montage
-        </p>
+            <div className="login-brand__name">
+              <strong>SOMACA</strong>
+              <span>RADAR</span>
+            </div>
+          </div>
+
+          <div className="login-hero__copy">
+            <p className="login-kicker">
+              ATELIER MONTAGE
+            </p>
+
+            <h1>
+              Pilotez l’atelier
+              <br />
+              en temps réel.
+            </h1>
+
+            <p className="login-hero__description">
+              Suivez l’atelier, repérez les incidents
+              et intervenez au bon moment.
+            </p>
+          </div>
+
+          <RenaultGroupMark />
+        </div>
       </section>
 
-      <section className="login-panel">
-        <div className="login-panel__eyebrow">
-          ACCÈS SÉCURISÉ
-        </div>
+      <section className="login-access">
+        <div className="login-card">
+          <header className="login-card__header">
+            <h2>Connexion</h2>
 
-        <h1>Connexion</h1>
+            <p>
+              Accédez à votre espace SOMACA RADAR.
+            </p>
+          </header>
 
-        <p>
-          Utilisez votre compte SOMACA RADAR.
-        </p>
+          {authNotice && (
+            <div
+              className="login-notice"
+              role="status"
+            >
+              {authNotice}
+            </div>
+          )}
 
-        {authNotice && (
-          <div
-            className="session-notice"
-            role="status"
+          <form
+            onSubmit={submit}
+            className="login-form"
           >
-            {authNotice}
-          </div>
-        )}
+            <label>
+              <span>Adresse e-mail</span>
 
-        <form
-          onSubmit={submit}
-          className="login-form"
-        >
-          <label>
-            Adresse e-mail
-
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              required
-              onChange={(event) =>
-                setEmail(
-                  event.target.value,
-                )
-              }
-            />
-          </label>
-
-          <label>
-            Mot de passe
-
-            <div className="password-field">
               <input
-                type={
-                  showPassword
-                    ? 'text'
-                    : 'password'
-                }
-                autoComplete="current-password"
-                value={password}
+                type="email"
+                autoComplete="email"
+                value={email}
                 required
+                placeholder="prenom.nom@somaca.local"
                 onChange={(event) =>
-                  setPassword(
+                  setEmail(
                     event.target.value,
                   )
                 }
               />
+            </label>
 
-              <button
-                type="button"
-                className="password-field__toggle"
-                aria-label={
-                  showPassword
-                    ? 'Masquer le mot de passe'
-                    : 'Afficher le mot de passe'
-                }
-                title={
-                  showPassword
-                    ? 'Masquer le mot de passe'
-                    : 'Afficher le mot de passe'
-                }
-                onClick={() =>
-                  setShowPassword(
-                    (current) => !current,
-                  )
-                }
-              >
-                <EyeIcon
-                  hidden={showPassword}
+            <label>
+              <span>Mot de passe</span>
+
+              <div className="login-password">
+                <input
+                  type={
+                    showPassword
+                      ? 'text'
+                      : 'password'
+                  }
+                  autoComplete="current-password"
+                  value={password}
+                  required
+                  placeholder=""
+                  onChange={(event) =>
+                    setPassword(
+                      event.target.value,
+                    )
+                  }
                 />
-              </button>
-            </div>
-          </label>
 
-          {error && (
-            <div className="form-error">
-              {error}
-            </div>
-          )}
+                <button
+                  type="button"
+                  className="login-password__toggle"
+                  aria-label={
+                    showPassword
+                      ? 'Masquer le mot de passe'
+                      : 'Afficher le mot de passe'
+                  }
+                  title={
+                    showPassword
+                      ? 'Masquer le mot de passe'
+                      : 'Afficher le mot de passe'
+                  }
+                  onClick={() =>
+                    setShowPassword(
+                      (current) => !current,
+                    )
+                  }
+                >
+                  <EyeIcon
+                    hidden={showPassword}
+                  />
+                </button>
+              </div>
+            </label>
 
-          <button
-            type="submit"
-            className="primary-button"
-            disabled={submitting}
-          >
-            {submitting
-              ? 'CONNEXION…'
-              : 'SE CONNECTER'}
-          </button>
-        </form>
+            {error && (
+              <div
+                className="login-error"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
 
-        <small className="login-panel__security">
-          Les droits sont appliqués par le backend selon votre rôle.
-        </small>
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={submitting}
+            >
+              <span>
+                {submitting
+                  ? 'Connexion en cours'
+                  : 'Se connecter'}
+              </span>
+
+              {!submitting && (
+                <span
+                  className="login-submit__arrow"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
+              )}
+            </button>
+          </form>
+
+          <p className="login-card__restricted">
+            Accès réservé au personnel autorisé.
+          </p>
+        </div>
       </section>
     </main>
   )

@@ -31,9 +31,11 @@ import {
     getUnites,
     updateIncident,
     updateIncidentStatus,
+    getEtats,
 } from '../api/client'
 
 import type {
+    Etat,
     ContactType,
     Incident,
     IncidentActor,
@@ -531,6 +533,14 @@ export function IncidentsPage() {
             Unite[]
         >([])
 
+    const [
+        etats,
+        setEtats,
+    ] =
+        useState<
+            Etat[]
+        >([])
+
     const registerRequestRef =
         useRef(0)
 
@@ -624,6 +634,16 @@ export function IncidentsPage() {
             .catch(
                 () =>
                     setUnites(
+                        [],
+                    ),
+            )
+        void getEtats()
+            .then(
+                setEtats,
+            )
+            .catch(
+                () =>
+                    setEtats(
                         [],
                     ),
             )
@@ -1453,6 +1473,15 @@ export function IncidentsPage() {
                                                         ?? `Machine ${incident.id_machine}`
                                                     }
                                                 </small>
+
+                                                {
+                                                    machine?.type_machine
+                                                    && (
+                                                        <em>
+                                                            {machine.type_machine}
+                                                        </em>
+                                                    )
+                                                }
                                             </span>
 
                                             <span className="incident-register__problem">
@@ -1632,6 +1661,14 @@ export function IncidentsPage() {
                                         ?.nom_machine
                                     ?? `Machine ${selected.id_machine}`
                                 }
+                                machineType={
+                                    machineById
+                                        .get(
+                                            selected.id_machine,
+                                        )
+                                        ?.type_machine
+                                    ?? 'Type non renseigné'
+                                }
                                 poleId={
                                     machineById
                                         .get(
@@ -1706,6 +1743,9 @@ export function IncidentsPage() {
                                 actors={
                                     actors
                                 }
+                                etats={
+                                    etats
+                                }
                                 userRole={
                                     user?.role
                                     ?? null
@@ -1756,6 +1796,7 @@ export function IncidentsPage() {
 function IncidentDetail({
     incident,
     machineName,
+    machineType,
     poleId,
     poleName,
     uniteName,
@@ -1764,6 +1805,7 @@ function IncidentDetail({
     contacts,
     technicians,
     actors,
+    etats,
     userRole,
     onRefresh,
     onClose,
@@ -1772,6 +1814,8 @@ function IncidentDetail({
     incident:
     Incident
     machineName:
+    string
+    machineType:
     string
     poleId:
     number | null
@@ -1789,6 +1833,8 @@ function IncidentDetail({
     Technician[]
     actors:
     IncidentActor[]
+    etats:
+    Etat[]
     userRole:
     RoleName | null
     onRefresh:
@@ -1833,6 +1879,11 @@ function IncidentDetail({
         setSeverityNote,
     ] =
         useState('')
+    const [
+        machineStateId,
+        setMachineStateId,
+    ] =
+        useState(0)
 
     const [
         contactType,
@@ -1994,6 +2045,7 @@ function IncidentDetail({
         setActionError('')
         setActionSuccess('')
         setTreatmentEditing(false)
+        setMachineStateId(0)
     }, [
         incident.id_incident,
         incident.confirmed_cause,
@@ -2168,7 +2220,18 @@ function IncidentDetail({
         nextStatus:
             IncidentStatus,
         note?: string,
+        selectedMachineStateId?: number,
     ) {
+        if (
+            nextStatus === 'resolu'
+            && !selectedMachineStateId
+        ) {
+            setActionError(
+                'Sélectionnez l’état actuel de la machine.',
+            )
+            return
+        }
+
         let successMessage =
             'Statut de l’incident mis à jour.'
 
@@ -2193,7 +2256,7 @@ function IncidentDetail({
             nextStatus === 'resolu'
         ) {
             successMessage =
-                'Incident marqué comme résolu.'
+                'Incident résolu et état machine mis à jour.'
         } else if (
             nextStatus === 'ferme'
         ) {
@@ -2211,14 +2274,20 @@ function IncidentDetail({
                 await updateIncidentStatus(
                     incident.id_incident,
                     nextStatus,
-                    note?.trim()
-                    || undefined,
+                    {
+                        note:
+                            note?.trim()
+                            || undefined,
+                        id_etat_machine:
+                            nextStatus === 'resolu'
+                                ? selectedMachineStateId
+                                : undefined,
+                    },
                 )
             },
             successMessage,
         )
     }
-
     async function confirmAdminTransition() {
         if (
             !pendingAdminStatus
@@ -2364,6 +2433,16 @@ function IncidentDetail({
 
                 <div>
                     <span>
+                        TYPE
+                    </span>
+
+                    <strong>
+                        {machineType}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
                         POSTE
                     </span>
 
@@ -2469,7 +2548,72 @@ function IncidentDetail({
                         TRAITEMENT TECHNIQUE
                     </h3>
                 </div>
+                {
+                    isTechnician
+                    && incident.status === 'en_cours'
+                    && (
+                        <div className="incident-machine-state">
+                            <label
+                                htmlFor={
+                                    `machine-state-${incident.id_incident}`
+                                }
+                            >
+                                ÉTAT DE LA MACHINE MAINTENANT
+                            </label>
 
+                            <select
+                                id={
+                                    `machine-state-${incident.id_incident}`
+                                }
+                                value={
+                                    machineStateId
+                                }
+                                disabled={
+                                    actionPending
+                                }
+                                onChange={
+                                    (event) =>
+                                        setMachineStateId(
+                                            Number(
+                                                event.target.value,
+                                            ),
+                                        )
+                                }
+                            >
+                                <option
+                                    value={0}
+                                    disabled
+                                >
+                                    Sélectionner l’état actuel
+                                </option>
+
+                                {
+                                    etats.map(
+                                        (etat) => (
+                                            <option
+                                                key={
+                                                    etat.id_etat
+                                                }
+                                                value={
+                                                    etat.id_etat
+                                                }
+                                            >
+                                                {
+                                                    etat.libelle_etat
+                                                }
+                                            </option>
+                                        ),
+                                    )
+                                }
+                            </select>
+
+                            <small>
+                                Confirmez l’état réel de la machine
+                                avant de résoudre l’incident.
+                            </small>
+                        </div>
+                    )
+                }
                 {
                     isTechnician
                     && technicianActions
@@ -2499,6 +2643,10 @@ function IncidentDetail({
                                                 () =>
                                                     void changeStatus(
                                                         nextStatus,
+                                                        undefined,
+                                                        nextStatus === 'resolu'
+                                                            ? machineStateId
+                                                            : undefined,
                                                     )
                                             }
                                         >
@@ -3288,13 +3436,13 @@ function IncidentDetail({
                         role="status"
                         aria-live="polite"
                     >
+                        <span className="incident-action-toast__icon">
+                            ✓
+                        </span>
+
                         <strong>
                             {actionSuccess}
                         </strong>
-
-                        <span>
-                            L’opération a été enregistrée avec succès.
-                        </span>
                     </div>,
                     document.body,
                 )
@@ -3308,13 +3456,13 @@ function IncidentDetail({
                         role="alert"
                         aria-live="assertive"
                     >
-                        <strong>
-                            L’opération n’a pas pu être effectuée.
-                        </strong>
-
-                        <span>
-                            {actionError}
+                        <span className="incident-action-toast__icon">
+                            !
                         </span>
+
+                        <strong>
+                            {actionError}
+                        </strong>
                     </div>,
                     document.body,
                 )

@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta, timezone
+import re
 from sqlalchemy import func 
 from sqlalchemy.orm import Session
 from ..models import (
@@ -15,11 +16,62 @@ from ..models import (
 )
 
 def _normalize_text(value: str) -> str:
-    return value.strip().lower()
+    return value.strip().casefold()
+
+
+def _normalize_pole_name(value: str) -> str:
+    normalized = _normalize_text(value)
+    normalized = normalized.replace("pôle", "pole")
+
+    match = re.fullmatch(
+        r"(?:p|pole|poteau)?\s*-?\s*0*(\d+)",
+        normalized,
+    )
+    if match:
+        return f"p-{int(match.group(1)):02d}"
+
+    return normalized
+
+
+def _machine_type_terms(value: str) -> list[str]:
+    stop_words = {
+        "de",
+        "des",
+        "du",
+        "d",
+        "la",
+        "le",
+        "les",
+        "un",
+        "une",
+    }
+
+    terms = []
+    for raw_term in re.findall(
+        r"[\wÀ-ÿ]+",
+        _normalize_text(value),
+    ):
+        term = raw_term
+
+        if (
+            len(term) > 4
+            and term.endswith("s")
+        ):
+            term = term[:-1]
+
+        if (
+            term
+            and term not in stop_words
+        ):
+            terms.append(term)
+
+    return terms
 
 def search_incidents(
     db: Session,
     id_machine: int | None = None,
+    machine_type: str | None = None,
+    id_poteau: int | None = None,
     status: IncidentStatus | None = None,
     severity: IncidentSeverity | None = None,
     date_from: date | None = None,
@@ -120,26 +172,30 @@ def search_incidents(
         )
 
     needs_location = any(
-    value is not None
-    for value in (
-        poteau_name,
-        unite_name,
-        departement_name,
-    )
+        value is not None
+        for value in (
+            id_poteau,
+            poteau_name,
+            unite_name,
+            departement_name,
+        )
     )
 
-    # needs_location returns True if at least one of these conditions are provided, otherwise False.
+    needs_machine = (
+        machine_type is not None
+        or needs_location
+    )
+
+    if needs_machine:
+        query = query.join(
+            Machine,
+            Incident.id_machine == Machine.id_machine,
+        )
+
     if needs_location:
-        query = (
-            query
-            .join(
-                Machine,
-                Incident.id_machine == Machine.id_machine,
-            )
-            .join(
-                Poteau,
-                Machine.id_poteau == Poteau.id_poteau,
-            )
+        query = query.join(
+            Poteau,
+            Machine.id_poteau == Poteau.id_poteau,
         )
 
         if unite_name is not None or departement_name is not None:
@@ -154,10 +210,29 @@ def search_incidents(
                 Unite.id_dep == Departement.id_dep,
             )
 
+    if machine_type is not None:
+        type_terms = _machine_type_terms(
+            machine_type
+        )
+
+        for term in type_terms:
+            query = query.filter(
+                Machine.type_machine.ilike(
+                    f"%{term}%"
+                )
+            )
+
+    if id_poteau is not None:
+        query = query.filter(
+            Poteau.id_poteau == id_poteau
+        )
+
     if poteau_name is not None:
         query = query.filter(
             func.lower(Poteau.nom_poteau)
-            == _normalize_text(poteau_name)
+            == _normalize_pole_name(
+                poteau_name
+            )
         )
 
     if unite_name is not None:
