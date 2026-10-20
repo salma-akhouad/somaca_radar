@@ -98,11 +98,13 @@ It is not a deployment of the complete system. Backend-dependent features such a
 
 ---
 
-## 🔐 Security & Access Control
+## 🔐 Security, Access Control & Data Management
 
-SOMACA RADAR uses JWT authentication with HttpOnly cookies, server-side session tracking, and role-based authorization.
+SOMACA RADAR uses **JWT authentication with HttpOnly cookies**, server-side session tracking, and **role-based access control (RBAC)** to ensure that users can only access the features and operations permitted by their roles.
 
-Session revocation and rate limiting for selected operations provide additional control over access and application activity.
+Sessions are tracked through hashed tokens and can be revoked, while **rate limiting** helps protect selected API operations from excessive requests.
+
+On the data management side, the application implements **server-side pagination, search, and filtering** to keep administrative operations efficient and manageable, even as the number of records grows.
 
 ---
 
