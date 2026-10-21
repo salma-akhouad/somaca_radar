@@ -1113,7 +1113,7 @@ export function OperationsProvider({
                 }
         }
 
-        connect()
+        if (import.meta.env.VITE_DEMO_MODE !== 'true') connect()
 
         return () => {
             disposed = true
@@ -1450,7 +1450,7 @@ export function OperationsProvider({
                 }
         }
 
-        connect()
+        if (import.meta.env.VITE_DEMO_MODE !== 'true') connect()
 
         return () => {
             disposed = true

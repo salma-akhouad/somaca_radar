@@ -117,8 +117,8 @@ export function LoginPage() {
 
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(import.meta.env.VITE_DEMO_MODE === 'true' ? 'visiteur@demo.invalid' : '')
+  const [password, setPassword] = useState(import.meta.env.VITE_DEMO_MODE === 'true' ? 'demonstration' : '')
   const [showPassword, setShowPassword] =
     useState(false)
   const [error, setError] = useState('')
@@ -223,6 +223,7 @@ export function LoginPage() {
         <div className="login-card">
           <header className="login-card__header">
             <h2>Connexion</h2>
+            {import.meta.env.VITE_DEMO_MODE === 'true' && <p>Accès de démonstration : identifiants préremplis, cliquez sur Se connecter.</p>}
 
             <p>
               Accédez à votre espace SOMACA RADAR.
@@ -338,7 +339,7 @@ export function LoginPage() {
           </form>
 
           <p className="login-card__restricted">
-            Accès réservé au personnel autorisé.
+            {import.meta.env.VITE_DEMO_MODE === 'true' ? 'Démonstration publique · données fictives' : 'Accès réservé au personnel autorisé.'}
           </p>
         </div>
       </section>

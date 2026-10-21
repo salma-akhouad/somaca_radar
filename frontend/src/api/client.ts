@@ -1,3 +1,4 @@
+import { demoRequest } from '../demo/api'
 import type {
     ContactType,
     CurrentUser,
@@ -172,6 +173,10 @@ async function request<T>(
     init: RequestInit = {},
     behavior: RequestBehavior = {},
 ): Promise<T> {
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        return demoRequest<T>(path, init)
+    }
+
     const headers = new Headers(init.headers)
 
     if (

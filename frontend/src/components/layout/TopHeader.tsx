@@ -296,16 +296,14 @@ export function TopHeader() {
       <div className="top-header__actions">
         <div
           className={
-            `system-status system-status--${realtimeStatus}`
+            `system-status system-status--${import.meta.env.VITE_DEMO_MODE === 'true' ? 'connected' : realtimeStatus}`
           }
           aria-live="polite"
         >
           <span />
 
           {
-            REALTIME_LABELS[
-            realtimeStatus
-            ]
+            (import.meta.env.VITE_DEMO_MODE === 'true' ? 'MODE DÉMONSTRATION' : REALTIME_LABELS[realtimeStatus])
           }
         </div>
 
