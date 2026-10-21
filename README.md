@@ -14,7 +14,7 @@ The goal is simple: **make information easier to see, incidents easier to follow
 
 ---
 
-## 💡What can SOMACA RADAR do?
+## What can SOMACA RADAR do?
 
 ### Explore the factory in 3D 🗺
 
@@ -88,13 +88,15 @@ The frontend handles interaction and visualization, while FastAPI coordinates au
 
 ## 🎬 See it in action
 
-Want to explore SOMACA RADAR without setting up the entire application?
+**🌐 [Explore the interactive SOMACA RADAR demo](https://somaca-radar-demo.vercel.app)**
 
-**🌐 Interactive preview:** Link coming soon
+Explore the interactive 3D factory, equipment monitoring dashboard, incident tracking, and administration interface directly in your browser.
 
-The preview will focus on the **frontend experience**, including the interactive 3D factory environment and its visual interface, using demonstration data.
+The public demo runs entirely in the frontend using demonstration data. No backend server or database connection is required.
 
-It is not a deployment of the complete system. Backend-dependent features such as authentication, live incident workflows, database operations, and SOMACA Helper are implemented in the full application but are not part of this standalone preview.
+**Demo access:** The login form is prefilled. Simply click **Se connecter**.
+
+**Important:** This is a standalone demonstration, not a live factory monitoring system. Changes are not persisted, session records are fictional, and the AI assistant is unavailable in demo mode.
 
 ---
 
