@@ -1,0 +1,243 @@
+import { useMemo } from 'react'
+import {
+  CanvasTexture,
+  LinearFilter,
+  RepeatWrapping,
+} from 'three'
+
+
+interface FactoryFloorProps {
+  onDoubleClick?: (
+    x: number,
+    z: number,
+  ) => void
+}
+
+
+export function FactoryFloor({
+  onDoubleClick,
+}: FactoryFloorProps) {
+  const floorTexture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+
+    /*
+     * We generate a small concrete texture ourselves.
+     *
+     * This avoids downloading an external image while still
+     * preventing the factory floor from looking perfectly flat.
+     */
+    canvas.width = 128
+    canvas.height = 128
+
+    const context = canvas.getContext('2d')
+
+    if (!context) {
+      throw new Error(
+        'Could not create factory floor texture',
+      )
+    }
+
+
+    /* Base industrial concrete */
+    context.fillStyle = '#b9bab5'
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    )
+
+
+    /*
+     * Very small variations in the concrete.
+     *
+     * IMPORTANT:
+     * These are NOT tiles.
+     *
+     * They only create subtle irregularities like a real
+     * industrial concrete surface.
+     */
+    for (let i = 0; i < 650; i += 1) {
+      const x = Math.random() * canvas.width
+      const y = Math.random() * canvas.height
+
+      const brightness =
+        158 + Math.floor(Math.random() * 28)
+
+      const alpha =
+        0.025 + Math.random() * 0.045
+
+      context.fillStyle =
+        `rgba(${brightness}, ${brightness}, ${brightness - 3}, ${alpha})`
+
+      context.fillRect(
+        x,
+        y,
+        1 + Math.random() * 3,
+        1 + Math.random() * 3,
+      )
+    }
+
+
+    /*
+     * Very subtle expansion / construction joints.
+     *
+     * Real large concrete factory floors are divided into
+     * sections. These lines should remain quiet and should
+     * NOT compete with safety markings.
+     */
+    context.strokeStyle =
+      'rgba(90, 94, 90, 0.12)'
+
+    context.lineWidth = 1
+
+    context.beginPath()
+
+    context.moveTo(64, 0)
+    context.lineTo(64, 128)
+
+    context.moveTo(0, 64)
+    context.lineTo(128, 64)
+
+    context.stroke()
+
+
+    const texture =
+      new CanvasTexture(canvas)
+
+    texture.wrapS = RepeatWrapping
+    texture.wrapT = RepeatWrapping
+
+    /*
+     * Repeating the texture gives us many concrete sections
+     * across the much larger factory.
+     */
+    texture.repeat.set(8, 6)
+
+    /*
+     * Linear filtering softens the procedural texture.
+     *
+     * The previous NearestFilter emphasized individual pixels
+     * and helped create the game-like appearance.
+     */
+    texture.magFilter = LinearFilter
+    texture.minFilter = LinearFilter
+
+    return texture
+  }, [])
+
+
+  return (
+    <group>
+      {/* =====================================================
+          MAIN CONTINUOUS FACTORY FLOOR
+
+          Everything in the cartography scene belongs to this
+          same industrial environment.
+
+          We deliberately extend it far beyond the currently
+          modelled equipment so the user never encounters a
+          sudden "end of factory" during normal navigation.
+          ===================================================== */}
+
+      <mesh
+        position={[
+          15,
+          -0.025,
+          0,
+        ]}
+        rotation-x={
+          -Math.PI / 2
+        }
+        receiveShadow
+        onDoubleClick={(
+          event,
+        ) => {
+          event.stopPropagation()
+
+          onDoubleClick?.(
+            event.point.x,
+            event.point.z,
+          )
+        }}
+      >
+        <planeGeometry
+          args={[
+            130,
+            100,
+          ]}
+        />
+
+        <meshStandardMaterial
+          map={floorTexture}
+          color="#bdbfba"
+          roughness={0.96}
+          metalness={0}
+        />
+      </mesh>
+
+      {/* Expansion joints */}
+
+      {[
+        -35,
+        -15,
+        5,
+        25,
+        45,
+        65,
+      ].map((x) => (
+        <mesh
+          key={`joint-x-${x}`}
+          position={[
+            x,
+            0.004,
+            0,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              0.025,
+              0.006,
+              92,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#858984"
+            roughness={0.95}
+          />
+        </mesh>
+      ))}
+
+
+      {[
+        -30,
+        -10,
+        10,
+        30,
+      ].map((z) => (
+        <mesh
+          key={`joint-z-${z}`}
+          position={[
+            15,
+            0.004,
+            z,
+          ]}
+        >
+          <boxGeometry
+            args={[
+              120,
+              0.006,
+              0.025,
+            ]}
+          />
+
+          <meshStandardMaterial
+            color="#858984"
+            roughness={0.95}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}

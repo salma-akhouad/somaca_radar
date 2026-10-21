@@ -1,0 +1,3 @@
+export function SomacaCompanyMark() {
+  return <div className="somaca-company" aria-label="SOMACA corporate identity"><div className="somaca-company__lockup"><span className="somaca-company__wordmark">somaca</span><svg className="somaca-company__symbol" viewBox="0 0 82 40" role="img" aria-label="SOMACA corporate double-curve symbol"><path className="somaca-company__curve--dark" d="M5 2C43 8 66 19 79 38H48c5-10 1-20-43-36Z" /><path className="somaca-company__curve--light" d="M10 7c28 6 43 14 47 23-8 6-23 8-44 9 27-8 38-17-3-32Z" /></svg></div><span className="somaca-company__subtitle">SOCIÉTÉ MAROCAINE DE CONSTRUCTION AUTOMOBILE</span></div>
+}

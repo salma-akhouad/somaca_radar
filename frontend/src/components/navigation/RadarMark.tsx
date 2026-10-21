@@ -1,0 +1,2 @@
+interface RadarMarkProps { compact?: boolean }
+export function RadarMark({ compact = false }: RadarMarkProps) { return <div className={`radar-mark ${compact ? 'radar-mark--compact' : ''}`} aria-hidden="true"><span className="radar-mark__ring radar-mark__ring--one" /><span className="radar-mark__ring radar-mark__ring--two" /><span className="radar-mark__ring radar-mark__ring--three" /><span className="radar-mark__core" /><span className="radar-mark__beam" /></div> }

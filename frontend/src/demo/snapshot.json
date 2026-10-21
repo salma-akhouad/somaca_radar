@@ -1,0 +1,2984 @@
+{
+  "/machines": [
+    {
+      "nom_machine": "Machine 01",
+      "type_machine": "Équipement 01",
+      "ip_address": "192.0.2.2",
+      "mac_address": null,
+      "date_installation": "2023-04-06",
+      "id_poteau": 1,
+      "id_machine": 1,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 02",
+      "type_machine": "Équipement 02",
+      "ip_address": "192.0.2.3",
+      "mac_address": null,
+      "date_installation": "2024-07-11",
+      "id_poteau": 1,
+      "id_machine": 2,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 03",
+      "type_machine": "Équipement 03",
+      "ip_address": "192.0.2.4",
+      "mac_address": null,
+      "date_installation": "2025-10-16",
+      "id_poteau": 2,
+      "id_machine": 3,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 04",
+      "type_machine": "Équipement 04",
+      "ip_address": "192.0.2.5",
+      "mac_address": null,
+      "date_installation": "2022-01-21",
+      "id_poteau": 2,
+      "id_machine": 4,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 05",
+      "type_machine": "Équipement 05",
+      "ip_address": "192.0.2.6",
+      "mac_address": null,
+      "date_installation": "2023-04-26",
+      "id_poteau": 3,
+      "id_machine": 5,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 06",
+      "type_machine": "Équipement 06",
+      "ip_address": "192.0.2.7",
+      "mac_address": null,
+      "date_installation": "2024-07-04",
+      "id_poteau": 3,
+      "id_machine": 6,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 07",
+      "type_machine": "Équipement 07",
+      "ip_address": "192.0.2.8",
+      "mac_address": null,
+      "date_installation": "2025-10-09",
+      "id_poteau": 4,
+      "id_machine": 7,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 08",
+      "type_machine": "Équipement 08",
+      "ip_address": "192.0.2.9",
+      "mac_address": null,
+      "date_installation": "2022-01-14",
+      "id_poteau": 4,
+      "id_machine": 8,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 09",
+      "type_machine": "Équipement 09",
+      "ip_address": "192.0.2.10",
+      "mac_address": null,
+      "date_installation": "2023-04-19",
+      "id_poteau": 5,
+      "id_machine": 9,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 10",
+      "type_machine": "Équipement 10",
+      "ip_address": "192.0.2.11",
+      "mac_address": null,
+      "date_installation": "2024-07-24",
+      "id_poteau": 5,
+      "id_machine": 10,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 11",
+      "type_machine": "Équipement 11",
+      "ip_address": "192.0.2.12",
+      "mac_address": null,
+      "date_installation": "2025-10-02",
+      "id_poteau": 6,
+      "id_machine": 11,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 12",
+      "type_machine": "Équipement 12",
+      "ip_address": "192.0.2.13",
+      "mac_address": null,
+      "date_installation": "2022-01-07",
+      "id_poteau": 6,
+      "id_machine": 12,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 13",
+      "type_machine": "Équipement 13",
+      "ip_address": "192.0.2.14",
+      "mac_address": null,
+      "date_installation": "2023-04-12",
+      "id_poteau": 7,
+      "id_machine": 13,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 14",
+      "type_machine": "Équipement 14",
+      "ip_address": "192.0.2.15",
+      "mac_address": null,
+      "date_installation": "2024-07-17",
+      "id_poteau": 7,
+      "id_machine": 14,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 15",
+      "type_machine": "Équipement 15",
+      "ip_address": "192.0.2.16",
+      "mac_address": null,
+      "date_installation": "2025-10-22",
+      "id_poteau": 8,
+      "id_machine": 15,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 17",
+      "type_machine": "Équipement 17",
+      "ip_address": "192.0.2.18",
+      "mac_address": null,
+      "date_installation": "2023-04-05",
+      "id_poteau": 9,
+      "id_machine": 17,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 18",
+      "type_machine": "Équipement 18",
+      "ip_address": "192.0.2.19",
+      "mac_address": null,
+      "date_installation": "2024-07-10",
+      "id_poteau": 9,
+      "id_machine": 18,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 19",
+      "type_machine": "Équipement 19",
+      "ip_address": "192.0.2.20",
+      "mac_address": null,
+      "date_installation": "2025-10-15",
+      "id_poteau": 10,
+      "id_machine": 19,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 20",
+      "type_machine": "Équipement 20",
+      "ip_address": "192.0.2.21",
+      "mac_address": null,
+      "date_installation": "2022-01-20",
+      "id_poteau": 10,
+      "id_machine": 20,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 21",
+      "type_machine": "Équipement 21",
+      "ip_address": "192.0.2.22",
+      "mac_address": null,
+      "date_installation": "2023-04-25",
+      "id_poteau": 11,
+      "id_machine": 21,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 22",
+      "type_machine": "Équipement 22",
+      "ip_address": "192.0.2.23",
+      "mac_address": null,
+      "date_installation": "2024-07-03",
+      "id_poteau": 11,
+      "id_machine": 22,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 23",
+      "type_machine": "Équipement 23",
+      "ip_address": "192.0.2.24",
+      "mac_address": null,
+      "date_installation": "2025-10-08",
+      "id_poteau": 12,
+      "id_machine": 23,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 24",
+      "type_machine": "Équipement 24",
+      "ip_address": "192.0.2.25",
+      "mac_address": null,
+      "date_installation": "2022-01-13",
+      "id_poteau": 12,
+      "id_machine": 24,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 25",
+      "type_machine": "Équipement 25",
+      "ip_address": "192.0.2.26",
+      "mac_address": null,
+      "date_installation": "2023-04-18",
+      "id_poteau": 13,
+      "id_machine": 25,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 26",
+      "type_machine": "Équipement 26",
+      "ip_address": "192.0.2.27",
+      "mac_address": null,
+      "date_installation": "2024-07-23",
+      "id_poteau": 13,
+      "id_machine": 26,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 27",
+      "type_machine": "Équipement 27",
+      "ip_address": "192.0.2.28",
+      "mac_address": null,
+      "date_installation": "2025-10-01",
+      "id_poteau": 14,
+      "id_machine": 27,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 28",
+      "type_machine": "Équipement 28",
+      "ip_address": "192.0.2.29",
+      "mac_address": null,
+      "date_installation": "2022-01-06",
+      "id_poteau": 14,
+      "id_machine": 28,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 29",
+      "type_machine": "Équipement 29",
+      "ip_address": "192.0.2.30",
+      "mac_address": null,
+      "date_installation": "2023-04-11",
+      "id_poteau": 15,
+      "id_machine": 29,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 30",
+      "type_machine": "Équipement 30",
+      "ip_address": "192.0.2.31",
+      "mac_address": null,
+      "date_installation": "2024-07-16",
+      "id_poteau": 15,
+      "id_machine": 30,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 31",
+      "type_machine": "Équipement 31",
+      "ip_address": "192.0.2.32",
+      "mac_address": null,
+      "date_installation": "2025-10-21",
+      "id_poteau": 16,
+      "id_machine": 31,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 32",
+      "type_machine": "Équipement 32",
+      "ip_address": "192.0.2.33",
+      "mac_address": null,
+      "date_installation": "2022-01-26",
+      "id_poteau": 16,
+      "id_machine": 32,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 33",
+      "type_machine": "Équipement 33",
+      "ip_address": "192.0.2.34",
+      "mac_address": null,
+      "date_installation": "2023-04-04",
+      "id_poteau": 17,
+      "id_machine": 33,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 34",
+      "type_machine": "Équipement 34",
+      "ip_address": "192.0.2.35",
+      "mac_address": null,
+      "date_installation": "2024-07-09",
+      "id_poteau": 17,
+      "id_machine": 34,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 35",
+      "type_machine": "Équipement 35",
+      "ip_address": "192.0.2.36",
+      "mac_address": null,
+      "date_installation": "2025-10-14",
+      "id_poteau": 18,
+      "id_machine": 35,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 36",
+      "type_machine": "Équipement 36",
+      "ip_address": "192.0.2.37",
+      "mac_address": null,
+      "date_installation": "2022-01-19",
+      "id_poteau": 18,
+      "id_machine": 36,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 37",
+      "type_machine": "Équipement 37",
+      "ip_address": "192.0.2.38",
+      "mac_address": null,
+      "date_installation": "2023-04-24",
+      "id_poteau": 19,
+      "id_machine": 37,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 38",
+      "type_machine": "Équipement 38",
+      "ip_address": "192.0.2.39",
+      "mac_address": null,
+      "date_installation": "2024-07-02",
+      "id_poteau": 19,
+      "id_machine": 38,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 39",
+      "type_machine": "Équipement 39",
+      "ip_address": "192.0.2.40",
+      "mac_address": null,
+      "date_installation": "2025-10-07",
+      "id_poteau": 20,
+      "id_machine": 39,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 40",
+      "type_machine": "Équipement 40",
+      "ip_address": "192.0.2.41",
+      "mac_address": null,
+      "date_installation": "2022-01-12",
+      "id_poteau": 20,
+      "id_machine": 40,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 41",
+      "type_machine": "Équipement 41",
+      "ip_address": "192.0.2.42",
+      "mac_address": null,
+      "date_installation": "2023-04-17",
+      "id_poteau": 21,
+      "id_machine": 41,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 42",
+      "type_machine": "Équipement 42",
+      "ip_address": "192.0.2.43",
+      "mac_address": null,
+      "date_installation": "2024-07-22",
+      "id_poteau": 21,
+      "id_machine": 42,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 43",
+      "type_machine": "Équipement 43",
+      "ip_address": "192.0.2.44",
+      "mac_address": null,
+      "date_installation": "2025-10-27",
+      "id_poteau": 22,
+      "id_machine": 43,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 44",
+      "type_machine": "Équipement 44",
+      "ip_address": "192.0.2.45",
+      "mac_address": null,
+      "date_installation": "2022-01-05",
+      "id_poteau": 22,
+      "id_machine": 44,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 45",
+      "type_machine": "Équipement 45",
+      "ip_address": "192.0.2.46",
+      "mac_address": null,
+      "date_installation": "2023-04-10",
+      "id_poteau": 23,
+      "id_machine": 45,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 46",
+      "type_machine": "Équipement 46",
+      "ip_address": "192.0.2.47",
+      "mac_address": null,
+      "date_installation": "2024-07-15",
+      "id_poteau": 23,
+      "id_machine": 46,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 47",
+      "type_machine": "Équipement 47",
+      "ip_address": "192.0.2.48",
+      "mac_address": null,
+      "date_installation": "2025-10-20",
+      "id_poteau": 24,
+      "id_machine": 47,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 48",
+      "type_machine": "Équipement 48",
+      "ip_address": "192.0.2.49",
+      "mac_address": null,
+      "date_installation": "2022-01-25",
+      "id_poteau": 24,
+      "id_machine": 48,
+      "actif": true,
+      "date_decommissionnement": null
+    }
+  ],
+  "/machines?include_inactive=true": [
+    {
+      "nom_machine": "Machine 01",
+      "type_machine": "Équipement 01",
+      "ip_address": "192.0.2.2",
+      "mac_address": null,
+      "date_installation": "2023-04-06",
+      "id_poteau": 1,
+      "id_machine": 1,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 02",
+      "type_machine": "Équipement 02",
+      "ip_address": "192.0.2.3",
+      "mac_address": null,
+      "date_installation": "2024-07-11",
+      "id_poteau": 1,
+      "id_machine": 2,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 03",
+      "type_machine": "Équipement 03",
+      "ip_address": "192.0.2.4",
+      "mac_address": null,
+      "date_installation": "2025-10-16",
+      "id_poteau": 2,
+      "id_machine": 3,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 04",
+      "type_machine": "Équipement 04",
+      "ip_address": "192.0.2.5",
+      "mac_address": null,
+      "date_installation": "2022-01-21",
+      "id_poteau": 2,
+      "id_machine": 4,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 05",
+      "type_machine": "Équipement 05",
+      "ip_address": "192.0.2.6",
+      "mac_address": null,
+      "date_installation": "2023-04-26",
+      "id_poteau": 3,
+      "id_machine": 5,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 06",
+      "type_machine": "Équipement 06",
+      "ip_address": "192.0.2.7",
+      "mac_address": null,
+      "date_installation": "2024-07-04",
+      "id_poteau": 3,
+      "id_machine": 6,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 07",
+      "type_machine": "Équipement 07",
+      "ip_address": "192.0.2.8",
+      "mac_address": null,
+      "date_installation": "2025-10-09",
+      "id_poteau": 4,
+      "id_machine": 7,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 08",
+      "type_machine": "Équipement 08",
+      "ip_address": "192.0.2.9",
+      "mac_address": null,
+      "date_installation": "2022-01-14",
+      "id_poteau": 4,
+      "id_machine": 8,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 09",
+      "type_machine": "Équipement 09",
+      "ip_address": "192.0.2.10",
+      "mac_address": null,
+      "date_installation": "2023-04-19",
+      "id_poteau": 5,
+      "id_machine": 9,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 10",
+      "type_machine": "Équipement 10",
+      "ip_address": "192.0.2.11",
+      "mac_address": null,
+      "date_installation": "2024-07-24",
+      "id_poteau": 5,
+      "id_machine": 10,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 11",
+      "type_machine": "Équipement 11",
+      "ip_address": "192.0.2.12",
+      "mac_address": null,
+      "date_installation": "2025-10-02",
+      "id_poteau": 6,
+      "id_machine": 11,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 12",
+      "type_machine": "Équipement 12",
+      "ip_address": "192.0.2.13",
+      "mac_address": null,
+      "date_installation": "2022-01-07",
+      "id_poteau": 6,
+      "id_machine": 12,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 13",
+      "type_machine": "Équipement 13",
+      "ip_address": "192.0.2.14",
+      "mac_address": null,
+      "date_installation": "2023-04-12",
+      "id_poteau": 7,
+      "id_machine": 13,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 14",
+      "type_machine": "Équipement 14",
+      "ip_address": "192.0.2.15",
+      "mac_address": null,
+      "date_installation": "2024-07-17",
+      "id_poteau": 7,
+      "id_machine": 14,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 15",
+      "type_machine": "Équipement 15",
+      "ip_address": "192.0.2.16",
+      "mac_address": null,
+      "date_installation": "2025-10-22",
+      "id_poteau": 8,
+      "id_machine": 15,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 16",
+      "type_machine": "Équipement 16",
+      "ip_address": "192.0.2.17",
+      "mac_address": null,
+      "date_installation": "2022-01-27",
+      "id_poteau": 8,
+      "id_machine": 16,
+      "actif": false,
+      "date_decommissionnement": "2026-10-11T16:53:29.136806+02:00"
+    },
+    {
+      "nom_machine": "Machine 17",
+      "type_machine": "Équipement 17",
+      "ip_address": "192.0.2.18",
+      "mac_address": null,
+      "date_installation": "2023-04-05",
+      "id_poteau": 9,
+      "id_machine": 17,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 18",
+      "type_machine": "Équipement 18",
+      "ip_address": "192.0.2.19",
+      "mac_address": null,
+      "date_installation": "2024-07-10",
+      "id_poteau": 9,
+      "id_machine": 18,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 19",
+      "type_machine": "Équipement 19",
+      "ip_address": "192.0.2.20",
+      "mac_address": null,
+      "date_installation": "2025-10-15",
+      "id_poteau": 10,
+      "id_machine": 19,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 20",
+      "type_machine": "Équipement 20",
+      "ip_address": "192.0.2.21",
+      "mac_address": null,
+      "date_installation": "2022-01-20",
+      "id_poteau": 10,
+      "id_machine": 20,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 21",
+      "type_machine": "Équipement 21",
+      "ip_address": "192.0.2.22",
+      "mac_address": null,
+      "date_installation": "2023-04-25",
+      "id_poteau": 11,
+      "id_machine": 21,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 22",
+      "type_machine": "Équipement 22",
+      "ip_address": "192.0.2.23",
+      "mac_address": null,
+      "date_installation": "2024-07-03",
+      "id_poteau": 11,
+      "id_machine": 22,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 23",
+      "type_machine": "Équipement 23",
+      "ip_address": "192.0.2.24",
+      "mac_address": null,
+      "date_installation": "2025-10-08",
+      "id_poteau": 12,
+      "id_machine": 23,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 24",
+      "type_machine": "Équipement 24",
+      "ip_address": "192.0.2.25",
+      "mac_address": null,
+      "date_installation": "2022-01-13",
+      "id_poteau": 12,
+      "id_machine": 24,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 25",
+      "type_machine": "Équipement 25",
+      "ip_address": "192.0.2.26",
+      "mac_address": null,
+      "date_installation": "2023-04-18",
+      "id_poteau": 13,
+      "id_machine": 25,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 26",
+      "type_machine": "Équipement 26",
+      "ip_address": "192.0.2.27",
+      "mac_address": null,
+      "date_installation": "2024-07-23",
+      "id_poteau": 13,
+      "id_machine": 26,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 27",
+      "type_machine": "Équipement 27",
+      "ip_address": "192.0.2.28",
+      "mac_address": null,
+      "date_installation": "2025-10-01",
+      "id_poteau": 14,
+      "id_machine": 27,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 28",
+      "type_machine": "Équipement 28",
+      "ip_address": "192.0.2.29",
+      "mac_address": null,
+      "date_installation": "2022-01-06",
+      "id_poteau": 14,
+      "id_machine": 28,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 29",
+      "type_machine": "Équipement 29",
+      "ip_address": "192.0.2.30",
+      "mac_address": null,
+      "date_installation": "2023-04-11",
+      "id_poteau": 15,
+      "id_machine": 29,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 30",
+      "type_machine": "Équipement 30",
+      "ip_address": "192.0.2.31",
+      "mac_address": null,
+      "date_installation": "2024-07-16",
+      "id_poteau": 15,
+      "id_machine": 30,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 31",
+      "type_machine": "Équipement 31",
+      "ip_address": "192.0.2.32",
+      "mac_address": null,
+      "date_installation": "2025-10-21",
+      "id_poteau": 16,
+      "id_machine": 31,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 32",
+      "type_machine": "Équipement 32",
+      "ip_address": "192.0.2.33",
+      "mac_address": null,
+      "date_installation": "2022-01-26",
+      "id_poteau": 16,
+      "id_machine": 32,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 33",
+      "type_machine": "Équipement 33",
+      "ip_address": "192.0.2.34",
+      "mac_address": null,
+      "date_installation": "2023-04-04",
+      "id_poteau": 17,
+      "id_machine": 33,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 34",
+      "type_machine": "Équipement 34",
+      "ip_address": "192.0.2.35",
+      "mac_address": null,
+      "date_installation": "2024-07-09",
+      "id_poteau": 17,
+      "id_machine": 34,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 35",
+      "type_machine": "Équipement 35",
+      "ip_address": "192.0.2.36",
+      "mac_address": null,
+      "date_installation": "2025-10-14",
+      "id_poteau": 18,
+      "id_machine": 35,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 36",
+      "type_machine": "Équipement 36",
+      "ip_address": "192.0.2.37",
+      "mac_address": null,
+      "date_installation": "2022-01-19",
+      "id_poteau": 18,
+      "id_machine": 36,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 37",
+      "type_machine": "Équipement 37",
+      "ip_address": "192.0.2.38",
+      "mac_address": null,
+      "date_installation": "2023-04-24",
+      "id_poteau": 19,
+      "id_machine": 37,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 38",
+      "type_machine": "Équipement 38",
+      "ip_address": "192.0.2.39",
+      "mac_address": null,
+      "date_installation": "2024-07-02",
+      "id_poteau": 19,
+      "id_machine": 38,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 39",
+      "type_machine": "Équipement 39",
+      "ip_address": "192.0.2.40",
+      "mac_address": null,
+      "date_installation": "2025-10-07",
+      "id_poteau": 20,
+      "id_machine": 39,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 40",
+      "type_machine": "Équipement 40",
+      "ip_address": "192.0.2.41",
+      "mac_address": null,
+      "date_installation": "2022-01-12",
+      "id_poteau": 20,
+      "id_machine": 40,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 41",
+      "type_machine": "Équipement 41",
+      "ip_address": "192.0.2.42",
+      "mac_address": null,
+      "date_installation": "2023-04-17",
+      "id_poteau": 21,
+      "id_machine": 41,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 42",
+      "type_machine": "Équipement 42",
+      "ip_address": "192.0.2.43",
+      "mac_address": null,
+      "date_installation": "2024-07-22",
+      "id_poteau": 21,
+      "id_machine": 42,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 43",
+      "type_machine": "Équipement 43",
+      "ip_address": "192.0.2.44",
+      "mac_address": null,
+      "date_installation": "2025-10-27",
+      "id_poteau": 22,
+      "id_machine": 43,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 44",
+      "type_machine": "Équipement 44",
+      "ip_address": "192.0.2.45",
+      "mac_address": null,
+      "date_installation": "2022-01-05",
+      "id_poteau": 22,
+      "id_machine": 44,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 45",
+      "type_machine": "Équipement 45",
+      "ip_address": "192.0.2.46",
+      "mac_address": null,
+      "date_installation": "2023-04-10",
+      "id_poteau": 23,
+      "id_machine": 45,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 46",
+      "type_machine": "Équipement 46",
+      "ip_address": "192.0.2.47",
+      "mac_address": null,
+      "date_installation": "2024-07-15",
+      "id_poteau": 23,
+      "id_machine": 46,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 47",
+      "type_machine": "Équipement 47",
+      "ip_address": "192.0.2.48",
+      "mac_address": null,
+      "date_installation": "2025-10-20",
+      "id_poteau": 24,
+      "id_machine": 47,
+      "actif": true,
+      "date_decommissionnement": null
+    },
+    {
+      "nom_machine": "Machine 48",
+      "type_machine": "Équipement 48",
+      "ip_address": "192.0.2.49",
+      "mac_address": null,
+      "date_installation": "2022-01-25",
+      "id_poteau": 24,
+      "id_machine": 48,
+      "actif": true,
+      "date_decommissionnement": null
+    }
+  ],
+  "/poteaux": [
+    {
+      "nom_poteau": "Poste P-01",
+      "id_unite": 1,
+      "id_poteau": 1,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-02",
+      "id_unite": 1,
+      "id_poteau": 2,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-03",
+      "id_unite": 1,
+      "id_poteau": 3,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-04",
+      "id_unite": 1,
+      "id_poteau": 4,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-05",
+      "id_unite": 1,
+      "id_poteau": 5,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-06",
+      "id_unite": 1,
+      "id_poteau": 6,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-07",
+      "id_unite": 2,
+      "id_poteau": 7,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-08",
+      "id_unite": 2,
+      "id_poteau": 8,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-09",
+      "id_unite": 2,
+      "id_poteau": 9,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-10",
+      "id_unite": 2,
+      "id_poteau": 10,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-11",
+      "id_unite": 2,
+      "id_poteau": 11,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-12",
+      "id_unite": 2,
+      "id_poteau": 12,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-13",
+      "id_unite": 3,
+      "id_poteau": 13,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-14",
+      "id_unite": 3,
+      "id_poteau": 14,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-15",
+      "id_unite": 3,
+      "id_poteau": 15,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-16",
+      "id_unite": 3,
+      "id_poteau": 16,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-17",
+      "id_unite": 3,
+      "id_poteau": 17,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-18",
+      "id_unite": 3,
+      "id_poteau": 18,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-19",
+      "id_unite": 4,
+      "id_poteau": 19,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-20",
+      "id_unite": 4,
+      "id_poteau": 20,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-21",
+      "id_unite": 4,
+      "id_poteau": 21,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-22",
+      "id_unite": 4,
+      "id_poteau": 22,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-23",
+      "id_unite": 4,
+      "id_poteau": 23,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-24",
+      "id_unite": 4,
+      "id_poteau": 24,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    }
+  ],
+  "/poteaux?include_inactive=true": [
+    {
+      "nom_poteau": "Poste P-01",
+      "id_unite": 1,
+      "id_poteau": 1,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-02",
+      "id_unite": 1,
+      "id_poteau": 2,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-03",
+      "id_unite": 1,
+      "id_poteau": 3,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-04",
+      "id_unite": 1,
+      "id_poteau": 4,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-05",
+      "id_unite": 1,
+      "id_poteau": 5,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-06",
+      "id_unite": 1,
+      "id_poteau": 6,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-07",
+      "id_unite": 2,
+      "id_poteau": 7,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-08",
+      "id_unite": 2,
+      "id_poteau": 8,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-09",
+      "id_unite": 2,
+      "id_poteau": 9,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-10",
+      "id_unite": 2,
+      "id_poteau": 10,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-11",
+      "id_unite": 2,
+      "id_poteau": 11,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-12",
+      "id_unite": 2,
+      "id_poteau": 12,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-13",
+      "id_unite": 3,
+      "id_poteau": 13,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-14",
+      "id_unite": 3,
+      "id_poteau": 14,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-15",
+      "id_unite": 3,
+      "id_poteau": 15,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-16",
+      "id_unite": 3,
+      "id_poteau": 16,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-17",
+      "id_unite": 3,
+      "id_poteau": 17,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-18",
+      "id_unite": 3,
+      "id_poteau": 18,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-19",
+      "id_unite": 4,
+      "id_poteau": 19,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-20",
+      "id_unite": 4,
+      "id_poteau": 20,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-21",
+      "id_unite": 4,
+      "id_poteau": 21,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-22",
+      "id_unite": 4,
+      "id_poteau": 22,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-23",
+      "id_unite": 4,
+      "id_poteau": 23,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_poteau": "Poste P-24",
+      "id_unite": 4,
+      "id_poteau": 24,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    }
+  ],
+  "/unites": [
+    {
+      "nom_unite": "Unité 1",
+      "id_dep": 1,
+      "id_unite": 1,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 2",
+      "id_dep": 1,
+      "id_unite": 2,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 3",
+      "id_dep": 1,
+      "id_unite": 3,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 4",
+      "id_dep": 1,
+      "id_unite": 4,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    }
+  ],
+  "/unites?include_inactive=true": [
+    {
+      "nom_unite": "Unité 1",
+      "id_dep": 1,
+      "id_unite": 1,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 2",
+      "id_dep": 1,
+      "id_unite": 2,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 3",
+      "id_dep": 1,
+      "id_unite": 3,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    },
+    {
+      "nom_unite": "Unité 4",
+      "id_dep": 1,
+      "id_unite": 4,
+      "actif": true,
+      "represente_carte": true,
+      "date_creation": "2026-10-03T18:07:13.762176+02:00"
+    }
+  ],
+  "/departements": [
+    {
+      "nom_dep": "Département 1",
+      "id_dep": 1,
+      "actif": true
+    },
+    {
+      "nom_dep": "Département 2",
+      "id_dep": 2,
+      "actif": true
+    },
+    {
+      "nom_dep": "Département 3",
+      "id_dep": 3,
+      "actif": true
+    }
+  ],
+  "/departements?include_inactive=true": [
+    {
+      "nom_dep": "Département 1",
+      "id_dep": 1,
+      "actif": true
+    },
+    {
+      "nom_dep": "Département 2",
+      "id_dep": 2,
+      "actif": true
+    },
+    {
+      "nom_dep": "Département 3",
+      "id_dep": 3,
+      "actif": true
+    }
+  ],
+  "/etats": [
+    {
+      "id_etat": 1,
+      "libelle_etat": "Opérationnel",
+      "couleur": "vert"
+    },
+    {
+      "id_etat": 2,
+      "libelle_etat": "Attention requise",
+      "couleur": "jaune"
+    },
+    {
+      "id_etat": 3,
+      "libelle_etat": "Critique",
+      "couleur": "rouge"
+    },
+    {
+      "id_etat": 4,
+      "libelle_etat": "Inconnu",
+      "couleur": "gris"
+    }
+  ],
+  "/statuts": [
+    {
+      "id_statut": 1,
+      "date_changement": "2023-04-06T00:00:00",
+      "id_machine": 1,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 87,
+      "date_changement": "2026-10-05T10:10:00",
+      "id_machine": 2,
+      "id_etat": 2,
+      "id_util": null,
+      "id_incident": 19,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 3,
+      "date_changement": "2025-10-16T00:00:00",
+      "id_machine": 3,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 92,
+      "date_changement": "2026-10-11T16:37:36.080102",
+      "id_machine": 4,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": 18,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 5,
+      "date_changement": "2023-04-26T00:00:00",
+      "id_machine": 5,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 6,
+      "date_changement": "2024-07-04T00:00:00",
+      "id_machine": 6,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 7,
+      "date_changement": "2025-10-09T00:00:00",
+      "id_machine": 7,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 8,
+      "date_changement": "2022-01-14T00:00:00",
+      "id_machine": 8,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 93,
+      "date_changement": "2026-10-11T16:41:05.081441",
+      "id_machine": 9,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": 11,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 95,
+      "date_changement": "2026-10-11T16:59:07.146137",
+      "id_machine": 10,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": 20,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 86,
+      "date_changement": "2026-10-07T11:05:00",
+      "id_machine": 11,
+      "id_etat": 3,
+      "id_util": null,
+      "id_incident": 13,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 12,
+      "date_changement": "2022-01-07T00:00:00",
+      "id_machine": 12,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 13,
+      "date_changement": "2023-04-12T00:00:00",
+      "id_machine": 13,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 91,
+      "date_changement": "2026-10-11T16:33:52.766894",
+      "id_machine": 14,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": 12,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 89,
+      "date_changement": "2026-10-07T12:15:00",
+      "id_machine": 15,
+      "id_etat": 3,
+      "id_util": null,
+      "id_incident": 14,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 17,
+      "date_changement": "2023-04-05T00:00:00",
+      "id_machine": 17,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 85,
+      "date_changement": "2026-10-07T13:30:00",
+      "id_machine": 18,
+      "id_etat": 2,
+      "id_util": null,
+      "id_incident": 15,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 19,
+      "date_changement": "2025-10-15T00:00:00",
+      "id_machine": 19,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 20,
+      "date_changement": "2022-01-20T00:00:00",
+      "id_machine": 20,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 21,
+      "date_changement": "2023-04-25T00:00:00",
+      "id_machine": 21,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 82,
+      "date_changement": "2026-10-07T15:05:00",
+      "id_machine": 22,
+      "id_etat": 4,
+      "id_util": null,
+      "id_incident": 17,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 23,
+      "date_changement": "2025-10-08T00:00:00",
+      "id_machine": 23,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 24,
+      "date_changement": "2022-01-13T00:00:00",
+      "id_machine": 24,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 90,
+      "date_changement": "2026-10-11T16:30:43.434027",
+      "id_machine": 25,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": 16,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 26,
+      "date_changement": "2024-07-23T00:00:00",
+      "id_machine": 26,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 27,
+      "date_changement": "2025-10-01T00:00:00",
+      "id_machine": 27,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 28,
+      "date_changement": "2022-01-06T00:00:00",
+      "id_machine": 28,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 29,
+      "date_changement": "2023-04-11T00:00:00",
+      "id_machine": 29,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 30,
+      "date_changement": "2024-07-16T00:00:00",
+      "id_machine": 30,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 31,
+      "date_changement": "2025-10-21T00:00:00",
+      "id_machine": 31,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 32,
+      "date_changement": "2022-01-26T00:00:00",
+      "id_machine": 32,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 33,
+      "date_changement": "2023-04-04T00:00:00",
+      "id_machine": 33,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 34,
+      "date_changement": "2024-07-09T00:00:00",
+      "id_machine": 34,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 35,
+      "date_changement": "2025-10-14T00:00:00",
+      "id_machine": 35,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 36,
+      "date_changement": "2022-01-19T00:00:00",
+      "id_machine": 36,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 37,
+      "date_changement": "2023-04-24T00:00:00",
+      "id_machine": 37,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 38,
+      "date_changement": "2024-07-02T00:00:00",
+      "id_machine": 38,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 39,
+      "date_changement": "2025-10-07T00:00:00",
+      "id_machine": 39,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 40,
+      "date_changement": "2022-01-12T00:00:00",
+      "id_machine": 40,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 41,
+      "date_changement": "2023-04-17T00:00:00",
+      "id_machine": 41,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 42,
+      "date_changement": "2024-07-22T00:00:00",
+      "id_machine": 42,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 43,
+      "date_changement": "2025-10-27T00:00:00",
+      "id_machine": 43,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 44,
+      "date_changement": "2022-01-05T00:00:00",
+      "id_machine": 44,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 45,
+      "date_changement": "2023-04-10T00:00:00",
+      "id_machine": 45,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 46,
+      "date_changement": "2024-07-15T00:00:00",
+      "id_machine": 46,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 47,
+      "date_changement": "2025-10-20T00:00:00",
+      "id_machine": 47,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    },
+    {
+      "id_statut": 48,
+      "date_changement": "2022-01-25T00:00:00",
+      "id_machine": 48,
+      "id_etat": 1,
+      "id_util": null,
+      "id_incident": null,
+      "date_suppression": null,
+      "id_util_suppression": null
+    }
+  ],
+  "/incidents/active": [
+    {
+      "id_incident": 20,
+      "id_machine": 10,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 10.",
+      "severity": "majeur",
+      "status": "resolu",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-11T16:56:56.355153+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 17,
+      "id_machine": 22,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 22.",
+      "severity": "mineur",
+      "status": "en_cours",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T15:05:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 16,
+      "id_machine": 25,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 25.",
+      "severity": "critique",
+      "status": "resolu",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T14:10:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 15,
+      "id_machine": 18,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 18.",
+      "severity": "mineur",
+      "status": "ouvert",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T13:30:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 14,
+      "id_machine": 15,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 15.",
+      "severity": "critique",
+      "status": "en_attente",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T12:15:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 13,
+      "id_machine": 11,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 11.",
+      "severity": "critique",
+      "status": "en_cours",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T11:05:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 12,
+      "id_machine": 14,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 14.",
+      "severity": "mineur",
+      "status": "resolu",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T10:20:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 11,
+      "id_machine": 9,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 9.",
+      "severity": "mineur",
+      "status": "resolu",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-07T09:40:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    },
+    {
+      "id_incident": 18,
+      "id_machine": 4,
+      "problem": "Anomalie de fonctionnement simulée sur la machine 4.",
+      "severity": "majeur",
+      "status": "resolu",
+      "confirmed_cause": null,
+      "applied_solution": null,
+      "created_at": "2026-10-06T11:20:00+02:00",
+      "created_by_user_id": null,
+      "updated_by_user_id": null,
+      "closed_by_user_id": null
+    }
+  ],
+  "/incidents/summary": {
+    "active_count": 9,
+    "critical_active_count": 3,
+    "waiting_count": 1,
+    "oldest_active": [
+      {
+        "id_incident": 18,
+        "problem": "Lectures intermittentes du code de traçabilité.",
+        "severity": "majeur",
+        "status": "resolu",
+        "created_at": "2026-10-06T11:20:00+02:00"
+      },
+      {
+        "id_incident": 11,
+        "problem": "Bruit anormal détecté au niveau du moteur du convoyeur.",
+        "severity": "mineur",
+        "status": "resolu",
+        "created_at": "2026-10-07T09:40:00+02:00"
+      },
+      {
+        "id_incident": 12,
+        "problem": "Couple de serrage irrégulier observé sur plusieurs cycles.",
+        "severity": "mineur",
+        "status": "resolu",
+        "created_at": "2026-10-07T10:20:00+02:00"
+      },
+      {
+        "id_incident": 13,
+        "problem": "Perte intermittente du signal de sécurité provoquant l'arrêt du poste.",
+        "severity": "critique",
+        "status": "en_cours",
+        "created_at": "2026-10-07T11:05:00+02:00"
+      },
+      {
+        "id_incident": 14,
+        "problem": "Le robot ne reprend pas son cycle après acquittement de l'alarme.",
+        "severity": "critique",
+        "status": "en_attente",
+        "created_at": "2026-10-07T12:15:00+02:00"
+      },
+      {
+        "id_incident": 15,
+        "problem": "L'écran tactile répond de manière intermittente.",
+        "severity": "mineur",
+        "status": "ouvert",
+        "created_at": "2026-10-07T13:30:00+02:00"
+      },
+      {
+        "id_incident": 16,
+        "problem": "Valeurs de mesure instables détectées pendant le contrôle de production.",
+        "severity": "critique",
+        "status": "resolu",
+        "created_at": "2026-10-07T14:10:00+02:00"
+      },
+      {
+        "id_incident": 17,
+        "problem": "Absence de réponse du capteur empêchant de confirmer son état.",
+        "severity": "mineur",
+        "status": "en_cours",
+        "created_at": "2026-10-07T15:05:00+02:00"
+      },
+      {
+        "id_incident": 20,
+        "problem": "Certaines pièces passent devant le capteur sans etre détectées , cela perturbe le cycle de production",
+        "severity": "majeur",
+        "status": "resolu",
+        "created_at": "2026-10-11T16:56:56.355153+02:00"
+      }
+    ]
+  },
+  "/incidents?page=1&page_size=100": {
+    "items": [
+      {
+        "id_incident": 20,
+        "id_machine": 10,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 10.",
+        "severity": "majeur",
+        "status": "resolu",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-11T16:56:56.355153+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 17,
+        "id_machine": 22,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 22.",
+        "severity": "mineur",
+        "status": "en_cours",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T15:05:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 16,
+        "id_machine": 25,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 25.",
+        "severity": "critique",
+        "status": "resolu",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T14:10:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 15,
+        "id_machine": 18,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 18.",
+        "severity": "mineur",
+        "status": "ouvert",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T13:30:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 14,
+        "id_machine": 15,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 15.",
+        "severity": "critique",
+        "status": "en_attente",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T12:15:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 13,
+        "id_machine": 11,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 11.",
+        "severity": "critique",
+        "status": "en_cours",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T11:05:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 12,
+        "id_machine": 14,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 14.",
+        "severity": "mineur",
+        "status": "resolu",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T10:20:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 11,
+        "id_machine": 9,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 9.",
+        "severity": "mineur",
+        "status": "resolu",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-07T09:40:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 18,
+        "id_machine": 4,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 4.",
+        "severity": "majeur",
+        "status": "resolu",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-06T11:20:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      },
+      {
+        "id_incident": 19,
+        "id_machine": 2,
+        "problem": "Anomalie de fonctionnement simulée sur la machine 2.",
+        "severity": "mineur",
+        "status": "ferme",
+        "confirmed_cause": null,
+        "applied_solution": null,
+        "created_at": "2026-10-05T10:10:00+02:00",
+        "created_by_user_id": null,
+        "updated_by_user_id": null,
+        "closed_by_user_id": null
+      }
+    ],
+    "total": 10,
+    "page": 1,
+    "page_size": 100,
+    "total_pages": 1
+  },
+  "/etat-usine": {
+    "scope": "Montage",
+    "generated_at": "2026-10-21T00:51:40.504478Z",
+    "summary": {
+      "total_machines": 47,
+      "operational": 42,
+      "attention": 2,
+      "critical": 2,
+      "unknown": 1,
+      "operational_health": 89.4,
+      "active_incidents": 9,
+      "critical_active_incidents": 3
+    },
+    "trend": [
+      {
+        "date": "2026-10-15",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-16",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-17",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-18",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-19",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-20",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      },
+      {
+        "date": "2026-10-21",
+        "operational": 42,
+        "attention": 2,
+        "critical": 2,
+        "unknown": 1,
+        "operational_health": 89.4,
+        "active_incidents": 9,
+        "critical_active_incidents": 3
+      }
+    ],
+    "watched_poles": [
+      {
+        "id_poteau": 6,
+        "nom_poteau": "Poste P-06",
+        "id_unite": 1,
+        "nom_unite": "Unité 1",
+        "attention_machines": 0,
+        "critical_machines": 1,
+        "unknown_machines": 0,
+        "active_incidents": 1,
+        "critical_incidents": 1,
+        "major_incidents": 0,
+        "minor_incidents": 0,
+        "highest_severity": "critique"
+      },
+      {
+        "id_poteau": 8,
+        "nom_poteau": "Poste P-08",
+        "id_unite": 2,
+        "nom_unite": "Unité 2",
+        "attention_machines": 0,
+        "critical_machines": 1,
+        "unknown_machines": 0,
+        "active_incidents": 1,
+        "critical_incidents": 1,
+        "major_incidents": 0,
+        "minor_incidents": 0,
+        "highest_severity": "critique"
+      },
+      {
+        "id_poteau": 9,
+        "nom_poteau": "Poste P-09",
+        "id_unite": 2,
+        "nom_unite": "Unité 2",
+        "attention_machines": 1,
+        "critical_machines": 0,
+        "unknown_machines": 0,
+        "active_incidents": 1,
+        "critical_incidents": 0,
+        "major_incidents": 0,
+        "minor_incidents": 1,
+        "highest_severity": "mineur"
+      },
+      {
+        "id_poteau": 11,
+        "nom_poteau": "Poste P-11",
+        "id_unite": 2,
+        "nom_unite": "Unité 2",
+        "attention_machines": 0,
+        "critical_machines": 0,
+        "unknown_machines": 1,
+        "active_incidents": 1,
+        "critical_incidents": 0,
+        "major_incidents": 0,
+        "minor_incidents": 1,
+        "highest_severity": "mineur"
+      },
+      {
+        "id_poteau": 1,
+        "nom_poteau": "Poste P-01",
+        "id_unite": 1,
+        "nom_unite": "Unité 1",
+        "attention_machines": 1,
+        "critical_machines": 0,
+        "unknown_machines": 0,
+        "active_incidents": 0,
+        "critical_incidents": 0,
+        "major_incidents": 0,
+        "minor_incidents": 0,
+        "highest_severity": null
+      }
+    ],
+    "recent_changes": [
+      {
+        "id_statut": 95,
+        "changed_at": "2026-10-11T16:59:07.146137",
+        "id_machine": 10,
+        "machine_name": "Machine 10",
+        "machine_type": "Équipement 10",
+        "id_poteau": 5,
+        "pole_name": "Poste P-05",
+        "id_unite": 1,
+        "unite_name": "Unité 1",
+        "previous_state": null,
+        "current_state": "Opérationnel",
+        "id_incident": 20
+      },
+      {
+        "id_statut": 93,
+        "changed_at": "2026-10-11T16:41:05.081441",
+        "id_machine": 9,
+        "machine_name": "Machine 09",
+        "machine_type": "Équipement 09",
+        "id_poteau": 5,
+        "pole_name": "Poste P-05",
+        "id_unite": 1,
+        "unite_name": "Unité 1",
+        "previous_state": null,
+        "current_state": "Opérationnel",
+        "id_incident": 11
+      },
+      {
+        "id_statut": 92,
+        "changed_at": "2026-10-11T16:37:36.080102",
+        "id_machine": 4,
+        "machine_name": "Machine 04",
+        "machine_type": "Équipement 04",
+        "id_poteau": 2,
+        "pole_name": "Poste P-02",
+        "id_unite": 1,
+        "unite_name": "Unité 1",
+        "previous_state": null,
+        "current_state": "Opérationnel",
+        "id_incident": 18
+      },
+      {
+        "id_statut": 91,
+        "changed_at": "2026-10-11T16:33:52.766894",
+        "id_machine": 14,
+        "machine_name": "Machine 14",
+        "machine_type": "Équipement 14",
+        "id_poteau": 7,
+        "pole_name": "Poste P-07",
+        "id_unite": 2,
+        "unite_name": "Unité 2",
+        "previous_state": null,
+        "current_state": "Opérationnel",
+        "id_incident": 12
+      },
+      {
+        "id_statut": 90,
+        "changed_at": "2026-10-11T16:30:43.434027",
+        "id_machine": 25,
+        "machine_name": "Machine 25",
+        "machine_type": "Équipement 25",
+        "id_poteau": 13,
+        "pole_name": "Poste P-13",
+        "id_unite": 3,
+        "unite_name": "Unité 3",
+        "previous_state": null,
+        "current_state": "Opérationnel",
+        "id_incident": 16
+      },
+      {
+        "id_statut": 82,
+        "changed_at": "2026-10-07T15:05:00",
+        "id_machine": 22,
+        "machine_name": "Machine 22",
+        "machine_type": "Équipement 22",
+        "id_poteau": 11,
+        "pole_name": "Poste P-11",
+        "id_unite": 2,
+        "unite_name": "Unité 2",
+        "previous_state": null,
+        "current_state": "Inconnu",
+        "id_incident": 17
+      },
+      {
+        "id_statut": 85,
+        "changed_at": "2026-10-07T13:30:00",
+        "id_machine": 18,
+        "machine_name": "Machine 18",
+        "machine_type": "Équipement 18",
+        "id_poteau": 9,
+        "pole_name": "Poste P-09",
+        "id_unite": 2,
+        "unite_name": "Unité 2",
+        "previous_state": null,
+        "current_state": "Attention requise",
+        "id_incident": 15
+      },
+      {
+        "id_statut": 89,
+        "changed_at": "2026-10-07T12:15:00",
+        "id_machine": 15,
+        "machine_name": "Machine 15",
+        "machine_type": "Équipement 15",
+        "id_poteau": 8,
+        "pole_name": "Poste P-08",
+        "id_unite": 2,
+        "unite_name": "Unité 2",
+        "previous_state": null,
+        "current_state": "Critique",
+        "id_incident": 14
+      }
+    ]
+  },
+  "/me": {
+    "id_util": 9999,
+    "nom": "Démo",
+    "prenom": "Visiteur",
+    "email": "demo@example.invalid",
+    "id_role": 4,
+    "role": "administrateur",
+    "notifications_read_at": null,
+    "actif": true,
+    "date_desactivation": null
+  },
+  "/utilisateurs": [
+    {
+      "id_util": 1,
+      "nom": "El Amrani",
+      "prenom": "Yasmine",
+      "email": "personnel.demo01@example.invalid",
+      "id_role": 4,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 2,
+      "nom": "Bennani",
+      "prenom": "Hamza",
+      "email": "personnel.demo02@example.invalid",
+      "id_role": 2,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 3,
+      "nom": "Alaoui",
+      "prenom": "Imane",
+      "email": "personnel.demo03@example.invalid",
+      "id_role": 3,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 4,
+      "nom": "Berrada",
+      "prenom": "Youssef",
+      "email": "personnel.demo04@example.invalid",
+      "id_role": 1,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 5,
+      "nom": "Tazi",
+      "prenom": "Salma",
+      "email": "personnel.demo05@example.invalid",
+      "id_role": 4,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 6,
+      "nom": "Idrissi",
+      "prenom": "Anas",
+      "email": "personnel.demo06@example.invalid",
+      "id_role": 2,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 7,
+      "nom": "Fassi",
+      "prenom": "Hajar",
+      "email": "personnel.demo07@example.invalid",
+      "id_role": 3,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 8,
+      "nom": "Lahlou",
+      "prenom": "Mehdi",
+      "email": "personnel.demo08@example.invalid",
+      "id_role": 1,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 9,
+      "nom": "Mansouri",
+      "prenom": "Aya",
+      "email": "personnel.demo09@example.invalid",
+      "id_role": 4,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 10,
+      "nom": "Chraibi",
+      "prenom": "Omar",
+      "email": "personnel.demo10@example.invalid",
+      "id_role": 2,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 11,
+      "nom": "Zerouali",
+      "prenom": "Nour",
+      "email": "personnel.demo11@example.invalid",
+      "id_role": 3,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 12,
+      "nom": "El Fassi",
+      "prenom": "Rayan",
+      "email": "personnel.demo12@example.invalid",
+      "id_role": 1,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 13,
+      "nom": "Amrani",
+      "prenom": "Sara",
+      "email": "personnel.demo13@example.invalid",
+      "id_role": 4,
+      "actif": false,
+      "date_desactivation": "2026-09-20T10:00:00Z"
+    },
+    {
+      "id_util": 14,
+      "nom": "Benjelloun",
+      "prenom": "Adam",
+      "email": "personnel.demo14@example.invalid",
+      "id_role": 2,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 15,
+      "nom": "Ouazzani",
+      "prenom": "Lina",
+      "email": "personnel.demo15@example.invalid",
+      "id_role": 3,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 16,
+      "nom": "Haddad",
+      "prenom": "Zakaria",
+      "email": "personnel.demo16@example.invalid",
+      "id_role": 1,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 17,
+      "nom": "Raji",
+      "prenom": "Kawtar",
+      "email": "personnel.demo17@example.invalid",
+      "id_role": 4,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 18,
+      "nom": "Sbai",
+      "prenom": "Ayoub",
+      "email": "personnel.demo18@example.invalid",
+      "id_role": 2,
+      "actif": false,
+      "date_desactivation": "2026-09-20T10:00:00Z"
+    },
+    {
+      "id_util": 19,
+      "nom": "Ait Lahcen",
+      "prenom": "Meryem",
+      "email": "personnel.demo19@example.invalid",
+      "id_role": 3,
+      "actif": true,
+      "date_desactivation": null
+    },
+    {
+      "id_util": 20,
+      "nom": "Kettani",
+      "prenom": "Ilyas",
+      "email": "personnel.demo20@example.invalid",
+      "id_role": 1,
+      "actif": true,
+      "date_desactivation": null
+    }
+  ],
+  "/roles": [
+    {
+      "id_role": 1,
+      "nom_role": "operateur_de_production"
+    },
+    {
+      "id_role": 2,
+      "nom_role": "superviseur"
+    },
+    {
+      "id_role": 3,
+      "nom_role": "technicien"
+    },
+    {
+      "id_role": 4,
+      "nom_role": "administrateur"
+    }
+  ],
+  "/sessions": [
+    {
+      "id_session": 1,
+      "date_creation": "2026-10-20T09:15:00Z",
+      "date_expiration": "2026-10-22T09:15:00Z",
+      "date_revocation": null,
+      "id_util": 1,
+      "user_email": "personnel.demo01@example.invalid",
+      "user_nom": "El Amrani",
+      "user_prenom": "Yasmine",
+      "status": "active"
+    },
+    {
+      "id_session": 2,
+      "date_creation": "2026-10-20T10:15:00Z",
+      "date_expiration": "2026-10-22T10:15:00Z",
+      "date_revocation": null,
+      "id_util": 2,
+      "user_email": "personnel.demo02@example.invalid",
+      "user_nom": "Bennani",
+      "user_prenom": "Hamza",
+      "status": "active"
+    },
+    {
+      "id_session": 3,
+      "date_creation": "2026-10-19T11:15:00Z",
+      "date_expiration": "2026-10-21T11:15:00Z",
+      "date_revocation": null,
+      "id_util": 3,
+      "user_email": "personnel.demo03@example.invalid",
+      "user_nom": "Alaoui",
+      "user_prenom": "Imane",
+      "status": "active"
+    },
+    {
+      "id_session": 4,
+      "date_creation": "2026-10-19T12:15:00Z",
+      "date_expiration": "2026-10-21T12:15:00Z",
+      "date_revocation": null,
+      "id_util": 4,
+      "user_email": "personnel.demo04@example.invalid",
+      "user_nom": "Berrada",
+      "user_prenom": "Youssef",
+      "status": "expired"
+    },
+    {
+      "id_session": 5,
+      "date_creation": "2026-10-19T13:15:00Z",
+      "date_expiration": "2026-10-21T13:15:00Z",
+      "date_revocation": "2026-10-19T17:00:00Z",
+      "id_util": 5,
+      "user_email": "personnel.demo05@example.invalid",
+      "user_nom": "Tazi",
+      "user_prenom": "Salma",
+      "status": "revoked"
+    },
+    {
+      "id_session": 6,
+      "date_creation": "2026-10-18T14:15:00Z",
+      "date_expiration": "2026-10-20T14:15:00Z",
+      "date_revocation": null,
+      "id_util": 6,
+      "user_email": "personnel.demo06@example.invalid",
+      "user_nom": "Idrissi",
+      "user_prenom": "Anas",
+      "status": "expired"
+    },
+    {
+      "id_session": 7,
+      "date_creation": "2026-10-18T15:15:00Z",
+      "date_expiration": "2026-10-20T15:15:00Z",
+      "date_revocation": null,
+      "id_util": 7,
+      "user_email": "personnel.demo07@example.invalid",
+      "user_nom": "Fassi",
+      "user_prenom": "Hajar",
+      "status": "active"
+    },
+    {
+      "id_session": 8,
+      "date_creation": "2026-10-18T16:15:00Z",
+      "date_expiration": "2026-10-20T16:15:00Z",
+      "date_revocation": "2026-10-18T17:00:00Z",
+      "id_util": 8,
+      "user_email": "personnel.demo08@example.invalid",
+      "user_nom": "Lahlou",
+      "user_prenom": "Mehdi",
+      "status": "revoked"
+    },
+    {
+      "id_session": 9,
+      "date_creation": "2026-10-17T08:15:00Z",
+      "date_expiration": "2026-10-19T08:15:00Z",
+      "date_revocation": null,
+      "id_util": 9,
+      "user_email": "personnel.demo09@example.invalid",
+      "user_nom": "Mansouri",
+      "user_prenom": "Aya",
+      "status": "expired"
+    },
+    {
+      "id_session": 10,
+      "date_creation": "2026-10-17T09:15:00Z",
+      "date_expiration": "2026-10-19T09:15:00Z",
+      "date_revocation": null,
+      "id_util": 10,
+      "user_email": "personnel.demo10@example.invalid",
+      "user_nom": "Chraibi",
+      "user_prenom": "Omar",
+      "status": "active"
+    },
+    {
+      "id_session": 11,
+      "date_creation": "2026-10-17T10:15:00Z",
+      "date_expiration": "2026-10-19T10:15:00Z",
+      "date_revocation": null,
+      "id_util": 11,
+      "user_email": "personnel.demo11@example.invalid",
+      "user_nom": "Zerouali",
+      "user_prenom": "Nour",
+      "status": "expired"
+    },
+    {
+      "id_session": 12,
+      "date_creation": "2026-10-16T11:15:00Z",
+      "date_expiration": "2026-10-18T11:15:00Z",
+      "date_revocation": null,
+      "id_util": 12,
+      "user_email": "personnel.demo12@example.invalid",
+      "user_nom": "El Fassi",
+      "user_prenom": "Rayan",
+      "status": "active"
+    }
+  ],
+  "/technicians": [],
+  "/incident-actors": [],
+  "/notifications/read": {
+    "read_at": "2026-10-21T00:00:00Z"
+  }
+}
