@@ -14,7 +14,7 @@ The goal is simple: **make information easier to see, incidents easier to follow
 
 ---
 
-## 💡What can SOMACA RADAR do?
+## What can SOMACA RADAR do?
 
 ### Explore the factory in 3D 🗺
 
