@@ -215,3 +215,9 @@ SOMACA RADAR was developed during an industrial internship as a full-stack engin
 From the 3D factory environment to the incident lifecycle and SOMACA Helper, the project brings these technologies together in a single industrial monitoring application.
 
 **Developed and tested locally using simulated operational data.**
+
+### Copyright
+
+© 2026 SOMACA RADAR. All rights reserved.
+
+Unauthorized reproduction, modification, or redistribution of this project is prohibited.
